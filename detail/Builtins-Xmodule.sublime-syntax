@@ -1,0 +1,58 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+version: 2
+extends:
+  - Packages/B2Jam/detail/Builtins.sublime-syntax
+
+contexts:
+
+  builtins:
+    - match: '{{ws_lb}}xbuild{{right_edge}}'
+      scope: support.function.xmodule.xbuild.b2jam
+      set: main-target
+    - match: '{{ws_lb}}xdist{{right_edge}}'
+      scope: support.function.xmodule.xdist.b2jam
+      set: main-target
+    - match: '{{ws_lb}}xmakefile{{right_edge}}'
+      scope: support.function.xmodule.xmakefile.b2jam
+      set: main-target
+    - match: '{{ws_lb}}xconfigure{{right_edge}}'
+      scope: support.function.xmodule.xconfigure.b2jam
+      set: main-target
+    - match: '{{ws_lb}}xfile{{right_edge}}'
+      scope: support.function.xmodule.xfile.b2jam
+      set: main-target
+    - match: '{{ws_lb}}xpath{{right_edge}}'
+      scope: support.function.xmodule.xpath.b2jam
+      set: main-target
+    - match: '{{ws_lb}}xrepo{{right_edge}}'
+      scope: support.function.xmodule.xrepo.b2jam
+      set: main-target
+    - match: '{{ws_lb}}xinclude{{right_edge}}'
+      scope: support.function.xmodule.xinclude.b2jam
+      set: main-target
+    - match: '{{ws_lb}}xlib{{right_edge}}'
+      scope: support.function.xmodule.xlib.b2jam
+      set: main-target
+    - match: '{{ws_lb}}xdpkg{{right_edge}}'
+      scope: support.function.xmodule.xdpkg.b2jam
+      set: main-target
+    - match: '{{ws_lb}}xrepo{{right_edge}}'
+      scope: support.function.xmodule.xrepo.b2jam
+      set: main-target
+    - match: '{{ws_lb}}system-libs{{right_edge}}'
+      scope: support.function.xmodule.system-libs.b2jam
+      set: [ remainder, feature-list, --, feature-list, --,  1st-target-entity-list ]
+
+  ## GRAPHVIZ
+    - match: '{{ws_lb}}(?:graphviz-sources-svg|graphviz-generator-svg|graphviz-sources|graphviz-generator){{right_edge}}'
+      scope: support.function.xmodule.graphviz.b2jam
+      set: main-target

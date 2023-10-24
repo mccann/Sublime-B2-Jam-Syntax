@@ -997,6 +997,7 @@ contexts:
 
   cmd-all:
     - include: cmd-builtins
+    - include: cmd-builtins-xmodule
     - include: cmd-basic
 
   cmd-basic:
@@ -1006,6 +1007,9 @@ contexts:
 
   cmd-builtins:
     - include: Packages/B2Jam/detail/Builtins.sublime-syntax#builtins
+
+  cmd-builtins-xmodule:
+    - include: Packages/B2Jam/detail/Builtins-Xmodule.sublime-syntax#builtins
 
 
 ###[ END ]#####################################################################

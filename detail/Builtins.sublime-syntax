@@ -218,6 +218,12 @@ contexts:
     - match: ''
       set: Packages/B2Jam/detail/value/value-target-entity.sublime-syntax#first-strict-list-1-useful
 
+  1st-target-entity-list:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: Packages/B2Jam/detail/value/value-target-entity.sublime-syntax#first-strict-list
+
   target-entity:
     - include: Packages/B2Jam/detail/value/value-target-entity.sublime-syntax#expr
 
