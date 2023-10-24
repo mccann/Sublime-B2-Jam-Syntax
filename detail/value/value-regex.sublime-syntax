@@ -1,0 +1,595 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+name: B2 Jam
+scope: source.b2jam
+version: 2
+hidden: true
+
+extends: Packages/B2Jam/detail/value/LQ-values.sublime-syntax
+
+variables:
+  # escapes
+  char_escape: \\.
+
+  L_escapeable_char: '[\stnr\\\":;}{\[\]]'
+  Q_escapeable_char: '[tnr\\\"]'
+
+
+  # escaping does nothing for regex engine - Q has '[',']', L does not
+  L_regex_hazard_escape_char: '[\$\^\.\*\+\?\(\)]'
+  Q_regex_hazard_escape_char: '[\$\^\.\*\+\?\(\)\[\]]'
+  L_charset_hazard_escape_char: '[\^\-]'
+  Q_charset_hazard_escape_char: '[\^\-\[\]]'
+
+
+  charset_range: '(?:(?:{{char_escape}}|(?!\\-)[^\]])-(?:{{char_escape}}|[^\]]))'
+
+  # quantifiers
+  character_quantifier: '[?*+]'
+
+contexts:
+
+  main:
+    - include: as-value
+
+  value-meta:
+    - meta_scope: meta.mode.basic.regexp.b2jam
+    - include: immediately-pop
+
+  L-value:
+    - match: \"
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-value
+    - include: LQ-unexpected-quantifiers
+    - match: ''
+      set: L-regex
+
+  Q-value:
+    - meta_scope: meta.string.b2jam
+    - include: LQ-unexpected-quantifiers
+    - include: Q-quote-terminal
+    - match: ''
+      pop: 2
+      push: [ L-regex, Q-regex ]
+
+  L-terminal-0:
+    - include: L-terminal
+
+  L-terminal-N:
+    - match: '{{token_break}}'
+      pop: 2
+
+  L-regex:
+    - match: \"
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-regex
+    - match: '<'
+      pop: 1
+      push: L-regex-gristed
+    - include: L-expansions
+    - include: L-groups-0
+    - include: L-charsets-0
+    - include: L-terminal-0
+    - include: L-anchors-0
+    - include: L-regex-hazard-escapes
+    - include: LQ-double-escaped-chars
+    - include: L-escaped-chars
+    - include: L-needs-escape
+    - include: L-quantifiers-0
+    - include: L-operators-0
+    - include: LQ-pattern-chars
+    - include: LQ-unmatched-parens
+
+  L-regex-gristed:
+    - match: '>'
+      pop: 1
+      push: L-regex
+    - match: ':' # safe here
+    - include: L-regex
+
+
+  Q-regex:
+    - meta_scope: meta.string.b2jam
+    - include: Q-base
+
+  Q-base:
+    - include: Q-groups
+    - include: Q-base-common
+    - include: LQ-unmatched-parens
+
+  Q-base-common:
+    - include: Q-expansions
+    - include: Q-quote-terminal
+    - include: Q-operators
+    - include: Q-anchors
+    - include: Q-charsets
+    - include: Q-regex-hazard-escapes
+    - include: LQ-double-escaped-chars
+    - include: Q-escaped-chars
+    - include: Q-quantifiers
+    - include: LQ-pattern-chars
+
+  L-break-group-L0:
+    - match: ''
+      fail: L_group_0
+
+  L-break-group-LN:
+    - match: ''
+      fail: L_group_N
+
+  L-break-group-Q:
+    - match: ''
+      fail: Q_group
+
+  LQ-failed:
+    - match: ''
+      pop: 2      # drop down to previous L/Q layer
+
+  Q-break:
+    - match: ''
+      pop: 1      # drop down to fail handler
+
+  L-groups-0:
+    - match: (?=\()
+      branch_point: L_group_0
+      branch:
+        - L-group-0
+        - L-group-0-failed
+
+  L-groups-N:
+    - match: (?=\()
+      branch_point: L_group_N
+      branch:
+        - L-group-N
+        - L-group-N-failed
+
+  Q-groups:
+    - match: (?=\()
+      branch_point: Q_group
+      branch:
+        - Q-group
+        - Q-group-failed
+
+  L-group-0:
+    - match: ''
+      set: [ Q-value,       L-break-group-L0, Q-break,    L-group-body, Q-group-body, L-maybe-unexpected-quantifiers, LQ-group-open ]
+
+  L-group-0-failed:
+    - match: ''
+      set: [ Q-value,       LQ-failed,        LQ-failed,  L-group-body, Q-group-body, L-maybe-unexpected-quantifiers, LQ-group-open-failed ]
+
+  L-group-N:
+    - match: ''
+      set: [ Q-group-body,  L-break-group-LN, Q-break,    L-group-body, Q-group-body, L-maybe-unexpected-quantifiers, LQ-group-open ]
+
+  L-group-N-failed:
+    - match: ''
+      set: [ Q-group-body,  LQ-failed,        LQ-failed,  L-group-body, Q-group-body, L-maybe-unexpected-quantifiers, LQ-group-open-failed ]
+
+  Q-group:
+    - match: ''
+      set: [                L-break-group-Q,  Q-break,    L-group-body, Q-group-body, L-maybe-unexpected-quantifiers, Q-maybe-unexpected-quantifiers, LQ-group-open ]
+
+  Q-group-failed:
+    - match: ''
+      set: [                LQ-failed,        LQ-failed,  L-group-body, Q-group-body, L-maybe-unexpected-quantifiers, Q-maybe-unexpected-quantifiers, LQ-group-open-failed ]
+
+  LQ-group-open:
+    - match: \(
+      scope: punctuation.section.group.begin.regexp.b2jam
+      pop: 1
+
+  LQ-group-open-failed:
+    - match: \( # since this will continue to parse as if it was a group begin, keep the scope, even though it isn't actually a valid group
+      scope: punctuation.section.group.begin.regexp.b2jam invalid.illegal.unmatched.parens.regexp.b2jam
+      pop: 1
+
+  L-group-body:
+    - clear_scopes: 2 # meta.mode.basic && meta.string
+    - meta_scope: meta.group.regexp.b2jam meta.mode.basic.regexp.b2jam
+    - include: L-expansions
+    - include: LQ-group-end
+    - include: L-groups-N
+    - include: L-charsets-N
+    - include: L-terminal-N
+    - include: L-anchors-N
+    - include: L-regex-hazard-escapes
+    - include: LQ-double-escaped-chars
+    - include: L-escaped-chars
+    - include: L-needs-escape
+    - include: L-quantifiers-N
+    - include: L-operators-N
+    - include: LQ-pattern-chars
+
+  Q-group-body:
+    - meta_scope: meta.string.b2jam
+    - include: LQ-group-end
+    - include: Q-groups
+    - include: Q-base-common
+
+  LQ-group-end:
+    - match: \)
+      scope: punctuation.section.group.end.regexp.b2jam
+      pop: 4
+
+  L-charsets-0:
+    - match: (?=\\?\[)
+      branch_point: L_charset_0
+      branch:
+        - L-charset-0
+        - L-charset-0-failed
+
+  L-charsets-N:
+    - match: (?=\\?\[)
+      branch_point: L_charset_N
+      branch:
+        - L-charset-N
+        - L-charset-N-failed
+
+  L-break-charset-L0:
+    - match: ''
+      fail: L_charset_0
+
+  L-break-charset-LN:
+    - match: ''
+      fail: L_charset_N
+
+  L-break-charset-Q:
+    - match: ''
+      fail: Q_charset
+
+  L-charset-open:
+    - match: (\\)(\[)|(\[)
+      captures:
+        1: constant.character.escape.b2jam  # not impotent, really necessary in literal space
+        2: punctuation.definition.set.begin.regexp.b2jam
+        3: punctuation.definition.set.begin.regexp.b2jam invalid.deprecated.b2jam
+      pop: 1
+
+  L-charset-open-failed:
+    - match: (\\)?(\[)
+      captures:
+        1: constant.character.escape.b2jam  # not impotent, really necessary in literal space
+        # since this will continue to parse as if it was a group begin, keep the scope, even though it isn't actually a valid group
+        2: punctuation.definition.set.begin.regexp.b2jam invalid.illegal.unmatched.bracket.b2jam
+      pop: 1
+
+  L-charset-0:
+    - match: ''
+      set: [ Q-value,       L-break-charset-L0, Q-break,    L-charset-kind, L-charset-open ]
+
+  L-charset-0-failed:
+    - match: ''
+      set: [ Q-value,       LQ-failed,          LQ-failed,  L-charset-kind, L-charset-open-failed ]
+
+  L-charset-N:
+    - match: ''
+      set: [ Q-group-body,  L-break-charset-LN, Q-break,    L-charset-kind, L-charset-open ]
+
+  L-charset-N-failed:
+    - match: ''
+      set: [ Q-group-body,  LQ-failed,          LQ-failed,  L-charset-kind, L-charset-0-failed ]
+
+  Q-charsets:
+    - match: (?=\[)
+      branch_point: Q_charset
+      branch:
+        - Q-charset
+        - Q-charset-failed
+
+  Q-charset-open:
+    - match: \[
+      scope: punctuation.definition.set.begin.regexp.b2jam
+      pop: 1
+
+  Q-charset-open-failed:
+    - match: \[
+      # since this will continue to parse as if it was a group begin, keep the scope, even though it isn't actually a valid group
+      scope: punctuation.definition.set.begin.regexp.b2jam invalid.illegal.unmatched.bracket.b2jam
+      pop: 1
+
+  Q-charset:
+    - match: ''
+      set: [                L-break-charset-Q,  Q-break,    L-charset-kind, Q-charset-kind, Q-charset-open ]
+
+  Q-charset-failed:
+    - match: ''
+      set: [                LQ-failed,          LQ-failed,  L-charset-kind, Q-charset-kind, Q-charset-open-failed ]
+
+  LQ-charset-kind-negation:
+    - match: (\\?)(\^)
+      captures:
+        1: constant.character.escape.impotent.regexp.b2jam invalid.deprecated.impotent.escape.b2jam
+        2: keyword.operator.logical.regexp.b2jam
+
+  L-charset-kind:
+    - clear_scopes: 1 # meta.string
+    - meta_scope: meta.set.regexp.b2jam
+    - match: '"'
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-charset-kind
+    - include: LQ-charset-kind-negation
+    - include: L-terminal-N
+    - match: ''
+      pop: 1
+      push: L-charset-head
+
+  Q-charset-kind:
+    - meta_scope: meta.string.b2jam
+    - include: Q-quote-terminal
+    - include: LQ-charset-kind-negation
+    - match: ''
+      pop: 2
+      push: [ L-charset-head, Q-charset-head ]
+
+  L-charset-head:
+    - clear_scopes: 1 # meta.string
+    - meta_scope: meta.set.regexp.b2jam
+    - include: L-terminal-N
+    - match: '"'
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-charset-head
+    - match: (?={{charset_range}})
+      set: [ L-charset-body, Q-charset-body, L-charset-range-end, Q-charset-range-end, L-charset-range-begin ]
+    - match: ''
+      set: [ L-charset-body, Q-charset-body, L-charset-char ]
+
+  Q-charset-head:
+    - meta_scope: meta.string.b2jam
+    - include: Q-quote-terminal
+    - match: (?={{charset_range}})
+      pop: 2
+      set: [ L-charset-body, Q-charset-body, L-charset-range-end, Q-charset-range-end, L-charset-range-begin, Q-charset-range-begin ]
+    - match: ''
+      pop: 2
+      set: [ L-charset-body, Q-charset-body, L-charset-char, Q-charset-char ]
+
+  L-charset-body:
+    - clear_scopes: 1 # meta.string
+    - meta_scope: meta.set.regexp.b2jam
+    - match: '"'
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-charset-body
+    - match: (?:(\\)(\])|(\]))
+      captures:
+        1: constant.character.escape.b2jam # not impotent in literal context
+        2: punctuation.definition.set.end.regexp.b2jam
+        3: punctuation.definition.set.end.regexp.b2jam invalid.deprecated.b2jam
+      pop: 4
+    - match: (?={{charset_range}})
+      push: [ Q-charset-body, L-charset-range-end, Q-charset-range-end, L-charset-range-begin ]
+    - include: L-charset-hazard-escapes
+    - include: L-escaped-chars
+    - include: L-needs-escape
+    - include: L-terminal-N
+
+  Q-charset-body:
+    - meta_scope: meta.string.b2jam
+    - match: \]
+      scope: punctuation.definition.set.end.regexp.b2jam
+      pop: 4
+    - match: (?={{charset_range}})
+      push: [ L-charset-range-end, Q-charset-range-end, L-charset-range-begin, Q-charset-range-begin ]
+    - include: Q-charset-hazard-escapes
+    - include: Q-escaped-chars
+    - include: Q-quote-terminal
+
+
+  L-charset-range-end:
+    - clear_scopes: 1 # meta.string
+    - meta_scope: constant.other.range.regexp.b2jam
+    - match: '"'
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-charset-range-end
+    - include: L-charset-char
+
+  Q-charset-range-end:
+    - meta_scope: meta.string.b2jam
+    - include: Q-charset-char
+
+  LQ-charset-range-char:
+    - match: '(\\)?(-)'
+      captures:
+        1: constant.character.escape.impotent.regexp.b2jam invalid.deprecated.impotent.escape.b2jam
+        2: punctuation.separator.sequence.regexp.b2jam
+      pop: 2
+
+  L-charset-range-begin:
+    - clear_scopes: 1 # meta.string
+    - match: '"'
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-charset-range-begin
+    - include: LQ-charset-range-char
+    - include: L-escaped-chars
+
+  Q-charset-range-begin:
+    - meta_scope: meta.string.b2jam
+    - include: Q-quote-terminal
+    - include: LQ-charset-range-char
+    - include: Q-escaped-chars
+
+  LQ-double-escaped-chars:
+    - match: \\\\.
+      scope: constant.character.escape.regexp.b2jam
+
+  L-regex-hazard-escapes:
+    - match: '\\(?={{L_regex_hazard_escape_char}})'
+      scope: constant.character.escape.impotent.regexp.b2jam invalid.deprecated.impotent.escape.b2jam
+
+  Q-regex-hazard-escapes:
+    - match: '\\(?={{Q_regex_hazard_escape_char}})'
+      scope: constant.character.escape.impotent.regexp.b2jam invalid.deprecated.impotent.escape.b2jam
+
+  L-regex-hazard-escape:
+    - match: '\\(?={{L_regex_hazard_escape_char}})'
+      scope: constant.character.escape.impotent.regexp.b2jam invalid.deprecated.impotent.escape.b2jam
+      pop: 2
+
+  Q-regex-hazard-escape:
+    - match: '\\(?={{Q_regex_hazard_escape_char}})'
+      scope: constant.character.escape.impotent.regexp.b2jam invalid.deprecated.impotent.escape.b2jam
+      pop: 2
+
+  L-charset-hazard-escapes:
+    - match: '\\(?={{L_charset_hazard_escape_char}})'
+      scope: constant.character.escape.impotent.regexp.b2jam invalid.deprecated.impotent.escape.b2jam
+
+  Q-charset-hazard-escapes:
+    - match: '\\(?={{Q_charset_hazard_escape_char}})'
+      scope: constant.character.escape.impotent.regexp.b2jam invalid.deprecated.impotent.escape.b2jam
+
+  L-charset-hazard-escape:
+    # need to consume char in this case, unlike the escapeS case
+    - match: '(\\){{L_charset_hazard_escape_char}}'
+      captures:
+        1: constant.character.escape.impotent.regexp.b2jam invalid.deprecated.impotent.escape.b2jam
+      pop: 2
+
+  Q-charset-hazard-escape:
+    # need to consume char in this case, unlike the escapeS case
+    - match: '(\\){{Q_charset_hazard_escape_char}}'
+      captures:
+        1: constant.character.escape.impotent.regexp.b2jam invalid.deprecated.impotent.escape.b2jam
+      pop: 2
+
+  L-escaped-chars:
+    # this does not need to consume impotently escaped chars
+    - match: '(\\{{L_escapeable_char}})|(\\)'
+      captures:
+        1: constant.character.escape.b2jam  # no regexp, because this is global to b2jam
+        2: constant.character.escape.impotent.regexp.b2jam
+
+  L-charset-escaped-char:
+    # this needs to consume a char, even if that char was impotently escaped
+    - match: '(\\{{L_escapeable_char}})|(\\).'
+      captures:
+        1: constant.character.escape.b2jam  # no regexp, because this is global to b2jam
+        2: constant.character.escape.impotent.regexp.b2jam
+      pop: 2
+
+  Q-escaped-chars:
+    # this does not need to consume impotently escaped chars
+    - match: '(\\{{Q_escapeable_char}})|(\\)'
+      captures:
+        1: constant.character.escape.b2jam  # no regexp, because this is global to b2jam
+        2: constant.character.escape.impotent.regexp.b2jam
+
+  Q-charset-escaped-char:
+    # this needs to consume a char, even if that char was impotently escaped
+    - match: '(\\{{Q_escapeable_char}})|(\\).'
+      captures:
+        1: constant.character.escape.b2jam # no regexp, because this is global to b2jam
+        2: constant.character.escape.impotent.regexp.b2jam
+      pop: 2
+
+
+  L-0-as-maybe-unexpected-quantifiers:
+    - match: ''
+      set: [ Q-regex, L-maybe-unexpected-quantifiers ]
+
+  L-N-as-maybe-unexpected-quantifiers:
+    - match: ''
+      set: [ Q-group-body, L-maybe-unexpected-quantifiers ]
+
+  Q-as-maybe-unexpected-quantifiers:
+    - match: ''
+      set: [ L-maybe-unexpected-quantifiers, Q-maybe-unexpected-quantifiers ]
+
+  L-anchors-0:
+    - match: \\\\[<>]|[\^$]
+      scope: keyword.control.anchor.regexp.b2jam
+      push: L-0-as-maybe-unexpected-quantifiers
+
+  L-operators-0:
+    - match: \|
+      scope: keyword.operator.alternation.regexp.b2jam
+      push: L-0-as-maybe-unexpected-quantifiers
+
+  L-quantifiers-0:
+    - match: '{{character_quantifier}}'
+      scope: keyword.operator.quantifier.regexp.b2jam
+      push: L-0-as-maybe-unexpected-quantifiers
+
+  L-anchors-N:
+    - match: \\\\[<>]|[\^$]
+      scope: keyword.control.anchor.regexp.b2jam
+      push: L-N-as-maybe-unexpected-quantifiers
+
+  L-operators-N:
+    - match: \|
+      scope: keyword.operator.alternation.regexp.b2jam
+      push: L-N-as-maybe-unexpected-quantifiers
+
+  L-quantifiers-N:
+    - match: '{{character_quantifier}}'
+      scope: keyword.operator.quantifier.regexp.b2jam
+      push: L-N-as-maybe-unexpected-quantifiers
+
+  Q-anchors:
+    - match: \\\\[<>]|[\^$]
+      scope: keyword.control.anchor.regexp.b2jam
+      push: Q-as-maybe-unexpected-quantifiers
+
+  Q-operators:
+    - match: \|
+      scope: keyword.operator.alternation.regexp.b2jam
+      push: Q-as-maybe-unexpected-quantifiers
+
+  Q-quantifiers:
+    - match: '{{character_quantifier}}'
+      scope: keyword.operator.quantifier.regexp.b2jam
+      push: Q-as-maybe-unexpected-quantifiers
+
+  L-maybe-unexpected-quantifiers:
+    - clear_scopes: 1 # meta.string
+    - match: '"'
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-maybe-unexpected-quantifiers
+    - include: LQ-unexpected-quantifiers
+    - match: ''
+      pop: 2
+
+  Q-maybe-unexpected-quantifiers:
+    - meta_scope: meta.string.b2jam
+    - include: Q-quote-terminal
+    - include: LQ-unexpected-quantifiers
+    - match: ''
+      pop: 2
+
+  LQ-unexpected-quantifiers:
+    - match: '{{character_quantifier}}'
+      scope: invalid.illegal.unexpected-quantifier.regexp.b2jam
+
+  LQ-pattern-chars:
+    - match: \.
+      scope: keyword.other.any.regexp.b2jam
+
+  LQ-unmatched-parens:
+    - match: \)
+      scope: invalid.illegal.unmatched.parens.regexp.b2jam
+
+
+  L-charset-char:
+    - clear_scopes: 1 # meta.string
+    - match: '"'
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-charset-char
+    - match: '{{L_needs_escape_char}}'
+      scope: invalid.deprecated.b2jam
+      pop: 2
+    - include: L-charset-hazard-escape
+    - include: L-charset-escaped-char
+    - match: .
+      pop: 2
+
+  Q-charset-char:
+    - meta_scope: meta.string.b2jam
+    - include: Q-quote-terminal
+    - include: Q-charset-hazard-escape
+    - include: Q-charset-escaped-char
+    - match: .
+      pop: 2

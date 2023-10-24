@@ -1,0 +1,41 @@
+{
+	"scope": "source.b2jam & meta.function.actions - meta.interpolation",
+
+	"completions": [
+		{ "trigger": "bind\tB2 actions",
+		  "details": "make trailing variables available inside actions script",
+		  "contents" : "bind ",
+		  "kind" : [ "keyword", "B", "B2 actions variable binding" ]
+		},
+		{ "trigger": "existing\tB2 actions",
+		  "details": "only source targets currently existing are included",
+		  "contents" : "existing ",
+		  "kind" : [ "keyword", "F", "B2 actions flag" ]
+		},
+		{ "trigger": "ignore\tB2 actions",
+		  "details": "return status of actions script is ignored",
+		  "contents" : "ignore ",
+		  "kind" : [ "keyword", "F", "B2 actions flag" ]
+		},
+		{ "trigger": "piecemeal\tB2 actions",
+		  "details": "actions script is repeatedly invoked with a subset of <code>$(>)</code> small enough to fit in the command buffer on this OS",
+		  "contents" : "piecemeal ",
+		  "kind" : [ "keyword", "F", "B2 actions flag" ]
+		},
+		{ "trigger": "quietly\tB2 actions",
+		  "details": "standard output of actions script is suppressed",
+		  "contents" : "quietly ",
+		  "kind" : [ "keyword", "F", "B2 actions flag" ]
+		},
+		{ "trigger": "together\tB2 actions",
+		  "details": "the <code>$(>)</code> from multiple invocations of the same action on the same built target are glommed together",
+		  "contents" : "together ",
+		  "kind" : [ "keyword", "F", "B2 actions flag" ]
+		},
+		{ "trigger": "updated\tB2 actions",
+		  "details": "includes only source targets themselves marked for updating",
+		  "contents" : "updated ",
+		  "kind" : [ "keyword", "F", "B2 actions flag" ]
+		},
+	]
+}

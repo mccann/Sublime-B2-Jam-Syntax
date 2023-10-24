@@ -1,0 +1,29 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+version: 2
+extends:
+  - Packages/B2Jam/detail/expansion/modifier-names.sublime-syntax
+
+variables:
+  # E REQUIRES a value in filename expansions
+  modifier_opt_assign: 'BDGJMS'
+  modifier_assign: 'EOR<>'
+
+contexts:
+
+  LQ-modifiers-valueless-mustassign:
+    - meta_prepend: true
+    - match: 'E(?!=)'
+      scope: variable.parameter.switch.b2jam invalid.invalid.b2jam
+
+  L_0:
+    - meta_append: true
+    - meta_scope: meta.interpolation.filename.modifier.b2jam

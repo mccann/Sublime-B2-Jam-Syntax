@@ -1,0 +1,88 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+# buggy with 1
+version: 2
+
+variables:
+
+  is_interpolation: (?=[\$@]\()
+
+contexts:
+
+  main:
+    - include: as-actions-script
+
+###[ PROTOTYPES ]##############################################################
+
+  immediately-pop:
+    - match: ''
+      pop: 1
+
+  immediately-pop2:
+    - match: ''
+      pop: 2
+
+###[ Actions String ]##########################################################
+
+##  Try embedding scope.shell, with a prototype that looks for expansions
+
+  as-actions-script:
+    - match: \{
+      scope: punctuation.section.interpolation.begin.b2jam
+      set: [ action-script, shell-script ]
+      with_prototype:
+        - include: B2-expansions
+
+  action-script:
+    - meta_scope: meta.function.actions.b2jam meta.interpolation.shell.b2jam
+    - match: \}
+      scope: punctuation.section.interpolation.end.b2jam
+      pop: 1
+
+  shell-script:
+    - meta_content_scope: source.shell.bash.embedded.b2jam
+    - match: (?=\})
+      pop: 1
+    - include: Packages/ShellScript/Bash.sublime-syntax#statements
+
+  B2-expansion-identifier-failchars:
+    # heuristic character that occurs in shell command $(), but not B2Jam expansion identifiers (normally)
+    - match: (?=\s)
+      fail: B2_expansion_looks_like_shell
+
+  B2-expansions:
+    - match: '(?={{is_interpolation}})'
+      branch_point: B2_expansion_looks_like_shell
+      branch:
+        - B2-expansion
+        - shell-expansion
+
+  L-quote-escape:
+    - clear_scopes: true
+    - meta_scope: source.b2jam meta.function.actions.b2jam meta.interpolation.shell.b2jam
+    - match: (?<=\")
+      fail: B2_expansion_looks_like_shell
+    - include: immediately-pop
+
+  B2-expansion:
+    - match: ''
+      set:
+        - L-quote-escape # this represents the "L" layer
+        # use Q as this is a 'quoted' context as far as escaping is concerned
+        - Packages/B2Jam/detail/expansion/expansions.sublime-syntax#Q-as-expansions
+      #with_prototype:
+        # # ignore strings?
+        # - match: '"'
+
+  shell-expansion:
+    # hope it was an expansions-command we interrupted!
+    - include: Packages/ShellScript/Bash.sublime-syntax#expansions-command
+    - include: immediately-pop

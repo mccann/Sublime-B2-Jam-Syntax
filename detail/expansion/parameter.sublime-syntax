@@ -1,0 +1,40 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+version: 2
+extends:
+  - Packages/B2Jam/detail/expansion/LQ-expansion.sublime-syntax
+
+variables:
+
+  expansion_start_char: '\$'
+
+contexts:
+  
+
+  L-expansion:
+    - meta_prepend: true
+    - meta_scope: meta.interpolation.parameter.b2jam
+
+  L-as-expansion-modifier-name:
+    - clear_scopes: 2 # meta.string, meta.interpolation
+    - meta_scope: meta.interpolation.parameter.modifier.b2jam
+    - include: Packages/B2Jam/detail/expansion/modifier-names.sublime-syntax#L-as
+  Q-as-expansion-modifier-name:
+    - clear_scopes: 2 # meta.string, meta.interpolation
+    - meta_scope: meta.interpolation.parameter.modifier.b2jam meta.string.b2jam
+    - include: Packages/B2Jam/detail/expansion/modifier-names.sublime-syntax#Q-as
+  L-as-expansion-index-brackets:
+    - include: Packages/B2Jam/detail/expansion/index-brackets.sublime-syntax#L-as-index-brackets
+  Q-as-expansion-index-brackets:
+    - include: Packages/B2Jam/detail/expansion/index-brackets.sublime-syntax#Q-as-index-brackets
+  L-as-expansion-identifier:
+    - include: Packages/B2Jam/detail/expansion/parameter-identifier.sublime-syntax#L-as
+  Q-as-expansion-identifier:
+    - include: Packages/B2Jam/detail/expansion/parameter-identifier.sublime-syntax#Q-as

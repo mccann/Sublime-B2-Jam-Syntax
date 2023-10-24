@@ -1,0 +1,215 @@
+#  SYNTAX TEST "Packages/B2Jam/B2Jam.sublime-syntax"
+
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+
+echo
+
+    asdfsf
+#   ^^^^^^      meta.function-call.arguments.b2jam meta.type.args.plain.b2jam meta.string.b2jam string.unquoted.b2jam
+#   ^^^^^^      - meta.string meta.string
+#   ^^^^^^      - string string 
+#   ^^^^^^      - string.quoted
+
+    "asdf"
+#   ^^^^^^      meta.function-call.arguments.b2jam meta.type.args.plain.b2jam meta.string.b2jam string.quoted.double.b2jam    
+#   ^^^^^^      - meta.string meta.string
+#   ^^^^^^      - string string 
+#   ^^^^^^      - string.unquoted
+
+    <asas>asfd
+#   ^^^^^^^^^^  meta.function-call.arguments.b2jam meta.type.args.plain.b2jam meta.string.b2jam
+#   ^^^^^^^^^^  - meta.string meta.string
+#   ^^^^^^^^^^  - string string 
+#   ^^^^^^^^^^  - string.quoted
+#   ^           punctuation.definition.variable.begin.b2jam   
+#   ^           - variable.other.constant.grist.b2jam
+#    ^^^^       variable.other.constant.grist.b2jam
+#        ^^^^^  - variable.other.constant.grist.b2jam
+#        ^      punctuation.definition.variable.end.b2jam
+
+   "<asas>asdf"
+#  ^^^^^^^^^^^^ meta.function-call.arguments.b2jam meta.type.args.plain.b2jam meta.string.b2jam   
+#  ^^^^^^^^^^^^ - meta.string meta.string
+#  ^^^^^^^^^^^^ - string string 
+#  ^^^^^^^^^^^^ - string.unquoted
+#   ^           punctuation.definition.variable.begin.b2jam
+#  ^^           - variable.other.constant.grist.b2jam
+#    ^^^^       variable.other.constant.grist.b2jam
+#        ^^^^^^ - variable.other.constant.grist.b2jam
+
+
+# grist work at all positions, (regression test)
+<f>value 
+#<-                             meta.function-call.arguments.b2jam meta.string.b2jam punctuation.definition.variable.begin.b2jam
+#^                              meta.function-call.arguments.b2jam meta.string.b2jam variable.other.constant.grist.b2jam
+ <f>value 
+# ^                             meta.function-call.arguments.b2jam meta.string.b2jam variable.other.constant.grist.b2jam
+  <f>value 
+#  ^                            meta.function-call.arguments.b2jam meta.string.b2jam variable.other.constant.grist.b2jam
+
+"<f>value"
+# ^                             meta.function-call.arguments.b2jam meta.string.b2jam variable.other.constant.grist.b2jam
+ "<f>value"
+#  ^                            meta.function-call.arguments.b2jam meta.string.b2jam variable.other.constant.grist.b2jam
+  "<f>value"
+#   ^                           meta.function-call.arguments.b2jam meta.string.b2jam variable.other.constant.grist.b2jam
+
+ #don't work here:
+
+    \ <f>value 
+#   ^^^^^^^^^^                  meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam    
+#     ^^^                       - variable.other.constant.grist.b2jam
+
+    " <f>value"                 
+#     ^^^^^^^^                  meta.function-call.arguments.b2jam meta.string.b2jam string.quoted.double.b2jam
+#     ^^^                       - variable.other.constant.grist.b2jam
+
+
+;
+
+
+
+#####[ ARG ]#########
+
+# simple literal arg
+
+   mycommand  arg ;
+#  ^^^^^^^^^^^^^^^^      meta.function-call
+#  ^^^^^^^^^^^^^^^^      - meta.function-call meta.function-call
+#  ^^^^^^^^^             meta.function-call.identifier.b2jam variable.function.b2jam
+#           ^^^^^^^      meta.function-call.arguments.b2jam
+#             ^^^        meta.string.b2jam string.unquoted.b2jam
+#                 ^      punctuation.terminator.b2jam
+           
+
+
+# unquoted literal with special chars
+   ecko :]{}_($)\:\[23\] ; 
+#  ^^^^                      meta.function-call.identifier.b2jam variable.function.b2jam
+#       ^^^^^^^^^^^^^^^^     meta.function-call.arguments.b2jam 
+#       ^^^^^^^^^^^^^^^^     meta.string.b2jam
+#       ^^^^                 invalid.deprecated.b2jam
+#            ^^^^^^^^^^^     - invalid
+#       ^^^^^^^^             string.unquoted.b2jam
+#                   ^^       string.unquoted.b2jam
+#               ^^^^         constant.character.escape.b2jam
+#                     ^^     constant.character.escape.b2jam
+#                        ^   punctuation.terminator.b2jam
+
+
+# naked quoted literal with special chars
+ecko  ":]{}_($):[23]" ; 
+#     ^^^^^^^^^^^^^^^        string.quoted.double.b2jam
+#     ^^^^^^^^^^^^^^^        - invalid.deprecated.b2jam
+#     ^                      punctuation.definition.string.begin.b2jam
+#                   ^        punctuation.definition.string.end.b2jam
+
+
+# : before < is OK, if in middle of string
+ecko <foo>asfd:<bar>adsf ;
+#             ^              - invalid
+ecko :<foo> ;
+#    ^                        invalid 
+
+# unquoted literal with quoted expansion - one string!
+ecko  some" "thing    ;
+#     ^^^^^^^^^^^^           meta.function-call.arguments.b2jam meta.string.b2jam
+#     ^^^^                   string.unquoted.b2jam
+#            ^^^^^           string.unquoted.b2jam
+#         ^^^                string.quoted.double.b2jam
+#         ^                  punctuation.definition.string.begin.b2jam
+#           ^                punctuation.definition.string.end.b2jam
+#                     ^      punctuation.terminator.b2jam
+
+
+# command args
+   command arg arg : args args : more args ;
+#  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   meta.function-call      
+#  ^^^^^^^                                   meta.function-call.identifier.b2jam variable.function.b2jam   
+#         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   meta.function-call.arguments.b2jam
+#                  ^                         punctuation.separator.sequence.b2jam
+#                              ^             punctuation.separator.sequence.b2jam
+#                                          ^ punctuation.terminator.b2jam
+
+
+# expansions in args
+   cmd $(foop) ;
+#      ^^^^^^^                               meta.function-call.arguments.b2jam
+#      ^^^^^^^                               meta.interpolation.parameter
+#        ^^^^                                variable.other.readwrite.b2jam
+
+   cmd var$(foo) ;
+#      ^^^^^^^^^                             meta.function-call.arguments.b2jam
+#         ^^^^^^                             meta.interpolation.parameter
+#           ^^^                              variable.other.readwrite.b2jam
+#      ^^^                                   meta.string.b2jam
+#         ^^^^^^                             - meta.string   
+#      ^^^                                   string.unquoted.b2jam
+#         ^^^^^^                             - string.unquoted.b2jam
+
+   cmd var"baz$(foo)" ;
+#      ^^^^^^^^^^^^^^                        meta.function-call.arguments.b2jam
+#             ^^^^^^                         meta.interpolation.parameter
+#               ^^^                          variable.other.readwrite.b2jam
+#      ^^^^^^^^^^^^^^                        meta.string.b2jam
+#      ^^^                                   string.unquoted.b2jam
+#         ^^^^                               string.quoted.double.b2jam 
+#             ^^^^^^                         - string.quoted.double.b2jam 
+#                   ^                        string.quoted.double.b2jam 
+#         ^^^^^^^^^^^                        - string.unquoted.b2jam
+
+
+#  expression
+   cmd [ cmd foo ] ; 
+#  ^^^^^^^^^^^^^^^         meta.function-call
+#      ^^^^^^^^^^^         meta.function-call.arguments.b2jam meta.compound.b2jam
+#      ^^^^^^              - meta.string 
+#               ^^         - meta.string 
+#        ^^^               meta.compound.b2jam meta.function-call.identifier.b2jam variable.function.b2jam
+#            ^^^           meta.compound.b2jam meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam
+#      ^                   punctuation.section.brackets.begin.b2jam
+#                ^         punctuation.section.brackets.end.b2jam
+#                  ^       punctuation.terminator.b2jam
+
+#  expression - ending with ; (incorrect)
+   cmd [ cmd foo ; text ] ;
+#  ^^^^^^^^^^^^^^^^^^^^^^   meta.function-call
+#      ^^^^^^^^^^^^^^^^^^   meta.function-call.arguments.b2jam meta.compound.b2jam
+#        ^^^                meta.compound.b2jam meta.function-call.identifier.b2jam variable.function.b2jam
+#           ^^^^^^^^^^^^^   meta.compound.b2jam meta.function-call.arguments.b2jam
+#            ^^^            meta.compound.b2jam meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam
+#                  ^^^^     - variable.function.b2jam
+#                  ^^^^     - meta.string.b2jam
+#                  ^^^^     - string.unquoted.b2jam
+#      ^                    punctuation.section.brackets.begin.b2jam
+#                       ^   punctuation.section.brackets.end.b2jam
+#                ^          invalid.illegal.b2jam 
+#                ^          - punctuation.terminator.b2jam
+#                         ^ punctuation.terminator.b2jam
+
+#  expression - ending with other symbol, ! (incorrect)
+   cmd [ cmd foo ! text ] ;
+#  ^^^^^^^^^^^^^^^^^^^^^^   meta.function-call
+#      ^^^^^^^^^^^^^^^^^^   meta.function-call.arguments.b2jam meta.compound.b2jam
+#        ^^^                meta.compound.b2jam meta.function-call.identifier.b2jam variable.function.b2jam
+#           ^^^^^^^^^^^^^   meta.compound.b2jam meta.function-call.arguments.b2jam
+#            ^^^            meta.compound.b2jam meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam
+#                  ^^^^     - variable.function.b2jam
+#                  ^^^^     - meta.string.b2jam
+#                  ^^^^     - string.unquoted.b2jam
+#      ^                    punctuation.section.brackets.begin.b2jam
+#                       ^   punctuation.section.brackets.end.b2jam
+#                ^          invalid.illegal.b2jam 
+#                ^          - punctuation.terminator.b2jam
+#                         ^ punctuation.terminator.b2jam
+
+# expression, ] in statement space is invalid
+    ]
+#   ^ invalid.illegal.b2jam
+
+# <- - meta.block.b2jam 
+
+

@@ -1,0 +1,130 @@
+{
+	"scope": "source.b2jam - ( meta.function-call.arguments | meta.interpolation )",
+	// https://www.bfgroup.xyz/b2/manual/release/index.html#bbv2.reference.rules
+	"completions": [
+		{ "trigger": "exe\tB2 target",
+		  "details": "Declare an executable meta-target",
+		  "contents" : "exe ",
+		  "kind" : [ "function", "f", "B2 meta-target" ]
+		},
+		{ "trigger": "lib\tB2 target",
+		  "details": "Declare a library meta-target",
+		  "contents" : "lib ",
+		  "kind" : [ "function", "f", "B2 meta-target" ]
+		},
+		{ "trigger": "install\tB2 target",
+		  "details": "Declare an installation meta-target",
+		  "contents" : "install ",
+		  "kind" : [ "function", "f", "B2 meta-target" ]
+		},
+		{ "trigger": "alias\tB2 target",
+		  "details": "Declare an alias meta-target",
+		  "contents" : "alias ",
+		  "kind" : [ "function", "f", "B2 meta-target" ]
+		},
+		{ "trigger": "unit-test\tB2 target",
+		  "details": "Declare unit-test meta-target",
+		  "contents" : "unit-test ",
+		  "kind" : [ "function", "f", "B2 meta-target" ]
+		},
+		{ "trigger": "compile\tB2 testing",
+		  "details": "Test for compilation success",
+		  "contents" : "compile ",
+		  "kind" : [ "function", "f", "B2 unit-testing" ]
+		},
+		{ "trigger": "compile-fail\tB2 testing",
+		  "details": "Test for compilation failure",
+		  "contents" : "compile-fail ",
+		  "kind" : [ "function", "f", "B2 unit-testing" ]
+		},
+		{ "trigger": "link\tB2 testing",
+		  "details": "Test for link success",
+		  "contents" : "link ",
+		  "kind" : [ "function", "f", "B2 unit-testing" ]
+		},
+		{ "trigger": "link-fail\tB2 testing",
+		  "details": "Test for link failure",
+		  "contents" : "link-fail ",
+		  "kind" : [ "function", "f", "B2 unit-testing" ]
+		},
+		{ "trigger": "run\tB2 testing",
+		  "details": "Test that target executs with success exit status",
+		  "contents" : "run ",
+		  "kind" : [ "function", "f", "B2 unit-testing" ]
+		},
+		{ "trigger": "run-fail\tB2 testing",
+		  "details": "Test that target runs with failure exit status",
+		  "contents" : "run-fail ",
+		  "kind" : [ "function", "f", "B2 unit-testing" ]
+		},
+		{ "trigger": "check-target-builds\tB2 configuration",
+		  "details": "Apply properties upon successful compilation of target",
+		  "contents" : "check-target-builds ",
+		  "kind" : [ "function", "f", "B2 configuration" ]
+		},
+		{ "trigger": "obj\tB2 target",
+		  "details": "Declare object file meta-target",
+		  "contents" : "obj ",
+		  "kind" : [ "function", "f", "B2 meta-target" ]
+		},
+		{ "trigger": "preprocessed\tB2 target",
+		  "details": "Declare preprocessed source file meta-target",
+		  "contents" : "preprocessed ",
+		  "kind" : [ "function", "f", "B2 meta-target" ]
+		},
+		{ "trigger": "glob\tB2 Jamfile",
+		  "details": "Search for sources with glob pattern",
+		  "contents" : "glob ",
+		  "kind" : [ "function", "f", "B2 Jamfile" ]
+		},
+		{ "trigger": "glob-tree\tB2 Jamfile",
+		  "details": "Search recursively for sources with glob pattern",
+		  "contents" : "glob-tree ",
+		  "kind" : [ "function", "f", "B2 Jamfile" ]
+		},
+		{ "trigger": "project\tB2 Jamfile",
+		  "details": "Declare project data for Jamfile",
+		  "contents" : "project ",
+		  "kind" : [ "function", "f", "B2 Jamfile" ]
+		},
+		{ "trigger": "use-project\tB2 Jamfile",
+		  "details": "Declare local name for external project",
+		  "contents" : "use-project ",
+		  "kind" : [ "function", "f", "B2 Jamfile" ]
+		},
+		{ "trigger": "explicit\tB2 Jamfile",
+		  "details": "Remove meta-target from default build for project",
+		  "contents" : "explicit ",
+		  "kind" : [ "function", "f", "B2 Jamfile" ]
+		},
+		{ "trigger": "always\tB2 Jamfile",
+		  "details": "Make meta-target always build",
+		  "contents" : "always ",
+		  "kind" : [ "function", "f", "B2 Jamfile" ]
+		},
+		{ "trigger": "constant\tB2 Jamfile",
+		  "details": "Declare a constant that will be visible to this Jamfile and those in subdirectories",
+		  "contents" : "constant ",
+		  "kind" : [ "function", "f", "B2 Jamfile" ]
+		},
+		{ "trigger": "path-constant\tB2 Jamfile",
+		  "details": "Declare a path constant that will be visible to this Jamfile and those in subdirectories",
+		  "contents" : "path-constant ",
+		  "kind" : [ "function", "f", "B2 Jamfile" ]
+		},
+		{ "trigger": "build-project\tB2 Jamfile",
+		  "details": "Cause project at given relative path to be built",
+		  "contents" : "build-project ",
+		  "kind" : [ "function", "f", "B2 Jamfile" ]
+		},
+		{ "trigger": "variant\tB2",
+		  "details": "Define a custom <variant> feature",
+		  "contents" : "variant ",
+		  "kind" : [ "function", "f", "B2" ]
+		},
+	]
+}
+
+
+
+

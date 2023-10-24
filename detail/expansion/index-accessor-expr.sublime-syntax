@@ -1,0 +1,39 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+version: 2
+extends:
+  - Packages/B2Jam/detail/expansion/LQ-expansion-values.sublime-syntax
+
+variables:
+
+  LQN_stack_terminal_re: '[^\-\s]'
+  L0_stack_terminal_re: '(?:[^\-\s]|\))'
+  Q0_stack_terminal_re: '(?:[^\-\s]|\))'
+
+contexts:
+
+  index-accessor-expr-common:
+    - match: '-+'
+      scope: keyword.operator.arithmetic.b2jam
+    - match: '\s+'
+      scope: invalid.illegal.b2jam
+
+  L-prototype:
+    - meta_prepend: true
+    - include: index-accessor-expr-common
+
+  Q-prototype:
+    - meta_prepend: true
+    - include: index-accessor-expr-common
+
+  L_0:
+    - clear_scopes: 1 # defaults are fine for most, except L_0
+    - include: L_0-rules

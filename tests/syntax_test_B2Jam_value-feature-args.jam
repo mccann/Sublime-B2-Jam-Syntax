@@ -1,0 +1,626 @@
+#  SYNTAX TEST partial-symbols "Packages/B2Jam/B2Jam.sublime-syntax"
+
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+
+
+## semantics in gristed arguments, usually of the form <feature>value 
+
+    exe id : src :
+
+# solo
+        <feature> 
+#      ^^^^^^^^^^               meta.function-call.arguments.b2jam
+#       ^^^^^^^^^               meta.string.b2jam
+#        ^^^^^^^                support.constant.grist.feature.b2jam
+#       ^^^^^^^^^               - support.constant.grist.feature.b2jam support.constant.grist.feature.b2jam
+#       ^^^^^^^^^               - string.unquoted 
+#       ^                       punctuation.definition.variable.begin.b2jam
+#               ^               punctuation.definition.variable.end.b2jam
+        "<feature>" 
+#      ^^^^^^^^^^^^             meta.function-call.arguments.b2jam
+#       ^^^^^^^^^^^             meta.string.b2jam
+#         ^^^^^^^               support.constant.grist.feature.b2jam
+#       ^^^^^^^^^^^             - support.constant.grist.feature.b2jam support.constant.grist.feature.b2jam
+#       ^^^^^^^^^^^             - string.unquoted 
+#        ^                      punctuation.definition.variable.begin.b2jam
+#                ^              punctuation.definition.variable.end.b2jam
+
+# plain value
+        <feature>value 
+#      ^^^^^^^^^^^^^^^          meta.function-call.arguments.b2jam
+#       ^^^^^^^^^^^^^^          meta.string.b2jam
+#        ^^^^^^^                support.constant.grist.feature.b2jam
+#       ^^^^^^^^^               - support.constant.grist.feature.b2jam support.constant.grist.feature.b2jam
+#       ^^^^^^^^^               - string.unquoted
+#                ^^^^^          variable.other.constant.b2jam
+#                ^^^^^          - support.constant.grist.feature.b2jam
+#       ^                       punctuation.definition.variable.begin.b2jam
+#               ^               punctuation.definition.variable.end.b2jam
+#                @@@@@ none 
+
+        "<feature>value" 
+#      ^^^^^^^^^^^^^^^^^        meta.function-call.arguments.b2jam
+#       ^^^^^^^^^^^^^^^^        meta.string.b2jam
+#         ^^^^^^^               support.constant.grist.feature.b2jam
+#       ^^^^^^^^^^^             - support.constant.grist.feature.b2jam support.constant.grist.feature.b2jam
+#       ^^^^^^^^^^^^^^^^        - string.unquoted
+#                 ^^^^^         string.quoted.double.b2jam
+#                 ^^^^^         - support.constant.grist.feature.b2jam
+#                 ^^^^^         - variable.other.constant.b2jam
+#        ^                      punctuation.definition.variable.begin.b2jam
+#                ^              punctuation.definition.variable.end.b2jam
+
+# quoted value
+        <feature>"value" 
+#      ^^^^^^^^^^^^^^^^^        meta.function-call.arguments.b2jam
+#       ^^^^^^^^^^^^^^^^        meta.string.b2jam
+#       ^^^^^^^^^^^^^^^         - string.unquoted
+#        ^^^^^^^                support.constant.grist.feature.b2jam
+#       ^^^^^^^^^               - string.quoted
+#                ^^^^^^^        string.quoted.double.b2jam
+#       ^                       punctuation.definition.variable.begin.b2jam
+#               ^               punctuation.definition.variable.end.b2jam
+#                ^              punctuation.definition.string.begin.b2jam    
+#                      ^        punctuation.definition.string.end.b2jam    
+
+# expansions inside
+        <$(var)> 
+#      ^^^^^^^^^                meta.function-call.arguments.b2jam
+#       ^                       meta.string.b2jam
+#        ^^^^^^                 - meta.string.b2jam
+#              ^                meta.string.b2jam
+#       ^^^^^^^^                - string.unquoted
+#       ^^^^^^^^                - support.constant.grist.feature.b2jam
+
+        "<$(var)>" 
+#      ^^^^^^^^^^^              meta.function-call.arguments.b2jam
+#       ^^^^^^^^^^              meta.string.b2jam
+#       ^^^^^^^^^^              - string.unquoted
+#        ^^^^^^^^               - support.constant.grist.feature.b2jam
+
+
+# expansion as value
+        <feature>$(var) 
+#      ^^^^^^^^^^^^^^^^         meta.function-call.arguments.b2jam
+#       ^^^^^^^^^               meta.string.b2jam
+#                ^^^^^^         - meta.string.b2jam
+#        ^^^^^^^                support.constant.grist.feature.b2jam
+#       ^^^^^^^^^^^^^^^         - string.unquoted
+#                ^^^^^^         meta.interpolation.parameter
+#                  ^^^          variable.other.readwrite.b2jam
+
+
+# logical 'conditional' 
+
+        <f1>bar:<f2>baz 
+#      ^^^^^^^^^^^^^^^^         meta.function-call.arguments.b2jam
+#       ^^^^^^^^^^^^^^^         meta.string.b2jam
+#              ^                keyword.operator.logical.b2jam
+#        ^^                     support.constant.grist.feature.b2jam
+#           ^^^^^               - support.constant.grist.feature.b2jam
+#                ^^             support.constant.grist.feature.b2jam
+#                  ^^^^         - support.constant.grist.feature.b2jam
+#       ^^^^                    - variable.other.constant.b2jam
+#           ^^^                 variable.other.constant.b2jam
+#              ^^^^^            - variable.other.constant.b2jam
+#                   ^^^         variable.other.constant.b2jam
+#   ^^^^^^^^^^^^^^^^^^^         - support.constant.grist.feature.b2jam support.constant.grist.feature.b2jam
+#   ^^^^^^^^^^^^^^^^^^^         - invalid
+
+        "<f1>bar:<f2>baz" 
+#      ^^^^^^^^^^^^^^^^^^       meta.function-call.arguments.b2jam
+#       ^^^^^^^^^^^^^^^^^       meta.string.b2jam
+#       ^^                      - support.constant.grist.feature.b2jam
+#         ^^                    support.constant.grist.feature.b2jam
+#           ^^^^^^              - support.constant.grist.feature.b2jam
+#               ^               keyword.operator.logical.b2jam
+#                 ^^            support.constant.grist.feature.b2jam
+#                   ^^^^^       - support.constant.grist.feature.b2jam
+#        ^^^^^^^^^^^^^^^        - variable.other.constant.b2jam
+#            ^^^                string.quoted.double.b2jam
+#               ^^^^^           - variable.other.constant.b2jam
+#                    ^^^        string.quoted.double.b2jam
+#   ^^^^^^^^^^^^^^^^^^^^^       - support.constant.grist.feature.b2jam support.constant.grist.feature.b2jam
+#   ^^^^^^^^^^^^^^^^^^^^^       - invalid
+
+# logical 'negative-conditional'
+
+        <f1>bar:!<f2>baz 
+#      ^^^^^^^^^^^^^^^^         meta.function-call.arguments.b2jam
+#       ^^^^^^^^^^^^^^^         meta.string.b2jam
+#              ^                - invalid
+#              ^                keyword.operator.logical.b2jam
+#               ^               keyword.operator.logical.b2jam
+#       ^                       - support.constant.grist.feature.b2jam
+#        ^^                     support.constant.grist.feature.b2jam
+#          ^^^^^^^               - support.constant.grist.feature.b2jam
+#                 ^^            support.constant.grist.feature.b2jam
+#                   ^^^^        - support.constant.grist.feature.b2jam
+#       ^^^^                    - variable.other.constant.b2jam
+#           ^^^                 variable.other.constant.b2jam
+#              ^^^^^^           - variable.other.constant.b2jam
+#                    ^^^        variable.other.constant.b2jam
+
+        "<f1>bar:!<f2>baz" 
+#      ^^^^^^^^^^^^^^^^^^^      meta.function-call.arguments.b2jam
+#       ^^^^^^^^^^^^^^^^^^      meta.string.b2jam
+#               ^               - invalid
+#               ^               keyword.operator.logical.b2jam
+#                ^              keyword.operator.logical.b2jam
+#         ^^                    support.constant.grist.feature.b2jam
+#           ^^^^^^^             - support.constant.grist.feature.b2jam
+#                  ^^           support.constant.grist.feature.b2jam
+#                    ^^^^^      - support.constant.grist.feature.b2jam
+#        ^^^^^^^^^^^^^^^^       - variable.other.constant.b2jam
+#            ^^^                string.quoted.double.b2jam
+#                     ^^^       string.quoted.double.b2jam
+
+# multiple conditional items, with ','
+        <if>foo,<and>bar:<then>baz 
+#      ^^^^^^^^^^^^^^^^^^^^^^^^^^^          meta.function-call.arguments.b2jam
+#       ^^^^^^^^^^^^^^^^^^^^^^^^^^          meta.string.b2jam
+#       ^^^^^^^^^^^^^^^^^^^^^^^^^^          - meta.string meta.string
+#              ^                            keyword.operator.logical.b2jam
+#                       ^                   keyword.operator.logical.b2jam
+#                       ^                   - invalid
+#        ^^                                 support.constant.grist.feature.b2jam
+#          ^^^^^^                           - support.constant.grist.feature.b2jam
+#                ^^^                        support.constant.grist.feature.b2jam
+#                   ^^^^^^                  - support.constant.grist.feature.b2jam
+#                         ^^^^              support.constant.grist.feature.b2jam
+#                             ^^^^          - support.constant.grist.feature.b2jam
+#       ^^^^                                - variable.other.constant.b2jam
+#           ^^^                             variable.other.constant.b2jam
+#              ^^^^^^                       - variable.other.constant.b2jam
+#                    ^^^                    variable.other.constant.b2jam
+#                       ^^^^^^^             - variable.other.constant.b2jam
+#                              ^^^          variable.other.constant.b2jam
+
+        "<if>foo,<and>bar:<then>baz" 
+#      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^        meta.function-call.arguments.b2jam
+#       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^        meta.string.b2jam
+#       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^        - meta.string meta.string
+#               ^                           keyword.operator.logical.b2jam
+#                        ^                  keyword.operator.logical.b2jam
+#                        ^                  - invalid
+#         ^^                                support.constant.grist.feature.b2jam
+#           ^^^^^^                          - support.constant.grist.feature.b2jam
+#                 ^^^                       support.constant.grist.feature.b2jam
+#                    ^^^^^^                 - support.constant.grist.feature.b2jam
+#                          ^^^^             support.constant.grist.feature.b2jam
+#                              ^^^^^        - support.constant.grist.feature.b2jam
+#        ^^^^^^^^^^^^^^^^^^^^^^^^^^         - variable.other.constant.b2jam
+#            ^^^                            string.quoted.double.b2jam
+#                     ^^^                   string.quoted.double.b2jam
+#                               ^^^         string.quoted.double.b2jam
+
+
+# multiple assigned values
+            
+# a&&v        
+        <foo>a=b&&c
+#       ^^^^^^^^^^^                         meta.function-call.arguments.b2jam meta.string.b2jam
+#       ^^^^^^^^^^^                         - meta.string meta.string
+#        ^^^                                support.constant.grist.feature.b2jam
+#            ^                              entity.name.constant.b2jam
+#             ^                             keyword.operator.assignment.b2jam
+#              ^                            string.unquoted.b2jam
+#               ^^                          keyword.operator.logical.b2jam
+#                 ^                         variable.other.constant.b2jam
+#                 ^                         - string
+#            @ definition 
+
+# a&&a
+        <foo>a=b&&c=d 
+#       ^^^^^^^^^^^^^                       meta.function-call.arguments.b2jam meta.string.b2jam
+#       ^^^^^^^^^^^^^                       - meta.string meta.string
+#        ^^^                                support.constant.grist.feature.b2jam
+#            ^                              entity.name.constant.b2jam
+#             ^                             keyword.operator.assignment.b2jam
+#              ^                            string.unquoted.b2jam
+#               ^^                          keyword.operator.logical.b2jam
+#                 ^                         entity.name.constant.b2jam
+#                  ^                        keyword.operator.assignment.b2jam
+#                   ^                       string.unquoted.b2jam
+
+# v&&a
+        <foo>a&&=c 
+#       ^^^^^^^^^^                          meta.function-call.arguments.b2jam meta.string.b2jam
+#            ^                              variable.other.constant.b2jam
+#             ^^                            - variable.other.constant.b2jam
+#               ^                           keyword.operator.assignment.b2jam
+#                ^                          string.unquoted.b2jam
+
+# v&&v
+        <foo>a&&b 
+#       ^^^^^^^^^                           meta.function-call.arguments.b2jam meta.string.b2jam
+#       ^^^^^^^^^                           - meta.string meta.string
+#        ^^^                                support.constant.grist.feature.b2jam
+#            ^                              variable.other.constant.b2jam
+#             ^^                            - variable.other.constant.b2jam
+#               ^                           variable.other.constant.b2jam
+#             ^^                            keyword.operator.logical.b2jam
+
+
+#### quoted
+
+# a&&v        
+       "<foo>a=b&&c" 
+#      ^^^^^^^^^^^^^                        meta.function-call.arguments.b2jam meta.string.b2jam
+#       ^^^^^^^^^^^                         - meta.string meta.string
+#        ^^^                                support.constant.grist.feature.b2jam
+#            ^                              entity.name.constant.b2jam
+#             ^                             keyword.operator.assignment.b2jam
+#              ^                            string.quoted.double.b2jam
+#               ^^                          keyword.operator.logical.b2jam
+#                 ^                         - variable.other.constant.b2jam
+#                 ^                         string.quoted.double.b2jam
+
+# a&&a
+       "<foo>a=b&&c=d"
+#      ^^^^^^^^^^^^^^^                      meta.function-call.arguments.b2jam meta.string.b2jam
+#       ^^^^^^^^^^^^^                       - meta.string meta.string
+#        ^^^                                support.constant.grist.feature.b2jam
+#            ^                              entity.name.constant.b2jam
+#             ^                             keyword.operator.assignment.b2jam
+#              ^                            string.quoted.double.b2jam
+#               ^^                          keyword.operator.logical.b2jam
+#                 ^                         entity.name.constant.b2jam
+#                  ^                        keyword.operator.assignment.b2jam
+#                   ^                       string.quoted.double.b2jam
+
+# v&&a
+       "<foo>a&&=c"
+#      ^^^^^^^^^^^^                         meta.function-call.arguments.b2jam meta.string.b2jam
+#            ^^^^^                          - variable.other.constant.b2jam
+#            ^                              string.quoted.double.b2jam
+#             ^^                            keyword.operator.logical.b2jam
+#               ^                           keyword.operator.assignment.b2jam
+#                ^                          string.quoted.double.b2jam
+
+# v&&v
+       "<foo>a&&b"
+#      ^^^^^^^^^^^                          meta.function-call.arguments.b2jam meta.string.b2jam
+#       ^^^^^^^^^                           - meta.string meta.string
+#        ^^^                                support.constant.grist.feature.b2jam
+#            ^^^^                           - variable.other.constant.b2jam
+#            ^                              string.quoted.double.b2jam
+#             ^^                            keyword.operator.logical.b2jam
+#             ^^                            keyword.operator.logical.b2jam
+#               ^                           string.quoted.double.b2jam
+
+        <foo>a=b,<f>
+#               ^                           keyword.operator.logical.b2jam        
+#                 ^                         support.constant.grist.feature.b2jam
+        <foo>a=b,-<f>
+#               ^                           keyword.operator.logical.b2jam        
+#                ^                          keyword.operator.arithmetic.b2jam
+#                  ^                        support.constant.grist.feature.b2jam
+        <foo>a=b:<f>
+#               ^                           keyword.operator.logical.b2jam        
+#                 ^                         support.constant.grist.feature.b2jam
+        <foo>a=b:!<f>
+#               ^^                          keyword.operator.logical.b2jam        
+#                  ^                        support.constant.grist.feature.b2jam
+        <foo>a=b:-<f>
+#               ^                           keyword.operator.logical.b2jam        
+#                ^                          keyword.operator.arithmetic.b2jam
+#                  ^                        support.constant.grist.feature.b2jam
+
+        "<foo>a=b,<f>"
+#                ^                          keyword.operator.logical.b2jam        
+#                  ^                        support.constant.grist.feature.b2jam
+        "<foo>a=b,-<f>"
+#                ^                          keyword.operator.logical.b2jam        
+#                 ^                         keyword.operator.arithmetic.b2jam
+#                   ^                       support.constant.grist.feature.b2jam
+        "<foo>a=b:<f>"
+#                ^                          keyword.operator.logical.b2jam        
+#                  ^                        support.constant.grist.feature.b2jam
+        "<foo>a=b:!<f>"
+#                ^^                         keyword.operator.logical.b2jam        
+#                   ^                       support.constant.grist.feature.b2jam
+        "<foo>a=b:-<f>"
+#                ^                          keyword.operator.logical.b2jam        
+#                 ^                         keyword.operator.arithmetic.b2jam
+#                   ^                       support.constant.grist.feature.b2jam
+
+
+# remove a value
+        -<foo>value 
+#       ^^^^^^^^^^^                         meta.function-call.arguments.b2jam meta.string.b2jam
+#         ^^^                               support.constant.grist.feature.b2jam
+#       ^^^^^^                              - string.unquoted
+#             ^^^^^                         variable.other.constant.b2jam
+#       ^                                   keyword.operator.arithmetic.b2jam
+
+        <f>a:!-<b>  
+#           ^                               keyword.operator.logical.b2jam
+#            ^                              keyword.operator.logical.b2jam
+#             ^                             keyword.operator.arithmetic.b2jam
+
+# and now things that shouldn't match
+        :<foo> 
+#       ^^^^^^                  string.unquoted.b2jam
+#       ^^^^^^                  - support.constant.grist.feature.b2jam
+#       ^                       invalid.deprecated.b2jam    
+#       ^                       - keyword.operator.logical.b2jam
+
+
+        a<foo>b     
+#       ^^^^^^^                 string.unquoted.b2jam
+#       ^^^^^^^                 - support.constant.grist.feature.b2jam
+
+        a\ <foo>    
+#       ^^^^^^^^                string.unquoted.b2jam
+#       ^^^^^^^^                - support.constant.grist.feature.b2jam
+
+        a,b a&&b    
+#       ^^^^^^^^                - keyword.operator
+#       ^^^                     string.unquoted.b2jam
+#           ^^^^                string.unquoted.b2jam
+
+
+# strings that start like a windows path - don't warn about ':'
+  c:\\ C:/ <foo>Z:/ <foo>x:\\ 
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ - invalid
+
+
+    
+
+# features work at all positions, (regression test)
+<f>value 
+#<-                             meta.function-call.arguments.b2jam meta.string.b2jam punctuation.definition.variable.begin.b2jam
+#^                              meta.function-call.arguments.b2jam meta.string.b2jam support.constant.grist.feature.b2jam
+ <f>value 
+# ^                             meta.function-call.arguments.b2jam meta.string.b2jam support.constant.grist.feature.b2jam
+  <f>value 
+#  ^                            meta.function-call.arguments.b2jam meta.string.b2jam support.constant.grist.feature.b2jam
+
+"<f>value"
+# ^                             meta.function-call.arguments.b2jam meta.string.b2jam support.constant.grist.feature.b2jam
+ "<f>value"
+#  ^                            meta.function-call.arguments.b2jam meta.string.b2jam support.constant.grist.feature.b2jam
+  "<f>value"
+#   ^                           meta.function-call.arguments.b2jam meta.string.b2jam support.constant.grist.feature.b2jam
+
+ #don't work here:
+
+    \ <f>value 
+#   ^^^^^^^^^^                  meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam    
+#     ^^^                       - support.constant.grist.feature.b2jam
+
+    " <f>value"                 
+#     ^^^^^^^^                  meta.function-call.arguments.b2jam meta.string.b2jam string.quoted.double.b2jam
+#     ^^^                       - support.constant.grist.feature.b2jam
+
+    
+#  partial features are plain
+     <asdf 
+#         ^^                    - meta.string
+#    ^^^^^                      meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam
+#    ^^^^^                      - support.constant.grist.feature.b2jam
+
+    "<asfd" 
+#          ^^                   - meta.string
+#   ^^^^^^^                     meta.function-call.arguments.b2jam meta.string.b2jam string.quoted.double.b2jam
+#    ^^^^^                      - support.constant.grist.feature.b2jam
+
+    
+
+# assignment in values!
+
+    <f>value=string
+#   ^^^^^^^^^^^^^^^                 - string.quoted.double.b2jam
+#      ^^^^^                        entity.name.constant.b2jam
+#           ^                       keyword.operator.assignment.b2jam
+#            ^^^^^^                 meta.string.b2jam string.unquoted.b2jam
+
+# paths in values!
+
+    <f>c:/ <f>x:\\
+#   ^^^^^^^^^^^^^^                  - string.quoted.double.b2jam    
+#      ^^^                          variable.other.constant.b2jam 
+#      ^^                           - constant.language
+#      ^                            - punctuation
+#       ^                           punctuation.separator.drive.b2jam
+#        ^                          constant.language.path.root.b2jam
+#             ^^^^                  variable.other.constant.b2jam 
+#             ^^                    - constant.language
+#             ^                     - punctuation
+#              ^                    punctuation.separator.drive.b2jam
+#               ^^                  constant.language.path.root.b2jam
+
+    <f>/root/path/./file.txt     
+#   ^^^^^^^^^^^^^^^^^^^^^^^^        - string.quoted.double.b2jam        
+#      ^^^^^^^^^^^^^^^^^^^^         - support.constant.grist.feature.b2jam
+#      ^^^^^^^^^^^^^^^^^^^^         variable.other.constant.b2jam
+#      ^                            constant.language.path.root.b2jam
+#           ^                       punctuation.separator.path.b2jam
+#                ^                  punctuation.separator.path.b2jam
+#                 ^                 constant.language.path.self.b2jam
+#                  ^                punctuation.separator.path.b2jam
+#                       ^           punctuation.separator.file.b2jam
+
+    <f>./file/path//project 
+#   ^^^^^^^^^^^^^^^^^^^^^^^         - string.quoted.double.b2jam            
+#      ^^^^^^^^^^^^^^^^^^^^         - support.constant.grist.feature.b2jam
+#      ^^^^^^^^^^^^^^^^^^^^         variable.other.constant.b2jam
+#      ^                            constant.language.path.self.b2jam
+#       ^                           punctuation.separator.path.b2jam
+#            ^                      punctuation.separator.path.b2jam
+#                 ^^
+
+    <f>. <f>.. <f>/ <f>// 
+#   ^^^^^^^^^^^^^^^^^^^^^           - string.quoted.double.b2jam            
+#      ^                            constant.language.path.self.b2jam    
+#           ^^                      constant.language.path.parent.b2jam
+#                 ^                 constant.language.path.root.b2jam
+#                      ^^           constant.language.project-separator.b2jam
+
+    <f>/. <f>/.. <f>foo. <f>foo..   
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   - string.quoted.double.b2jam            
+#      ^                            constant.language.path.root.b2jam
+#       ^                           constant.language.path.self.b2jam   
+#            ^                      constant.language.path.root.b2jam
+#             ^^                    constant.language.path.parent.b2jam
+#                      ^            - constant.language
+#                              ^^   - constant.language
+#                      ^            punctuation.separator.file.b2jam
+#                              ^^   punctuation.separator.file.b2jam
+
+
+    <f>a=../../ <f>a=/root <f>a=//
+#        ^^                         constant.language.path.parent.b2jam 
+#          ^                        punctuation.separator.path.b2jam
+#           ^^                      constant.language.path.parent.b2jam    
+#             ^                     punctuation.separator.path.b2jam
+#                    ^              constant.language.path.root.b2jam
+#                               ^^  constant.language.project-separator.b2jam
+
+   "<f>a=../../" "<f>a=/r" "<f>a=//"
+#        ^^                         constant.language.path.parent.b2jam 
+#          ^                        punctuation.separator.path.b2jam
+#           ^^                      constant.language.path.parent.b2jam    
+#             ^                     punctuation.separator.path.b2jam
+#                      ^            constant.language.path.root.b2jam
+#                                ^^ constant.language.project-separator.b2jam
+
+    <f>a=../..  "<f>a=../.."
+#        ^^                         constant.language.path.parent.b2jam    
+#          ^                        punctuation.separator.path.b2jam
+#           ^^                      constant.language.path.parent.b2jam    
+#                     ^^            constant.language.path.parent.b2jam    
+#                       ^           punctuation.separator.path.b2jam
+#                        ^^         constant.language.path.parent.b2jam    
+
+
+# text,misc symbol terminator
+
+    <f>.file <f>..@ <f>.& <f>.! <f>.,
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^   - string.quoted.double.b2jam            
+#      ^                                punctuation.separator.file.b2jam
+#               ^^                      punctuation.separator.file.b2jam
+#                      ^                punctuation.separator.file.b2jam
+#                            ^          punctuation.separator.file.b2jam
+#                                  ^    punctuation.separator.file.b2jam
+#      ^                                - constant.language
+#               ^^                      - constant.language
+#                      ^                - constant.language
+#                            ^          - constant.language
+#                                  ^    - constant.language
+
+    <f>.,:<> 
+#      ^                                - constant.language
+
+# && ,< : terminators
+    <f>.&& <f>.,<g>.:<i>.:!<j>..    
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^        - string.quoted.double.b2jam            
+#      ^                                constant.language.path.self.b2jam    
+#             ^                         constant.language.path.self.b2jam    
+#                  ^                    constant.language.path.self.b2jam    
+#                       ^               constant.language.path.self.b2jam    
+    <f>.,-<f>.:-<f>.:!-<f>
+#      ^                                constant.language.path.self.b2jam    
+#            ^                          constant.language.path.self.b2jam    
+#                  ^                    constant.language.path.self.b2jam    
+
+
+# only match windows drive path at start
+    <f>c:/c:/ 
+#       ^                               punctuation.separator.drive.b2jam
+#        ^                              constant.language.path.root.b2jam
+#          ^                           invalid.deprecated
+#          ^                            - punctuation.separator.drive.b2jam
+#           ^                           - constant.language.path.root.b2jam
+
+
+
+
+## builtin feature support for non assignment definitions
+
+    <define>RED&&BLUE
+#   ^^^^^^^^^^^^^^^^^                   meta.function-call.arguments.b2jam meta.string.b2jam    
+#   ^^^^^^^^^^^^^^^^^                   - string.quoted.double
+#   ^^^^^^^^^^^^^^^^^                   - meta.string meta.string
+#    ^^^^^^                             support.constant.grist.feature.b2jam
+#   ^^^^^^^^                            - support.constant.grist.feature.b2jam support.constant.grist.feature.b2jam
+#   ^^^^^^^^                            - entity.name.constant.b2jam
+#           ^^^                         entity.name.constant.b2jam
+#              ^^                       - entity.name.constant.b2jam
+#                ^^^^                   entity.name.constant.b2jam
+#   ^^^^^^^^^^^                         - keyword.operator.logical.b2jam
+#              ^^                       keyword.operator.logical.b2jam
+#                ^^^^                   - keyword.operator.logical.b2jam
+
+    <name>A,<define>B:<undef>C
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^          meta.function-call.arguments.b2jam meta.string.b2jam    
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^          - string.quoted.double
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^          - meta.string meta.string
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^          - support.constant.grist.feature.b2jam support.constant.grist.feature.b2jam
+#    ^^^^                               support.constant.grist.feature.b2jam
+#         ^                             entity.name.constant.b2jam
+#          ^                            keyword.operator.logical.b2jam
+#           ^                           punctuation.definition.variable.begin.b2jam
+#            ^^^^^^                     support.constant.grist.feature.b2jam
+#                   ^                   entity.name.constant.b2jam
+#                    ^                  keyword.operator.logical.b2jam
+#                      ^^^^^            support.constant.grist.feature.b2jam
+#                            ^          entity.name.constant.b2jam
+
+    "<define>RED&&BLUE"
+#   ^^^^^^^^^^^^^^^^^^^                 meta.function-call.arguments.b2jam meta.string.b2jam    
+#   ^^^^^^^^^^^^^^^^^^^                 - string.quoted.double
+#   ^^^^^^^^^^^^^^^^^^^                 - meta.string meta.string
+#     ^^^^^^                            support.constant.grist.feature.b2jam
+#    ^^^^^^^^                           - support.constant.grist.feature.b2jam support.constant.grist.feature.b2jam
+#    ^^^^^^^^                           - entity.name.constant.b2jam
+#            ^^^                        entity.name.constant.b2jam
+#               ^^                      - entity.name.constant.b2jam
+#                 ^^^^                  entity.name.constant.b2jam
+#    ^^^^^^^^^^^                        - keyword.operator.logical.b2jam
+#               ^^                      keyword.operator.logical.b2jam
+#                 ^^^^                  - keyword.operator.logical.b2jam
+
+    "<name>A,<define>B:<undef>C"
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^        meta.function-call.arguments.b2jam meta.string.b2jam    
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^        - string.quoted.double
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^        - meta.string meta.string
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^        - support.constant.grist.feature.b2jam support.constant.grist.feature.b2jam
+#     ^^^^                              support.constant.grist.feature.b2jam
+#          ^                            entity.name.constant.b2jam
+#           ^                           keyword.operator.logical.b2jam
+#            ^                          punctuation.definition.variable.begin.b2jam
+#             ^^^^^^                    support.constant.grist.feature.b2jam
+#                    ^                  entity.name.constant.b2jam
+#                     ^                 keyword.operator.logical.b2jam
+#                       ^^^^^           support.constant.grist.feature.b2jam
+#                             ^         entity.name.constant.b2jam
+
+        <conditional>@rulename
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function-call.arguments.b2jam meta.type.args.feature.b2jam
+#       ^^^^^^^^^^^^^^^^^^^^^^ meta.string.b2jam
+#       ^ punctuation.definition.variable.begin.b2jam
+#        ^^^^^^^^^^^ support.constant.grist.feature.b2jam
+#                   ^ punctuation.definition.variable.end.b2jam
+#                    ^^^^^^^^^ variable.other.constant.b2jam
+#                    ^ punctuation.definition.variable.begin
+
+        "<conditional>@rulename"
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function-call.arguments.b2jam meta.type.args.feature.b2jam
+#       ^^^^^^^^^^^^^^^^^^^^^^^^ meta.string.b2jam
+#       ^ punctuation.definition.string.begin.b2jam
+#        ^ punctuation.definition.variable.begin.b2jam
+#         ^^^^^^^^^^^ support.constant.grist.feature.b2jam
+#                    ^ punctuation.definition.variable.end.b2jam
+#                     ^^^^^^^^^^ string.quoted.double.b2jam
+#                     ^ punctuation.definition.variable.begin
+#                              ^ punctuation.definition.string.end.b2jam
+
+
+
+ ;
+#^ meta.function-call.arguments.b2jam punctuation.terminator.b2jam 

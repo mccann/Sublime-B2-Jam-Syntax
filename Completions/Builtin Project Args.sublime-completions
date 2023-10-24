@@ -1,0 +1,54 @@
+{
+	"scope": "source.b2jam meta.support.project.args.b2jam - meta.interpolation",
+	"completions": [
+		{ "trigger": "build-dir\tB2 project path",
+		  "details": "path to build directory",
+		  "contents" : "build-dir ",
+		  "kind" : [ "keyword", "d", "B2 project path" ]
+		},
+		{ "trigger": "source-location\tB2 project path",
+		  "details": "path to sources",
+		  "contents" : "source-location ",
+		  "kind" : [ "keyword", "d", "B2 project path" ]
+		},
+		{ "trigger": "location\tB2 project path",
+		  "contents" : "location ",
+		  "kind" : [ "keyword", "d", "B2 project path" ]
+		},
+		{ "trigger": "project-root\tB2 project path",
+		  "details": "path to root project",
+		  "contents" : "project-root ",
+		  "kind" : [ "keyword", "d", "B2 project path" ]
+		},
+		{ "trigger": "projects-to-build\tB2 project path",
+		  "details": "identifers of projects to build",
+		  "contents" : "projects-to-build ",
+		  "kind" : [ "keyword", "d", "B2 project path" ]
+		},
+		{ "trigger": "requirements\tB2 project properties",
+		  "details": "requirements for all targets in project",
+		  "contents" : "requirements ",
+		  "kind" : [ "keyword", "p", "B2 project properties" ]
+		},
+		{ "trigger": "usage-requirements\tB2 project properties",
+		  "details": "usage-requirements for all targets in project",
+		  "contents" : "usage-requirements ",
+		  "kind" : [ "keyword", "p", "B2 project properties" ]
+		},
+		{ "trigger": "common-requirements\tB2 project properties",
+		  "details": "requirements and usage-requirements for all targets in project",
+		  "contents" : "common-requirements ",
+		  "kind" : [ "keyword", "p", "B2 project properties" ]
+		},
+		{ "trigger": "default-build\tB2 project properties",
+		  "details": "default-build variant for all targets in project",
+		  "contents" : "default-build ",
+		  "kind" : [ "keyword", "v", "B2 project variant" ]
+		},
+		{ "trigger": "id\tB2 project id",
+		  "details": "set project id",
+		  "contents" : "id ",
+		  "kind" : [ "keyword", "i", "B2 project id" ]
+		},
+	]
+}

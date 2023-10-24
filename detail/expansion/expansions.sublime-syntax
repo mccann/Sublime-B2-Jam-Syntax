@@ -1,0 +1,31 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+version: 2
+
+contexts:
+
+  main:
+    - include: L-as-expansions
+
+###[ EXPANSIONS ]##############################################################
+
+  # Nomenclature:
+  #  'expansions' refers to all TYPES of expansions:
+  #     - parameter = $(identifier[array-index]:modifier=value)
+  #     - filename  = @(identifier:modifier=value)
+
+  L-as-expansions:
+    - include: Packages/B2Jam/detail/expansion/parameter.sublime-syntax#L-as-expansion
+    - include: Packages/B2Jam/detail/expansion/filename.sublime-syntax#L-as-expansion
+
+  Q-as-expansions:
+    - include: Packages/B2Jam/detail/expansion/parameter.sublime-syntax#Q-as-expansion
+    - include: Packages/B2Jam/detail/expansion/filename.sublime-syntax#Q-as-expansion

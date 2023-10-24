@@ -1,0 +1,10 @@
+{
+	// Characters that are considered to separate words
+	// This is derived from sublime default
+	// - removed because it is very frequently used in identifiers
+	// <> removed in order to support <feature> completions
+	// . removed because it is often used in variables as a kind of namespace separator
+	"word_separators": "/\\()\"':,;~!@#$%^&*|+=[]{}`~?",
+	// Characters that are considered to separate sub-words
+	"sub_word_separators": "-_.<>",
+}

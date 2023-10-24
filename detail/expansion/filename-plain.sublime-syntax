@@ -1,0 +1,35 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+version: 2
+extends:
+  - Packages/B2Jam/detail/expansion/LQ-expansion-values.sublime-syntax
+
+variables:
+
+  # these can't be termined by abnormal means
+  LQN_stack_terminal_re: '$-'
+  Q0_stack_terminal_re: '$-'
+
+
+contexts:
+
+  L_0:
+    - clear_scopes: 1 # lower Q meta.string
+    - include: L_0-rules
+
+    # consume closing ) -- the normal expansion context is missing
+  L-terminals-0:
+    - match: \)
+      pop: 2
+
+  Q-terminals-0:
+    - match: \)
+      pop: 2

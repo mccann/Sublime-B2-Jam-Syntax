@@ -1,0 +1,177 @@
+[
+    // Auto-pair expansion
+    { "keys": ["$"], "command": "insert_snippet", "args": {"contents": "\\$($0)"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam - meta.function.actions", "match_all": true },
+            { "key": "setting.auto_match_enabled", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": true, "match_all": true },
+            // if this is not going to be escaped
+            { "key": "preceding_text", "operator": "not_regex_contains", "operand": "\\\\$", "match_all": true },
+            // if user doesn't want this, and hit backspace previously, don't do it again this time
+            { "key": "last_command", "operator": "not_equal", "operand": "run_macro_file", "match_all": true },
+        ]
+    },
+    { "keys": ["$"], "command": "insert_snippet", "args": {"contents": "\\$(${0:$SELECTION})"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam - meta.function.actions", "match_all": true },
+            { "key": "setting.auto_match_enabled", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": false, "match_all": true },
+            // if this is not going to be escaped
+            { "key": "preceding_text", "operator": "not_regex_contains", "operand": "\\\\$", "match_all": true },
+        ]
+    },
+    { "keys": ["backspace"], "command": "run_macro_file", "args": {"file": "res://Packages/B2Jam/Delete Left Left Right.sublime-macro"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam - meta.function.actions", "match_all": true },
+            { "key": "setting.auto_match_enabled", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": true, "match_all": true },
+            { "key": "preceding_text", "operator": "regex_contains", "operand": "\\$\\($", "match_all": true },
+            { "key": "following_text", "operator": "regex_contains", "operand": "^\\)", "match_all": true }
+        ]
+    },
+
+    // Auto-pair square brackets - with sufficient whitespace
+    { "keys": ["["], "command": "insert_snippet", "args": {"contents": "[ $0 ]"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam - ( meta.string | meta.function.actions | meta.statement.conditional.switch )", "match_all": true },
+            { "key": "setting.auto_match_enabled", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": true, "match_all": true },
+            { "key": "preceding_text", "operator": "regex_contains", "operand": "(^|\\s)$", "match_all": true },
+            { "key": "following_text", "operator": "regex_contains", "operand": "^(\\s|$)", "match_all": true },
+            // if user doesn't want this, and hit backspace previously, don't do it again this time
+            { "key": "last_command", "operator": "not_equal", "operand": "run_macro_file", "match_all": true },
+        ]
+    },
+    { "keys": ["["], "command": "insert_snippet", "args": {"contents": "[ ${0:$SELECTION} ]"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam - ( meta.string | meta.function.actions | meta.statement.conditional.switch )", "match_all": true },
+            { "key": "setting.auto_match_enabled", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": false, "match_all": true }
+        ]
+    },
+    // pressing ] to advance past
+    { "keys": ["]"], "command": "run_macro_file", "args": {"file": "res://Packages/B2Jam/Advance 2 + Space.sublime-macro"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam - meta.function.actions" },
+            { "key": "setting.auto_match_enabled", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": true, "match_all": true },
+            { "key": "following_text", "operator": "regex_contains", "operand": "^ \\]", "match_all": true },
+        ]
+    },
+    { "keys": ["backspace"], "command": "run_macro_file", "args": {"file": "res://Packages/B2Jam/Delete Left Right 2x.sublime-macro"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam - ( meta.string | meta.function.actions | meta.statement.conditional.switch )", "match_all": true },
+            { "key": "setting.auto_match_enabled", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": true, "match_all": true },
+            { "key": "preceding_text", "operator": "regex_contains", "operand": "\\[ $", "match_all": true },
+            { "key": "following_text", "operator": "regex_contains", "operand": "^ \\]", "match_all": true }
+        ]
+    },
+    // hitting enter between braces, adds line and fixes whitespace
+    { "keys": ["enter"], "command": "run_macro_file", "args": {"file": "res://Packages/B2Jam/Add Line in Braces - Space.sublime-macro"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam - meta.function.actions", "match_all": true },
+            { "key": "setting.auto_indent", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": true, "match_all": true },
+            { "key": "preceding_text", "operator": "regex_contains", "operand": "\\[ $", "match_all": true },
+            { "key": "following_text", "operator": "regex_contains", "operand": "^ \\]", "match_all": true },
+        ]
+    },    
+
+    // Auto-pair parenthesis - with sufficient whitespace
+    { "keys": ["("], "command": "insert_snippet", "args": {"contents": "( $0 )"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam meta.conditional", "match_all": true },
+            { "key": "setting.auto_match_enabled", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": true, "match_all": true },
+            { "key": "preceding_text", "operator": "regex_contains", "operand": "(^|\\s)$", "match_all": true },
+            { "key": "following_text", "operator": "regex_contains", "operand": "^(\\s|$)", "match_all": true },
+            // if user doesn't want this, and hit backspace previously, don't do it again this time
+            { "key": "last_command", "operator": "not_equal", "operand": "run_macro_file", "match_all": true },
+        ]
+    },
+    { "keys": ["("], "command": "insert_snippet", "args": {"contents": "( ${0:$SELECTION} )"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam meta.conditional", "match_all": true },
+            { "key": "setting.auto_match_enabled", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": false, "match_all": true }
+        ]
+    },
+    { "keys": ["backspace"], "command": "run_macro_file", "args": {"file": "res://Packages/B2Jam/Delete Left Right 2x.sublime-macro"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam meta.conditional", "match_all": true },
+            { "key": "setting.auto_match_enabled", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": true, "match_all": true },
+            { "key": "preceding_text", "operator": "regex_contains", "operand": "\\( $", "match_all": true },
+            { "key": "following_text", "operator": "regex_contains", "operand": "^ \\)", "match_all": true }
+        ]
+    },
+    // pressing ) to advance past
+    { "keys": [")"], "command": "run_macro_file", "args": {"file": "res://Packages/B2Jam/Advance 2 + Space.sublime-macro"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam - meta.function.actions" },
+            { "key": "setting.auto_match_enabled", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": true, "match_all": true },
+            { "key": "following_text", "operator": "regex_contains", "operand": "^ \\)", "match_all": true },
+        ]
+    },
+    // hitting enter between parenthesis, adds line and fixes whitespace
+    { "keys": ["enter"], "command": "run_macro_file", "args": {"file": "res://Packages/B2Jam/Add Line in Braces - Space.sublime-macro"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam - meta.function.actions", "match_all": true },
+            { "key": "setting.auto_indent", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": true, "match_all": true },
+            { "key": "preceding_text", "operator": "regex_contains", "operand": "\\( $", "match_all": true },
+            { "key": "following_text", "operator": "regex_contains", "operand": "^ \\)", "match_all": true },
+        ]
+    },    
+
+    // Auto-pair curly brackets - with sufficient whitespace
+    { "keys": ["{"], "command": "insert_snippet", "args": {"contents": "{ $0 }"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam - ( meta.string | meta.compound | meta.function.actions )", "match_all": true },
+            { "key": "setting.auto_match_enabled", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": true, "match_all": true },
+            { "key": "preceding_text", "operator": "regex_contains", "operand": "(^|\\s)$", "match_all": true },
+            { "key": "following_text", "operator": "regex_contains", "operand": "^(\\s|$)", "match_all": true },
+            // if user doesn't want this, and hit backspace previously, don't do it again this time
+            { "key": "last_command", "operator": "not_equal", "operand": "run_macro_file", "match_all": true },
+        ]
+    },
+    { "keys": ["{"], "command": "insert_snippet", "args": {"contents": "{ ${0:$SELECTION} }"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam - ( meta.string | meta.compound | meta.function.actions )", "match_all": true },
+            { "key": "setting.auto_match_enabled", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": false, "match_all": true }
+        ]
+    },
+    { "keys": ["backspace"], "command": "run_macro_file", "args": {"file": "res://Packages/B2Jam/Delete Left Right 2x.sublime-macro"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam - ( meta.string | meta.compound | meta.function.actions )", "match_all": true },
+            { "key": "setting.auto_match_enabled", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": true, "match_all": true },
+            { "key": "preceding_text", "operator": "regex_contains", "operand": "\\{ $", "match_all": true },
+            { "key": "following_text", "operator": "regex_contains", "operand": "^ \\}", "match_all": true }
+        ]
+    },
+    // pressing } to advance past
+    { "keys": ["}"], "command": "run_macro_file", "args": {"file": "res://Packages/B2Jam/Advance 2 + Space.sublime-macro"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam - meta.function.actions" },
+            { "key": "setting.auto_match_enabled", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": true, "match_all": true },
+            { "key": "following_text", "operator": "regex_contains", "operand": "^ \\}", "match_all": true },
+        ]
+    },
+    // hitting enter between braces, adds line and fixes whitespace
+    { "keys": ["enter"], "command": "run_macro_file", "args": {"file": "res://Packages/B2Jam/Add Line in Braces - Space.sublime-macro"}, "context":
+        [
+            { "key": "selector", "operator": "equal", "operand": "source.b2jam - meta.function.actions", "match_all": true },
+            { "key": "setting.auto_indent", "operator": "equal", "operand": true },
+            { "key": "selection_empty", "operator": "equal", "operand": true, "match_all": true },
+            { "key": "preceding_text", "operator": "regex_contains", "operand": "\\{ $", "match_all": true },
+            { "key": "following_text", "operator": "regex_contains", "operand": "^ \\}", "match_all": true },
+        ]
+    },    
+
+]

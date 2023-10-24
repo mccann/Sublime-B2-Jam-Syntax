@@ -1,0 +1,73 @@
+#   SYNTAX TEST "Packages/B2Jam/B2Jam.sublime-syntax"
+
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+
+    GLOB a :
+#   ^^^^            meta.function-call.identifier.b2jam support.function.GLOB.b2jam
+#        ^          variable.other.target.b2jam
+
+    plain "plain"
+#   ^^^^^           meta.mode.basic.regexp.glob.b2jam
+#         ^^^^^^^   meta.mode.basic.regexp.glob.b2jam
+#         ^^^^^^^   meta.string.b2jam
+
+#  regex special chars are regular here
+    .^$\\<\\>+() 
+#   ^^^^^^^^^^^^    meta.mode.basic.regexp.glob.b2jam    
+#   ^^^^^^^^^^^^    - invalid
+#   ^^^^^^^^^^^^    - keyword
+
+    ".^$\\<\\>+()" 
+#   ^^^^^^^^^^^^^^  meta.mode.basic.regexp.glob.b2jam    
+#   ^^^^^^^^^^^^^^  - invalid
+#   ^^^^^^^^^^^^^^  - keyword
+#   ^^^^^^^^^^^^^^  meta.string.b2jam
+
+# quantifiers (alone, stacked)
+    * ? **??*             
+#   ^               keyword.operator.quantifier.regexp.b2jam
+#     ^             keyword.operator.quantifier.regexp.b2jam
+#       ^^^^^       keyword.operator.quantifier.regexp.b2jam
+
+    "*" "?" "**??*"
+#    ^              keyword.operator.quantifier.regexp.b2jam
+#        ^          keyword.operator.quantifier.regexp.b2jam
+#            ^^^^^  keyword.operator.quantifier.regexp.b2jam
+#   ^^^             meta.string.b2jam
+#       ^^^         meta.string.b2jam
+#           ^^^^^^^ meta.string.b2jam
+
+# charsets should be untouched - minimal testing
+    [^a-z]
+#   ^^^^^^          meta.mode.basic.regexp.glob.b2jam meta.set.regexp.b2jam    
+#   ^^^^^^          - string
+#   ^               punctuation.definition.set.begin.regexp.b2jam invalid.deprecated.b2jam
+#    ^              keyword.operator.logical.regexp.b2jam
+#     ^             constant.other.range.regexp.b2jam
+#      ^            constant.other.range.regexp.b2jam punctuation.separator.sequence.regexp.b2jam
+#       ^           constant.other.range.regexp.b2jam
+#        ^          punctuation.definition.set.end.regexp.b2jam invalid.deprecated.b2jam
+
+   "[^a-z]"
+#  ^^^^^^^^         meta.string.b2jam
+#  ^^^^^^^^         - invalid
+#   ^^^^^^          meta.mode.basic.regexp.glob.b2jam meta.set.regexp.b2jam    
+#   ^               punctuation.definition.set.begin.regexp.b2jam
+#    ^              keyword.operator.logical.regexp.b2jam
+#     ^             constant.other.range.regexp.b2jam
+#      ^            constant.other.range.regexp.b2jam punctuation.separator.sequence.regexp.b2jam
+#       ^           constant.other.range.regexp.b2jam
+#        ^          punctuation.definition.set.end.regexp.b2jam
+
+# double-escape disables set
+    \\[a-z\\]
+#   ^^^^^^^^^       - meta.set.regexp.b2jam
+#   ^^^             constant.character.escape.regexp.b2jam
+#         ^^^       constant.character.escape.regexp.b2jam
+#       ^           - constant
+#       ^           - punctuation
+
+

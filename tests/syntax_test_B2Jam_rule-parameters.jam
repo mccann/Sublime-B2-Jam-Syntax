@@ -1,0 +1,297 @@
+#  SYNTAX TEST "Packages/B2Jam/B2Jam.sublime-syntax"
+
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+
+# matrix of param types
+
+# valid         - one param named 'p'
+rule f ( p )             { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+
+# valid         - one anon optional list param $(1)
+rule f ( * )             { } 
+#        ^                  keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+
+# valid         - one named param '+'
+rule f ( + )             { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+
+# valid         - one named param '?'    
+rule f ( ? )             { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+
+# valid         - two params named 'p' and 'p2'
+rule f ( p p2 )          { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^^               variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+
+# valid         - one optional list param named 'p'
+rule f ( p * )           { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+
+# valid         - one list param named 'p'
+rule f ( p + )           { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+
+ # valid         - one optional param named 'p'
+rule f ( p ? )           { }    
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+
+# ineffective   - one anon optional list param, cannot access p, 0 args permitted
+rule f ( * p )           { } 
+#        ^                  keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#          ^                invalid.illegal.b2jam
+
+# ineffective   - one effective anon optional list param, second * effectively ignored
+rule f ( * * )           { }
+#        ^                  keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#          ^                invalid.illegal.b2jam
+
+# ineffective   - one effective anon optional list param, + effectively ignored/inaccessible 
+rule f ( * + )           { } 
+#        ^                  keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#          ^                invalid.illegal.b2jam
+
+# ineffective   - one effective anon optional list param, ? effectively ignored/inaccessible 
+rule f ( * ? )           { } 
+#        ^                  keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#          ^                invalid.illegal.b2jam
+
+# valid         - two params, named '+' and 'p'
+rule f ( + p )           { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+
+# valid         - one optional list param named '+'
+rule f ( + * )           { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+
+# valid         - one optional param named '+'
+rule f ( + ? )           { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+
+# valid         - one list param named '+'
+rule f ( + + )           { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+
+# valid         - two params, named '?' and 'p' 
+rule f ( ? p )           { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+
+# valid         - one optional list param named '?'
+rule f ( ? * )           { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+
+# valid         - one list param named '?'
+rule f ( ? + )           { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+
+# valid         - one optional param named '?'
+rule f ( ? ? )           { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+
+# valid         - typed anon param $(1)
+rule f ( [t] * )         { } 
+#        ^^^                storage.type.b2jam
+#            ^              keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+
+# valid         - one typed param, named '+'
+rule f ( [t] + )         { } 
+#        ^^^                storage.type.b2jam
+#            ^              variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+
+# valid         - one typed param, named '?'
+rule f ( [t] ? )         { } 
+#        ^^^                storage.type.b2jam
+#            ^              variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+
+# crash         - one optional list 'a' and missing argument p
+rule f ( a * p )         { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#            ^              invalid.illegal.b2jam
+
+# crash         - one optional list 'a' and missing argument ?
+rule f ( a * ? )         { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#            ^              invalid.illegal.b2jam
+
+# ineffective   - one optional list 'a' and cannot access p
+rule f ( a * p ? )       { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#            ^^^            invalid.illegal.b2jam
+
+# ineffective   - one optional list 'a' and cannot access p
+rule f ( a * p * )       { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#            ^^^            invalid.illegal.b2jam
+
+# crash         - one list 'a' and missing argument p
+rule f ( a + p )         { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#            ^              invalid.illegal.b2jam
+
+# crash         - one list 'a' and missing argument ?
+rule f ( a + ? )         { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#            ^              invalid.illegal.b2jam
+
+# ineffective   - one list 'a' and cannot access p
+rule f ( a + p ? )       { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#            ^^^            invalid.illegal.b2jam
+
+# ineffective   - one list 'a' and cannot access p
+rule f ( a + p * )       { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#            ^^^            invalid.illegal.b2jam
+
+# valid         - two params named 'a' and 'p', optionality of 'a' is rendered ineffective
+rule f ( a ? p )         { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#            ^              variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+
+# valid         - one optional param named a, and anon list $(1) -- union type $(1) includes a
+rule f ( a ? * )         { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#            ^              keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+
+
+# valid         - two params named 'a' and '+', optionality of 'a' is rendered ineffective
+rule f ( a ? + )         { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#            ^              variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+
+# valid         - two params named 'a' and '?', optionality of '?' is rendered ineffective
+rule f ( a ? ? )         { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#            ^              variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+
+# crash         - missing argument name after type name
+rule f ( [t] )           { } 
+#        ^^^                invalid.illegal.b2jam
+
+# crash         - missing argument name after type name
+rule f ( a * [t] )       { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#            ^^^            invalid.illegal.b2jam
+
+# ineffective   - cannot access second anon optional list
+rule f ( a * [t] * )     { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#            ^^^^^          invalid.illegal.b2jam
+
+# ineffective   - cannot access second anon optional list
+rule f ( a + [t] * )     { } 
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#            ^^^^^          invalid.illegal.b2jam
+
+rule f ( a ? [t] * )     { } # valid         - one optional param named a, and a typed anon list $(1) -- union type $(1) includes a
+#        ^                  variable.parameter.b2jam - keyword.operator.quantifier.regexp.b2jam
+#          ^                keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+#            ^^^            storage.type.b2jam
+#                ^          keyword.operator.quantifier.regexp.b2jam - variable.parameter.b2jam
+
+# unescaped [ ] are permitted in paramter names
+rule  r ( []][[ ) { }
+#     ^^^^^^^^^^^^^^    meta.function
+#       ^^^^^^^^        meta.function.parameters.b2jam meta.group.b2jam
+#         ^^^^          variable.parameter.b2jam
+#     ^^^^^^^^^^^^^^    - invalid
+
+
+# escaping of [] in type gets a hazard escape, arg just plain impotent
+rule  r ( \[type\] \[arg\] ) { }
+#          ^^^^^^^              storage.type.b2jam
+#         ^                     constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#               ^               constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#                  ^            constant.character.escape.impotent.b2jam - invalid.deprecated
+#                       ^       constant.character.escape.impotent.b2jam - invalid.deprecated
+
+
+# when of the form [string] they are a 'type_name' (not sure how well supported)
+rule  r ( [type] arg ) { }
+#     ^^^^^^^^^^^^^^^^^     meta.function
+#       ^^^^^^^^^^^         meta.function.parameters.b2jam meta.group.b2jam
+#        ^^^^^^^^           - variable.parameter
+#                ^^^        variable.parameter.b2jam
+#         ^^^^^^            storage.type.b2jam
+#         ^                 punctuation.definition.annotation.begin.b2jam
+#              ^            punctuation.definition.annotation.end.b2jam
+#         ^^^^^^^           - invalid
+
+# must be followed by argument
+rule  r ( [t] : [t] ) { }
+#     ^^^^^^^^^^^^^^^^^^^   meta.function
+#       ^^^^^^^^^^^^^       meta.function.parameters.b2jam meta.group.b2jam
+#        ^^^^^^^^^^^        - variable.parameter
+#         ^^^               invalid.illegal.b2jam
+#               ^^^         invalid.illegal.b2jam
+#       ^^                  - storage.type
+#         ^^^               storage.type.b2jam
+#            ^^^            - storage.type
+#               ^^^         storage.type.b2jam
+#                  ^^       - storage.type
+#         ^                 punctuation.definition.annotation.begin.b2jam
+#           ^               punctuation.definition.annotation.end.b2jam
+
+rule  r ( \[t\] ) { }
+#         ^                 constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#            ^              constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+
+
+# can be chained
+rule  r ( [t] a [t] b [t] ) { }
+#     ^^^^^^^^^^^^^^^^^^^   meta.function
+#     ^^^^^^^^^^^^^^^^      - invalid
+#                     ^^^   invalid.illegal.b2jam
+#         ^^^               storage.type.b2jam
+#             ^             variable.parameter.b2jam
+#               ^^^         storage.type.b2jam
+#                   ^       variable.parameter.b2jam
+#                     ^^^   storage.type.b2jam
+
+
+# strings permitted as args
+rule name ( "strings too" ) { } 
+#    ^^^^^^^^^^^^^^^^^^^^^^^^^^     meta.function
+#         ^^^^^^^^^^^^^^^^^         meta.function.parameters.b2jam meta.group.b2jam
+#           ^^^^^^^^^^^^^           variable.parameter.b2jam meta.string.b2jam
+
+# escaped
+rule name ( a\ b ) { } 
+#    ^^^^^^^^^^^^^^^^^              meta.function
+#         ^^^^^^^^                  meta.function.parameters.b2jam meta.group.b2jam
+#           ^^^^                    variable.parameter.b2jam
+
+# no expansions performed, though valid name
+rule test ( $(var) ) { local a = $ (var) ; ecko $($(a:J)) ; }
+#           ^^^^^^                  meta.function.parameters.b2jam meta.group.b2jam variable.parameter.b2jam
+#           ^^^^^^                  - meta.interpolation.parameter 

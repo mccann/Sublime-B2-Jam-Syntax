@@ -1,0 +1,271 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+extends: Packages/B2Jam/detail/value/value-plain-args.sublime-syntax
+
+version: 2
+
+variables:
+
+  # features where the value is an entity that results in being a 'definition' in sublime symbols
+  # not bothering with supporting quotes in name, will use default handling in such case
+  builtin_definition_feature: (?:define|name|undef)
+
+  grist_prefix: (?:\-?)
+  feature_join: (?:(?<!{{left_edge}})(?:,|:\"*\!?))
+
+  L_grist_start: (?=(?:{{left_edge}}|{{feature_join}}){{grist_open}})
+  Q_grist_start: (?={{feature_join}}{{grist_open}})
+
+contexts:
+
+  L-as-grist:
+    - match: ''
+      set: [ L-grist, Q-grist, L-builtin-feature, Q-builtin-feature, L-grist-punctuation ]
+
+  Q-as-grist:
+    - match: ''
+      set: [ L-grist, Q-grist, L-builtin-feature, Q-builtin-feature, L-grist-punctuation, Q-grist-punctuation ]
+
+
+  LQ-grist-punctuation-start-chars:
+    - meta_prepend: true
+    - match: '[,:!]'
+      scope: keyword.operator.logical.b2jam
+    - match: \-
+      scope: keyword.operator.arithmetic.b2jam
+
+  L-builtin-feature:
+    - match: ({{builtin_definition_feature}})(\>)
+      captures:
+        2: punctuation.definition.variable.end.b2jam
+      push:
+        - match: ''
+          pop: 6 # anon + L-builtin-feature + L/Q Features + L/Q feature breaks
+          push: L-as-defintion-value
+    - include: immediately-pop2
+
+  Q-builtin-feature:
+    - match: ({{builtin_definition_feature}})(\>)
+      captures:
+        2: punctuation.definition.variable.end.b2jam
+      push:
+        - match: ''
+          pop: 7 # anon + L/Q-builtin-features + L/Q-features + L/Q feature breaks
+          push: Q-as-defintion-value
+    - include: immediately-pop2
+
+  L-as-defintion-value:
+    - match: ''
+      set: [ L-feature-values, L-feature-assignments-branch ]
+
+  Q-as-defintion-value:
+    - match: ''
+      set: [ L-feature-values, Q-feature-values, Q-feature-assignments-branch ]
+
+  L-grist:
+    - clear_scopes: 1 # Q-Value
+    - meta_content_scope: support.constant.grist.feature.b2jam
+    - match: \"
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-grist
+    - match: (?=\>)
+      pop: 3 # this, LQ-grist-breaks
+      push: [ L-feature-values, LQ-grist-punctuation-end-char ]
+    - match: ':'  # not a special char inside feature
+    - match: '{{token_break}}'
+      pop: 2 # jump to fail mode
+    - include: L-content-rules-standard
+
+  Q-grist:
+    - match: (?=\>)
+      pop: 4 # this, L-grist, LQ-grist-breaks
+      push: [ L-feature-values, Q-feature-values, LQ-grist-punctuation-end-char ]
+    - include: Q-content-rules-standard
+
+
+  L-feature-values:
+    - clear_scopes: 1 # Q-value
+    - match: ''
+      branch_point: L_feature_value
+      branch:
+        - L-feature-values-branch
+        - L-feature-assignments-branch
+
+  Q-feature-values:
+    - match: ''
+      branch_point: Q_feature_value
+      branch:
+        - Q-feature-values-branch
+        - Q-feature-assignments-branch
+
+  L-feature-value-break-L:
+    - match: ''
+      fail: L_feature_value
+  L-feature-value-break-Q:
+    - match: ''
+      fail: Q_feature_value
+  Q-break:
+    - include: immediately-pop
+
+  L-feature-values-branch:
+    - match: ''
+      set: [ Q-feature-values, L-feature-value-break-L, Q-break, L-feature-value,     Q-feature-value, L-feature-value-path-start-char ]
+
+  Q-feature-values-branch:
+    - match: ''
+      set: [                   L-feature-value-break-Q, Q-break, L-feature-value,     Q-feature-value, L-feature-value-path-start-char, Q-feature-value-path-start-char ]
+
+  LQ-null:
+    - match: ''
+      pop: 4
+
+  L-feature-assignments-branch:
+    - match: ''
+      set: [ Q-feature-values, LQ-null,                 LQ-null, L-feature-definition ]
+
+  Q-feature-assignments-branch:
+    - match: ''
+      set: [                   LQ-null,                 LQ-null, L-feature-definition, Q-feature-definition ]
+
+  LQ-feature-value-start-chars:
+    - match: '@'
+      scope: punctuation.definition.variable.begin
+
+  L-feature-value-path-start-char:
+    - clear_scopes: 1
+    - meta_scope: variable.other.constant.b2jam
+    - match: \"
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-feature-value-path-start-char
+    - include: LQ-feature-value-start-chars
+    - include: LQ-feature-value-path-start-char-common
+
+  Q-feature-value-path-start-char:
+    - clear_scopes: 1
+    - meta_scope: string.quoted.double.b2jam
+    - include: Q-quote-terminal
+    - include: LQ-feature-value-start-chars
+    - include: LQ-feature-value-path-start-char-common
+
+  LQ-assignment-guards:
+    - match: =
+      pop: 2
+
+  L-feature-value-terminal:
+    # skip over break & branch frames
+    - match: '{{token_break}}'
+      pop: 6
+
+  L-feature-features:
+    - match: '{{L_grist_start}}'
+      pop: 6 # back to L-value
+
+  Q-feature-features:
+    - match: '{{Q_grist_start}}'
+      pop: 6 # back to Q-Value
+
+  L-feature-value-common:
+    - include: L-feature-features
+    - include: L-feature-value-terminal
+    - include: L-content-rules-standard
+    - include: L-feature-joined-values
+
+  Q-feature-value-common:
+    - include: Q-feature-features
+    - include: Q-content-rules-standard
+    - include: Q-feature-joined-values
+
+  L-feature-value:
+    - meta_scope: variable.other.constant.b2jam
+    - include: L-feature-value-common
+    - include: L-feature-value-path-chars
+    - include: LQ-assignment-guards
+
+
+  Q-feature-value:
+    - clear_scopes: 1
+    - meta_scope: string.quoted.double.b2jam
+    - include: Q-feature-value-common
+    - include: Q-feature-value-path-chars
+    - include: LQ-assignment-guards
+
+  L-feature-joined-values:
+    - match: '\&\&'
+      scope: keyword.operator.logical.b2jam
+      push:
+        - clear_scopes: 1
+        - match: ''
+          pop: 6 # over break and branches
+          push: L-feature-values
+
+  Q-feature-joined-values:
+    - match: '\&\&'
+      scope: keyword.operator.logical.b2jam
+      push:
+        - clear_scopes: 1
+        - match: ''
+          pop: 7
+          push: [ L-feature-values, Q-feature-values ]
+
+
+  L-feature-joined-definitions:
+    - match: '\&\&'
+      scope: keyword.operator.logical.b2jam
+      push:
+        - clear_scopes: 1
+        - match: ''
+          pop: 6 # over break and branches
+          push: L-as-defintion-value
+
+  Q-feature-joined-definitions:
+    - match: '\&\&'
+      scope: keyword.operator.logical.b2jam
+      push:
+        - clear_scopes: 1
+        - match: ''
+          pop: 7
+          push: Q-as-defintion-value
+
+  L-feature-definition:
+    - meta_scope: entity.name.constant.b2jam
+    - match: \"
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-feature-definition
+    - match: =
+      scope: keyword.operator.assignment.b2jam
+      pop: 1
+      push: [ L-feature-rvalue, Q-feature-rvalue, L-feature-value-path-start-char ]
+    - include: L-feature-joined-definitions
+    - include: L-feature-value-common
+
+  Q-feature-definition:
+    - match: =
+      scope: keyword.operator.assignment.b2jam
+      pop: 2
+      push:
+        - match: ''
+          set: [ L-feature-rvalue, Q-feature-rvalue, L-feature-value-path-start-char, Q-feature-value-path-start-char ]
+    - include: Q-feature-joined-definitions
+    - include: Q-feature-value-common
+
+  L-feature-rvalue:
+    - meta_scope: string.unquoted.b2jam
+    - match: \"
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-feature-rvalue
+    - include: L-feature-value-common
+    - include: L-feature-value-path-chars
+
+  Q-feature-rvalue:
+    - clear_scopes: 1
+    - meta_scope: string.quoted.double.b2jam
+    - include: Q-feature-value-common
+    - include: Q-feature-value-path-chars

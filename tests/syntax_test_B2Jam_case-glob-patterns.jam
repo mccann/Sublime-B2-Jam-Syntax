@@ -1,0 +1,620 @@
+#  SYNTAX TEST "Packages/B2Jam/B2Jam.sublime-syntax"
+
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+# test various patterns
+
+    switch $(var) {
+#          ^^^^^^           meta.statement.conditional.switch.b2jam meta.interpolation.parameter    
+
+# some basic working ones first
+        case [a-z] : { }
+#            ^^^^^          meta.pattern.regex.b2jam meta.set.regexp.b2jam
+#            ^^^^^          - meta.set.regexp.b2jam meta.set.regexp.b2jam
+#              ^            punctuation.separator.range.regexp.b2jam
+
+# basic, but corner cases 
+
+
+# ; and { } characters are permitted without warning
+        case ;{} : { }
+#            ^^^            meta.statement.conditional.switch.b2jam meta.block.b2jam meta.pattern.regex.b2jam
+#            ^^^            - invalid
+#                ^          punctuation.separator.case-statement.b2jam
+
+# only ':' is warned about
+        case a:b : { }
+#            ^^^            meta.statement.conditional.switch.b2jam meta.block.b2jam meta.pattern.regex.b2jam
+#            ^              - invalid
+#             ^             invalid.deprecated.b2jam
+#              ^            - invalid
+#                ^          punctuation.separator.case-statement.b2jam
+
+# : by itself is illegal, as it's the terminator for pattern
+        case : : { }
+#            ^              meta.statement.conditional.switch.b2jam meta.block.b2jam meta.pattern.regex.b2jam 
+#            ^              invalid.illegal.b2jam
+#              ^            punctuation.separator.case-statement.b2jam
+
+
+        # not nothing = everything
+        case [^] : { }
+#            ^^^            meta.pattern.regex.b2jam meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             keyword.operator.logical.regexp.b2jam
+#              ^            meta.set.regexp.b2jam
+        # - as first char is just a -
+        case [-] : { }
+#            ^^^            meta.pattern.regex.b2jam meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             - punctuation
+#              ^            meta.set.regexp.b2jam punctuation.definition.set.end.regexp.b2jam
+
+
+        # [] is treated as unclosed '[..]', with first char ]
+        case []  : { }
+#            ^^             meta.pattern.regex.b2jam meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             - punctuation.definition.set
+#              ^            invalid.illegal.b2jam
+        # unclosed negation
+        case [^ : { }
+#            ^^             meta.pattern.regex.b2jam meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             keyword.operator.logical.regexp.b2jam
+#             ^             invalid.illegal.b2jam
+
+        # unclosed
+        case []b : { }
+#            ^^^            meta.pattern.regex.b2jam meta.set.regexp.b2jam
+#             ^             - punctuation.definition.set
+#               ^           invalid.illegal.b2jam
+
+        # all kinds of invalid
+        case [   : { }
+#            ^              invalid.illegal.b2jam
+
+        case ] : { }
+#            ^              invalid.illegal.b2jam
+
+        case [ ] : { }
+#            ^              invalid.illegal.b2jam
+#              ^            invalid.illegal.b2jam
+
+# [ inside set is plain char
+        case [[]] : { }
+#            ^^^            meta.set.regexp.b2jam
+#               ^           - meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             - punctuation.definition
+#              ^            punctuation.definition.set.end.regexp.b2jam
+#               ^           - punctuation.definition
+#            ^^^^           - invalid
+
+# first ] inside [..] is plain char
+        case []a] : { }
+#            ^^^^           meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^^            - punctuation.definition
+#               ^           punctuation.definition.set.end.regexp.b2jam
+#            ^^^^           - invalid
+
+# range matches ], ^, _
+        case []-_] : { }
+#            ^^^^^          meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^^^           - punctuation.definition
+#              ^            punctuation.separator.range.regexp.b2jam
+#                ^          punctuation.definition.set.end.regexp.b2jam
+#            ^^^^^          - invalid
+
+        case [-  : { }
+#            ^^             meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             - punctuation
+#              ^            invalid.illegal.b2jam
+
+        case [[  : { }
+#            ^^             meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             - punctuation
+#              ^            invalid.illegal.b2jam
+
+        case ]]  : { }
+#            ^^             meta.pattern.regex.b2jam
+#            ^^             - punctuation
+#            ^^             - invalid
+
+
+        case [^] : { }
+#            ^^^            meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             keyword.operator.logical.regexp.b2jam
+#              ^            punctuation.definition.set.end.regexp.b2jam
+#            ^^             - invalid
+#              ^            invalid.deprecated.b2jam meta.lint.unexpected-behavior.b2jam
+
+        # - here is just a plain -, all things not -
+        case [^-] : { }
+#            ^^^^           meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             keyword.operator.logical.regexp.b2jam
+#              ^            - punctuation
+#               ^           punctuation.definition.set.end.regexp.b2jam
+#            ^^^^           - invalid
+        # un terminated - , results in silent error
+        case [a-] : { }
+#            ^^^^           meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#              ^            punctuation.separator.range.regexp.b2jam
+#               ^           punctuation.definition.set.end.regexp.b2jam
+#            ^^             - invalid
+#              ^            invalid.illegal.b2jam
+#               ^           - invalid
+         
+        case [^a-] : { }
+#            ^^^^^          meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             keyword.operator.logical.regexp.b2jam
+#               ^           punctuation.separator.range.regexp.b2jam
+#                ^          punctuation.definition.set.end.regexp.b2jam
+#            ^^^            - invalid
+#               ^           invalid.illegal.b2jam
+#                ^          - invalid
+
+# Hungry?
+        case *foo? : { }        
+#            ^^^^^          meta.pattern.regex.b2jam
+#             ^^^           - keyword.operator.quantifier.regexp.b2jam
+#            ^              keyword.operator.quantifier.regexp.b2jam
+#                ^          keyword.operator.quantifier.regexp.b2jam
+
+# quantifier inside set is just a char
+        case [*?] : { }        
+#            ^^^^           meta.pattern.regex.b2jam        
+#            ^^^^           meta.set.regexp.b2jam
+#             ^^            - keyword.operator.quantifier
+
+# pattern escape testing - cannot single escape *,?,[,]
+        case a\ \"\*\?\]\[^] : { }
+#            ^^^^^^^^^^^^^^^    meta.pattern.regex.b2jam
+#             ^^^^              constant.character.escape.b2jam
+#                 ^             constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#                  ^            keyword.operator.quantifier.regexp.b2jam
+#                   ^           constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#                    ^          keyword.operator.quantifier.regexp.b2jam
+#                     ^         constant.character.escape.impotent.b2jam
+#                      ^        - invalid 
+#                      ^        - meta.set.regexp
+#                       ^       constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#                        ^^^    meta.set.regexp.b2jam
+
+       case "a\ \"\*\?\]\[^]" : { }
+#            ^^^^^^^^^^^^^^^    meta.pattern.regex.b2jam
+#             ^                 constant.character.escape.impotent.b2jam
+#              ^                - constant.character.escape
+#               ^^              constant.character.escape.b2jam
+#                 ^             constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#                  ^            keyword.operator.quantifier.regexp.b2jam
+#                   ^           constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#                    ^          keyword.operator.quantifier.regexp.b2jam
+#                     ^         constant.character.escape.impotent.b2jam
+#                      ^        - invalid 
+#                      ^        - meta.set.regexp
+#                       ^       constant.character.escape.impotent.b2jam
+#                       ^       - invalid.deprecated
+#                        ^^^    meta.set.regexp.b2jam
+
+
+
+# can double escape *,?,[
+        case \\*\\?\\[\\] : { }
+#            ^^^^^^^^^^^        constant.character.escape.b2jam
+#                       ^       - constant.character.escape
+
+       case "\\*\\?\\[\\]" : { }
+#            ^^^^^^^^^^^        constant.character.escape.b2jam
+#                       ^       - constant.character.escape
+
+
+# This was breaking such that the set ate the ':', here for regression test
+        case \[ : { } 
+#            ^                  constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#             ^                 punctuation.definition.set.begin.regexp.b2jam
+#              ^                invalid.illegal.b2jam
+#               ^               punctuation.separator.case-statement.b2jam
+
+       case "\[" : { } 
+#            ^                  constant.character.escape.impotent.b2jam
+#             ^                 punctuation.definition.set.begin.regexp.b2jam
+#               ^               invalid.illegal.b2jam
+#                ^              punctuation.separator.case-statement.b2jam
+
+
+# inside sets, it appears that the only valid/useful escapes are '\\', '\ ', '\"'
+        case [\\]   : { }
+#            ^^^^           meta.pattern.regex.b2jam
+#            ^^^^           meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^^            - punctuation - invalid
+#             ^^            constant.character.escape.b2jam
+#               ^           punctuation.definition.set.end.regexp.b2jam
+
+        case [a\\]   : { }
+#            ^^^^^          meta.pattern.regex.b2jam
+#            ^^^^^          meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             - punctuation - invalid
+#              ^^           constant.character.escape.b2jam
+#              ^^           - invalid
+#                ^          punctuation.definition.set.end.regexp.b2jam
+
+        case [\ ]   : { }
+#            ^^^^           meta.pattern.regex.b2jam
+#            ^^^^           meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^^            - punctuation - invalid
+#             ^^            constant.character.escape.b2jam
+#               ^           punctuation.definition.set.end.regexp.b2jam
+
+        case [a\ ]   : { }
+#            ^^^^^          meta.pattern.regex.b2jam
+#            ^^^^^          meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             - punctuation - invalid
+#              ^^           constant.character.escape.b2jam
+#              ^^           - invalid
+#                ^          punctuation.definition.set.end.regexp.b2jam
+
+        case [\"]   : { }
+#            ^^^^           meta.pattern.regex.b2jam
+#            ^^^^           meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^^            - punctuation - invalid
+#             ^^            constant.character.escape.b2jam
+#               ^           punctuation.definition.set.end.regexp.b2jam
+
+        case [a\"]   : { }
+#            ^^^^^          meta.pattern.regex.b2jam
+#            ^^^^^          meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             - punctuation - invalid
+#              ^^           constant.character.escape.b2jam
+#              ^^           - invalid
+#                ^          punctuation.definition.set.end.regexp.b2jam
+
+
+
+# using deprecated to represent that the escape is effectivly ignored
+
+        case [\]   : { }
+#            ^^^            meta.pattern.regex.b2jam
+#            ^^^            meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             - punctuation
+#             ^             constant.character.escape.impotent.b2jam
+#              ^            - constant.character.escape
+#             ^             invalid.deprecated.impotent.escape.b2jam
+#               ^           invalid.illegal.b2jam
+#              ^            - punctuation.definition.set.end.regexp.b2jam
+
+        case [^\]   : { }
+#            ^^^^           meta.pattern.regex.b2jam
+#            ^^^^           meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             keyword.operator.logical.regexp.b2jam
+#              ^            - punctuation
+#               ^           - constant.character.escape
+#              ^            invalid.deprecated.impotent.escape.b2jam
+#               ^           punctuation.definition.set.end.regexp.b2jam
+#               ^           invalid.deprecated.b2jam meta.lint.unexpected-behavior.b2jam
+
+        case [a\]   : { }
+#            ^^^^           meta.pattern.regex.b2jam
+#            ^^^^           meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             - punctuation - invalid
+#               ^           - constant.character.escape
+#              ^            constant.character.escape.impotent.b2jam
+#              ^            invalid.deprecated.impotent.escape.b2jam
+#               ^           punctuation.definition.set.end.regexp.b2jam
+
+# you can't escape range operator - either
+
+        case [a\-b]   : { }
+#            ^^^^^^         meta.pattern.regex.b2jam meta.set.regexp.b2jam        
+#              ^            constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#               ^           punctuation.separator.range.regexp.b2jam
+#               ^           - constant.character.escape
+
+# can't escape, and invalid behavior
+        case [a\-]   : { }
+#            ^^^^^          meta.pattern.regex.b2jam meta.set.regexp.b2jam        
+#              ^            constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#               ^           invalid.illegal.b2jam
+#               ^           punctuation.separator.range.regexp.b2jam
+#               ^           - constant.character.escape
+
+# can't escape, but this is a valid character set with one member '-'
+        case [\-]   : { }
+#            ^^^^           meta.pattern.regex.b2jam meta.set.regexp.b2jam        
+#             ^             constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#              ^            - invalid.illegal.b2jam
+#              ^            - punctuation.separator.range.regexp.b2jam
+#              ^            - constant.character.escape
+
+#   * ? are plain characters inside a set. 
+
+        case [*?] : { }
+#            ^^^^           meta.pattern.regex.b2jam meta.set.regexp.b2jam        
+#             ^^            - invalid
+#             ^^            - keyword
+
+
+#  Quoted! - quotes are largely ignored inside []
+#  but they do allow use of space without '\ ', and escaping 
+
+        case a" [a-z ]"a""s : { }
+#            ^^^^^^^^^^^^^^ meta.pattern.regex.b2jam
+#             ^             punctuation.definition.string.begin.b2jam
+#              ^            - invalid
+#               ^^^^^^      meta.set.regexp.b2jam
+#               ^           punctuation.definition.set.begin.regexp.b2jam
+#                 ^         punctuation.separator.range.regexp.b2jam
+#                   ^       - invalid
+#                    ^      punctuation.definition.set.end.regexp.b2jam 
+#                     ^     punctuation.definition.string.end.b2jam
+#                       ^   punctuation.definition.string.begin.b2jam
+#                        ^  punctuation.definition.string.end.b2jam
+#                           ^ punctuation.separator.case-statement.b2jam
+
+
+# Tests to ensure quotes are transparent to sets
+        case "[]" : { }
+#            ^^^^           meta.pattern.regex.b2jam
+#             ^             punctuation.definition.set.begin.regexp.b2jam
+#              ^            - punctuation.definition.set
+#            ^              punctuation.definition.string.begin.b2jam
+#               ^           punctuation.definition.string.end.b2jam
+#               ^           invalid.illegal.b2jam
+#             ^^^           meta.set.regexp.b2jam
+#                 ^         punctuation.separator.case-statement.b2jam
+
+        case "[]"] : { }
+#            ^^^^^          meta.pattern.regex.b2jam
+#             ^             punctuation.definition.set.begin.regexp.b2jam
+#                ^          punctuation.definition.set.end.regexp.b2jam
+#              ^            - punctuation.definition.set
+#            ^              punctuation.definition.string.begin.b2jam
+#               ^           punctuation.definition.string.end.b2jam
+#               ^           - invalid.illegal.b2jam
+#             ^^^           meta.set.regexp.b2jam
+#                  ^         punctuation.separator.case-statement.b2jam
+
+        case [""] : { }
+#            ^^^^           meta.pattern.regex.b2jam
+#               ^           - punctuation.definition.set
+#             ^             punctuation.definition.string.begin.b2jam
+#              ^            punctuation.definition.string.end.b2jam
+#            ^^^^           meta.set.regexp.b2jam
+#                ^          invalid.illegal.b2jam
+#                 ^         punctuation.separator.case-statement.b2jam
+
+        case []"" : { }
+#            ^^^^           meta.pattern.regex.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             - punctuation.definition.set
+#              ^            punctuation.definition.string.begin.b2jam
+#               ^           punctuation.definition.string.end.b2jam
+#            ^^^^           meta.set.regexp.b2jam
+#               ^           invalid.illegal.b2jam
+#                 ^         punctuation.separator.case-statement.b2jam
+
+        case "["] : { }
+#            ^^^^           meta.pattern.regex.b2jam
+#               ^           - punctuation.definition.set
+#            ^              punctuation.definition.string.begin.b2jam
+#             ^             punctuation.definition.set.begin.regexp.b2jam
+#              ^            punctuation.definition.string.end.b2jam
+#             ^^^           meta.set.regexp.b2jam
+#                ^          invalid.illegal.b2jam
+#                 ^         punctuation.separator.case-statement.b2jam
+
+        case ["]" : { }
+#            ^^^^           meta.pattern.regex.b2jam
+#             ^             punctuation.definition.string.begin.b2jam
+#               ^           punctuation.definition.string.end.b2jam
+#            ^^^            meta.set.regexp.b2jam
+#              ^            - punctuation.definition.set
+#               ^           invalid.illegal.b2jam
+#                 ^         punctuation.separator.case-statement.b2jam
+
+# [^] and quotes
+        case "[^]" : { }
+#            ^^^^^          meta.pattern.regex.b2jam
+#            ^^^^^          - meta.string string.quoted.double.b2jam
+#            ^              punctuation.definition.string.begin.b2jam
+#                ^          punctuation.definition.string.end.b2jam
+#             ^^^           meta.set.regexp.b2jam
+#              ^            keyword.operator.logical.regexp.b2jam
+#                  ^        punctuation.separator.case-statement.b2jam
+
+        case [^""] : { }
+#            ^^^^^          meta.pattern.regex.b2jam
+#              ^^           - meta.string string.quoted.double.b2jam
+#              ^            punctuation.definition.string.begin.b2jam
+#               ^           punctuation.definition.string.end.b2jam
+#            ^^^^^          meta.set.regexp.b2jam
+#             ^             keyword.operator.logical.regexp.b2jam
+#                  ^        punctuation.separator.case-statement.b2jam
+
+        case ["^"] : { }
+#            ^^^^^          meta.pattern.regex.b2jam
+#             ^^^           - meta.string string.quoted.double.b2jam
+#             ^             punctuation.definition.string.begin.b2jam
+#               ^           punctuation.definition.string.end.b2jam
+#            ^^^^^          meta.set.regexp.b2jam
+#              ^            keyword.operator.logical.regexp.b2jam
+#                  ^        punctuation.separator.case-statement.b2jam
+
+        case [""^] : { }
+#            ^^^^           meta.pattern.regex.b2jam
+#             ^^            - meta.string string.quoted.double.b2jam
+#             ^             punctuation.definition.string.begin.b2jam
+#              ^            punctuation.definition.string.end.b2jam
+#            ^^^^^          meta.set.regexp.b2jam
+#               ^           keyword.operator.logical.regexp.b2jam
+#                  ^        punctuation.separator.case-statement.b2jam
+
+        case "[^"] : { }
+#            ^^^^^          meta.pattern.regex.b2jam
+#            ^^^^           - meta.string string.quoted.double.b2jam
+#            ^              punctuation.definition.string.begin.b2jam
+#               ^           punctuation.definition.string.end.b2jam
+#             ^^^^          meta.set.regexp.b2jam
+#              ^            keyword.operator.logical.regexp.b2jam
+#                  ^        punctuation.separator.case-statement.b2jam
+
+        case "["^] : { }
+#            ^^^^^          meta.pattern.regex.b2jam
+#            ^^^            - meta.string string.quoted.double.b2jam
+#            ^              punctuation.definition.string.begin.b2jam
+#              ^            punctuation.definition.string.end.b2jam
+#             ^^^^          meta.set.regexp.b2jam
+#               ^           keyword.operator.logical.regexp.b2jam
+#                  ^        punctuation.separator.case-statement.b2jam
+
+        case [^"]" : { }
+#            ^^^^^          meta.pattern.regex.b2jam
+#              ^^^          - meta.string string.quoted.double.b2jam
+#              ^            punctuation.definition.string.begin.b2jam
+#                ^          punctuation.definition.string.end.b2jam
+#            ^^^^           meta.set.regexp.b2jam
+#             ^             keyword.operator.logical.regexp.b2jam
+#                  ^        punctuation.separator.case-statement.b2jam
+
+        case ["^]" : { }
+#            ^^^^^          meta.pattern.regex.b2jam
+#             ^^^^          - meta.string string.quoted.double.b2jam
+#             ^             punctuation.definition.string.begin.b2jam
+#                ^          punctuation.definition.string.end.b2jam
+#            ^^^^           meta.set.regexp.b2jam
+#              ^             keyword.operator.logical.regexp.b2jam
+#                  ^        punctuation.separator.case-statement.b2jam
+
+
+
+# inside sets, it appears that the only valid/useful escapes are '\\', '\ ', '\"'
+        case ["\\"]   : { }
+#            ^^^^^^         meta.pattern.regex.b2jam
+#            ^^^^^^         meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             punctuation.definition.string.begin.b2jam
+#                ^          punctuation.definition.string.end.b2jam
+#             ^^^^          - invalid
+#              ^^           constant.character.escape.b2jam
+#                 ^         punctuation.definition.set.end.regexp.b2jam
+
+        case ["a\\"]   : { }
+#            ^^^^^^^        meta.pattern.regex.b2jam
+#            ^^^^^^^        meta.set.regexp.b2jam
+#            ^^^^^^^        - invalid
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             punctuation.definition.string.begin.b2jam
+#                 ^         punctuation.definition.string.end.b2jam
+#               ^^          constant.character.escape.b2jam
+#                  ^        punctuation.definition.set.end.regexp.b2jam
+
+        case "[\ ]"  : { }
+#            ^^^^^^         meta.pattern.regex.b2jam
+#            ^              punctuation.definition.string.begin.b2jam
+#                 ^         punctuation.definition.string.end.b2jam
+#             ^^^^          meta.set.regexp.b2jam
+#             ^             punctuation.definition.set.begin.regexp.b2jam
+#              ^^           - punctuation - invalid
+#              ^            constant.character.escape.impotent.b2jam
+#               ^           - constant.character.escape
+#                ^          punctuation.definition.set.end.regexp.b2jam
+
+
+
+# using deprecated to represent that the escape is effectively ignored
+
+        case "[\]"   : { }
+#            ^^^^^          meta.pattern.regex.b2jam
+#             ^^^           meta.set.regexp.b2jam
+#             ^             punctuation.definition.set.begin.regexp.b2jam
+#              ^            - punctuation
+#               ^           - constant.character.escape
+#              ^            constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#                ^          invalid.illegal.b2jam
+#               ^           - punctuation.definition.set.end.regexp.b2jam
+
+        case "[^\]"   : { }
+#            ^^^^^^         meta.pattern.regex.b2jam
+#             ^^^^          meta.set.regexp.b2jam
+#             ^             punctuation.definition.set.begin.regexp.b2jam
+#              ^            keyword.operator.logical.regexp.b2jam
+#               ^           - punctuation
+#               ^           constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#                ^          - constant.character.escape
+#                ^          punctuation.definition.set.end.regexp.b2jam
+
+        case "[a\]"   : { }
+#             ^^^^          meta.pattern.regex.b2jam
+#             ^^^^          meta.set.regexp.b2jam
+#             ^             punctuation.definition.set.begin.regexp.b2jam
+#              ^            - punctuation - invalid
+#                ^          - constant.character.escape
+#               ^           constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#                ^          punctuation.definition.set.end.regexp.b2jam
+
+# you can't escape range operator - either
+
+        case "[a\-b]"   : { }
+#             ^^^^^^        meta.pattern.regex.b2jam meta.set.regexp.b2jam        
+#               ^           constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#                ^          punctuation.separator.range.regexp.b2jam
+#                ^          - constant.character.escape
+
+# can't escape, and invalid behavior (range from a to ?)
+        case "[a\-]"   : { }
+#             ^^^^^         meta.pattern.regex.b2jam meta.set.regexp.b2jam        
+#               ^           constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#                ^          invalid.illegal.b2jam
+#                ^          punctuation.separator.range.regexp.b2jam
+#                ^          - constant.character.escape
+
+# can't escape, but this is a valid character set with one member '-', not a range
+       case "[\-]"   : { }
+#            ^^^^           meta.pattern.regex.b2jam meta.set.regexp.b2jam        
+#             ^             constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#              ^            - invalid
+#              ^            - punctuation.separator.range.regexp.b2jam
+#              ^            - constant.character.escape
+       case "[^-]"   : { }
+#            ^^^^           meta.set.regexp.b2jam
+#            ^              punctuation.definition.set.begin.regexp.b2jam
+#             ^             keyword.operator.logical.regexp.b2jam
+#              ^            - punctuation
+#               ^           punctuation.definition.set.end.regexp.b2jam
+#            ^^^^           - invalid
+
+#   * ? are plain characters inside a set. 
+
+        case [*?] : { }
+#            ^^^^           meta.pattern.regex.b2jam meta.set.regexp.b2jam        
+#             ^^            - invalid
+#             ^^            - keyword
+
+        case $(noexp)*[abCD] : cmd1 arg1 ;
+#            ^^^^^^^^^^^^^^^    meta.statement.conditional.switch.b2jam meta.block.b2jam meta.pattern.regex.b2jam        
+#            ^^^^^^^^           - meta.interpolation
+
+# case after ';' statement should work as well
+        case a : cmd ;
+#       ^^^^                    - invalid
+
+}

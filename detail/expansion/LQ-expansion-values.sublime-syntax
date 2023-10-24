@@ -1,0 +1,388 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+# requries 2
+version: 2
+
+extends:
+  - Packages/B2Jam/detail/value/LQ-escapes.sublime-syntax
+
+variables:
+
+  # Abstract
+  # Define these in implementation, example values here are for identifer inside expansion
+  # LQN_stack_terminal_re: ':\['
+  # L0_stack_terminal_re: '[:\[\)]'
+  # Q0_stack_terminal_re: '[:\[\)]'
+
+  is_interpolation: (?=[\$@]\()
+
+  # Default values for LQ-escapes
+  L_escapeable_char: '[tnr\\"\s]'
+  Q_escapeable_char: '[tnr\\"]'
+  L_hazard_escape_re: '(?:[:\[()]|[$@]\()'
+  Q_hazard_escape_re: '(?:[:\[()]|[$@]\()'
+  L_needs_escape_char: '\s'
+
+contexts:
+
+  main:
+    - include: L-as
+
+###[ PROTOTYPES ]##############################################################
+
+  immediately-pop:
+    - match: ''
+      pop: 1
+
+  immediately-pop2:
+    - match: ''
+      pop: 2
+
+###[ LQ Parenthesis Stack ]####################################################
+
+  # BJam allows "" and () inside $(), and they only have to be balanced with respect
+  # to their own kind. This was a bit tricky to handle with the Sublime syntax grammar.
+  #
+  # The problem with balancing quotes and parens together is that they
+  # are states to be managed independently. When one closes, inside another,
+  # it requires that the closing context be reflected in the earlier type. This means
+  # changing the state of possibly many frames at once, and isn't directly possible
+  # with the sublime grammar.
+  #
+  # However we can achieve the effect by taking advantage of the same principal
+  # at play when we take a sequence of numbers and select every other number.
+  # If the first number is odd, then the selected sequence will be entirely odd.
+  # If we remove the first number (odd) from the base sequence, then the selected
+  # sequence will become entirely even. Using this property, we can solve the
+  # problem with tracking two context states simutaneously. One can think
+  # of it as maintaining two stacks.
+  #
+  # Letting the quote state be tracked with L and Q (Literal and Quoted)
+  # and the parenthesis state tracked with null parens 0 or nested parens p,
+  # we have four frames notated by: L, Q, Ln, Qn
+  #
+  #  [  1,  2,  3,  4,  5,  6,...]
+  #  [ L0, Q0, Ln, Qn, Ln, Qn,...]
+  #
+  # Like the raw number sequence, the LQP stack always has the same form, the only
+  # thing changing will be the depth.
+  #
+  #  Top:      L Q Qn Ln L
+  #            -------------
+  #  Stack:
+  #         4:     Qn
+  #         3:     Ln Ln
+  #         2:   Q Q  Q
+  #         1: L L L  L  L
+  #
+  # String:   [ " (  "  )  ]
+  #
+  #  Event:     ^              Push context, since changing L/Q type, push one frame
+  #               ^            Push context, since keeping  L/Q type, push two frames
+  #                  ^         Pop  context, since changing L/Q type, pop  one frame
+  #                     ^      pop  context, since keeping  L/Q type, pop  two frames
+  #
+  # The meta_scope feature is useful, but this 2 state stack isn't immediately compatible.
+  # We only want meta_scope's from every OTHER item up the stack. This can be achieved by
+  # using clear-scopes to always clear the alternate type, however experience with this
+  # has lead me to the conclusion that it isn't great, because when pushing multiple
+  # contexts at once, the clear_scopes sum, and apply BEFORE the stack, instead of
+  # applying as if they were pushed in sequence. This fact has proven itself to be
+  # awkward with this multi-dimension stack. I've abandoned that approach for just
+  # not using meta_scopes much, and manually applying scope for every match. It turns
+  # out that a stack with meta_scope that immediately pops is useful for extensibility.
+  #
+  # Originally, I had attempted to catch nesting errors by branch at each nest point.
+  # Apparently the sublime syntax engine is a bit buggy and when you 'fail' to
+  # branch points that were started in a stack frame that has been removed and replaced
+  # with the same frame type, it sometimes works, and gets buggy.
+  # Moved to a simpler model, just one branch.
+
+  # Takes place in stack of L or Q frame, but does nothing to scope
+  # When pushing, only the first item of stack applies to capture
+  # This fails when we rely upon the combined effect multiple pushes
+  # So, first item is null.
+
+  # Some contexts have the same content, I didn't collapse these
+  # into shared, to preserve the customization point.
+
+  LQ-failed-null:
+    - include: immediately-pop2
+
+  L-terminals-0:
+    - match: (?={{L0_stack_terminal_re}})
+      pop: 2
+
+  Q-terminals-0:
+    - match: (?={{Q0_stack_terminal_re}})
+      pop: 2
+
+  LQ-terminals-N:
+    - match: (?={{LQN_stack_terminal_re}})
+      fail: Q_nest_0
+    - match: (?={{LQN_stack_terminal_re}})
+      fail: L_nest_0
+    - include: LQ-terminals-N__failed
+
+  LQ-terminals-N__failed:
+    - match: (?={{LQN_stack_terminal_re}})
+      pop: 2
+
+  L-nest-0:
+    - match: (?=[\(\"])
+      branch_point: L_nest_0
+      branch:
+        - L-nest-0__good
+        - L-nest-0__fail
+
+  L-nest-0__failed:
+    - match: (?=[\(\"])
+      push: L-nest-0__fail
+
+  L-nest-0__good:
+    - match: \(
+      set: [ Q_0, L_N ]
+    - match: \"
+      scope: punctuation.definition.string.begin.b2jam
+      set: [ Q_0 ]
+
+  L-nest-0__fail:
+    - match: \(
+      scope: invalid.illegal.b2jam
+      set: [ Q_0-failed, L_N-failed ]
+
+    # don't trigger failed meta yet
+    - match: \"
+      scope: punctuation.definition.string.begin.b2jam
+      set: Q_0-failed
+
+  L-nest-N:
+    - match: \(
+      push: [ Q_N, L_N ]
+    - match: \"
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q_N
+
+  L-nest-N__failed:
+    - match: \(
+      push: [ Q_N-failed, L_N-failed ]
+    - match: \"
+      scope: punctuation.definition.string.begin.b2jam
+      push: [ Q_N-failed ]
+
+  L-pop-parens-N:
+    - match: \)
+      pop: 2
+
+  Q-pop-parens-N:
+    - match: \)
+      pop: 2
+
+  Q-nest-0:
+    - match: (?=\()
+      branch_point: Q_nest_0
+      branch:
+        - Q-nest-0__good
+        - Q-nest-0__fail
+
+  Q-nest-0__failed:
+    - match: \(
+      scope: invalid.illegal.b2jam
+      push: [ L_N-failed, Q_N-failed ]
+
+
+  Q-nest-0__good:
+    - match: \(
+      set: [ L_N, Q_N ]
+
+  Q-nest-0__fail:
+    - match: \(
+      scope: invalid.illegal.b2jam
+      set: [ L_N-failed, Q_N-failed ]
+
+  Q-nest-N:
+    - match: \(
+      push: [ L_N, Q_N ]
+
+  Q-nest-N__failed:
+    - match: \(
+      push: [ L_N-failed, Q_N-failed ]
+
+  Q-pop-quotes:
+    - match: \"
+      scope: punctuation.definition.string.end.b2jam
+      pop: 1
+
+# nested expansions
+
+  expansion-null:
+    - include: immediately-pop2
+
+  L-as-expansion:
+    - match: ''
+      set:
+        - expansion-meta # L place
+        - expansion-null # Q place
+        - Packages/B2Jam/detail/expansion/expansions.sublime-syntax#L-as-expansions
+
+  Q-as-expansion:
+    - match: ''
+      set:
+        - expansion-meta # L place
+        - expansion-null # Q place
+        - Packages/B2Jam/detail/expansion/expansions.sublime-syntax#Q-as-expansions
+
+  L-expansions-0:
+    - match: '(?={{is_interpolation}})'
+      push:
+        # L_0
+        - Q_0
+        - L-as-expansion
+
+  L-expansions-N:
+    - match: '(?={{is_interpolation}})'
+      push:
+        # L_N
+        - Q_N
+        - L-as-expansion
+
+  Q-expansions:
+    - match: '(?={{is_interpolation}})'
+      push:
+        # L_0
+        # Q_0
+        - Q-as-expansion
+
+  L-as:
+    - match: ''
+      set: L_0
+
+  Q-as:
+    - match: ''
+      set: [ L_0, Q_0 ]
+
+
+# Contexts
+
+  L_0-rules:
+    - include: L-nest-0
+    - include: L-expansions-0
+    - include: L-terminals-0
+    - include: L-prototype
+
+  L_0-failed-rules:
+    - include: L-nest-0
+    - include: L-expansions-0
+    - include: L-terminals-0
+    - include: L-prototype
+
+  L_N-rules:
+    - include: L-nest-N
+    - include: L-pop-parens-N
+    - include: L-expansions-N
+    - include: LQ-terminals-N
+    - include: L-prototype
+
+  L_N-failed-rules:
+    - include: L-nest-N__failed
+    - include: L-pop-parens-N
+    - include: L-expansions-N
+    - include: LQ-terminals-N__failed
+    - include: L-prototype
+
+  Q_0-rules:
+    - include: Q-nest-0
+    - include: Q-pop-quotes
+    - include: Q-expansions
+    - include: Q-terminals-0
+    - include: Q-prototype
+
+  Q_0-failed-rules:
+    - include: Q-nest-0__failed
+    - include: Q-pop-quotes
+    - include: Q-expansions
+    - include: Q-terminals-0
+    - include: Q-prototype
+
+  Q_N-rules:
+    - include: Q-nest-N
+    - include: Q-pop-parens-N
+    - include: Q-pop-quotes
+    - include: Q-expansions
+    - include: LQ-terminals-N
+    - include: Q-prototype
+
+  Q_N-failed-rules:
+    - include: Q-nest-N__failed
+    - include: Q-pop-parens-N
+    - include: Q-pop-quotes
+    - include: Q-expansions
+    - include: LQ-terminals-N__failed
+    - include: Q-prototype
+
+###[ OVERLOADS ]###############################################################
+
+  L-needs-escape-limit-deprecations:
+    # only match newline char if it is the first.
+    - match: '[ \t]{1,2}'
+      scope: invalid.deprecated.b2jam
+      push: L-needs-escape-deprecation-skipped
+    - match: '\n'
+      scope: invalid.deprecated.b2jam
+      push: L-needs-escape-deprecation-skipped
+
+  L-needs-escape-deprecation-skipped:
+    - match: '[ \t]+'
+      scope: invalid.deprecated.b2jam
+    - match: '\n'
+    - include: immediately-pop
+
+  # These are included, as a customization point.
+  L-prototype:
+    - include: L-escapes
+    - include: L-needs-escape-limit-deprecations
+
+  Q-prototype:
+    - include: Q-escapes
+
+  expansion-meta:
+    - clear_scopes: 1 # default, meta.string
+    - include: immediately-pop2
+
+  # by default, only toggles meta.string
+  # -failed contexts don't need 'failed' scope
+
+  L_0:
+    - include: L_0-rules
+
+  L_N:
+    - clear_scopes: 1 # - remove Q_X, meta.string
+    - include: L_N-rules
+
+  L_N-failed:
+    - clear_scopes: 1 # - remove Q_X, meta.string
+    - include: L_N-failed-rules
+
+  Q_0:
+    - meta_scope: meta.string.b2jam
+    - include: Q_0-rules
+
+  Q_0-failed:
+    - meta_scope: meta.string.b2jam
+    - include: Q_0-failed-rules
+
+  Q_N:
+    - meta_scope: meta.string.b2jam
+    - include: Q_N-rules
+
+  Q_N-failed:
+    - meta_scope: meta.string.b2jam
+    - include: Q_N-failed-rules

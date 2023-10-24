@@ -1,0 +1,163 @@
+#   SYNTAX TEST "Packages/B2Jam/B2Jam.sublime-syntax"
+
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+
+    exe foo :
+#   ^^^                 meta.function-call.identifier.b2jam support.function.exe.b2jam
+#       ^^^             meta.function-call.arguments.b2jam entity.name.type.target.b2jam
+
+    plain
+#   ^^^^^               meta.function-call.arguments.b2jam variable.other.target.b2jam
+
+    "plain"
+#   ^^^^^^^             meta.function-call.arguments.b2jam variable.other.target.b2jam
+
+    ./some/file.cpp
+#   ^^^^^^^^^^^^^^^     meta.function-call.arguments.b2jam    
+#   ^^^^^^^             variable.other.constant.path.b2jam    
+#          ^^^^^^^^     variable.other.target.b2jam
+#   ^                   constant.language.path.self.b2jam
+#    ^                  punctuation.separator.path.b2jam
+#         ^             punctuation.separator.path.b2jam
+#              ^        punctuation.separator.file.b2jam
+
+   "./some/file.cpp"
+#  ^^^^^^^^^^^^^^^^^    meta.function-call.arguments.b2jam    
+#   ^^^^^^^             variable.other.constant.path.b2jam    
+#          ^^^^^^^^     variable.other.target.b2jam
+#   ^                   constant.language.path.self.b2jam
+#    ^                  punctuation.separator.path.b2jam
+#         ^             punctuation.separator.path.b2jam
+#              ^        punctuation.separator.file.b2jam
+
+   .././../.dot /..dot
+#  ^^^^^^^^^^^^^^^^^^^^ meta.function-call.arguments.b2jam
+#  ^^^^^^^^             variable.other.constant.path.b2jam
+#          ^^^^         variable.other.target.b2jam
+#               ^       variable.other.constant.path.b2jam
+#                ^^^^^  variable.other.target.b2jam
+#  ^^                   constant.language.path.parent.b2jam
+#    ^                  punctuation.separator.path.b2jam
+#     ^                 constant.language.path.self.b2jam
+#      ^                punctuation.separator.path.b2jam
+#       ^^              constant.language.path.parent.b2jam
+#         ^             punctuation.separator.path.b2jam
+#          ^            punctuation.separator.file.b2jam
+#               ^       constant.language.path.root.b2jam
+#                ^^     punctuation.separator.file.b2jam
+
+  ".././../.dt" "/..dt"
+# ^^^^^^^^^^^^^^^^^^^^^ meta.function-call.arguments.b2jam
+#  ^^^^^^^^             variable.other.constant.path.b2jam
+#          ^^^          variable.other.target.b2jam
+#                ^      variable.other.constant.path.b2jam
+#                 ^^^^  variable.other.target.b2jam
+#  ^^                   constant.language.path.parent.b2jam
+#    ^                  punctuation.separator.path.b2jam
+#     ^                 constant.language.path.self.b2jam
+#      ^                punctuation.separator.path.b2jam
+#       ^^              constant.language.path.parent.b2jam
+#         ^             punctuation.separator.path.b2jam
+#          ^            punctuation.separator.file.b2jam
+#                ^      constant.language.path.root.b2jam
+#                 ^^    punctuation.separator.file.b2jam
+
+    c:/dir/file
+#   ^^^^^^^^^^^         meta.function-call.arguments.b2jam    
+#   ^^^^^^^             variable.other.constant.path.b2jam
+#          ^^^^         variable.other.target.b2jam
+#    ^                  punctuation.separator.drive.b2jam
+#     ^                 constant.language.path.root.b2jam
+#         ^             punctuation.separator.path.b2jam
+
+   "c:/dir/file"
+#  ^^^^^^^^^^^^^         meta.function-call.arguments.b2jam    
+#   ^^^^^^^             variable.other.constant.path.b2jam
+#          ^^^^         variable.other.target.b2jam
+#    ^                  punctuation.separator.drive.b2jam
+#     ^                 constant.language.path.root.b2jam
+#         ^             punctuation.separator.path.b2jam
+
+    x:\\dir\\file
+#   ^^^^^^^^^^^^^       meta.function-call.arguments.b2jam    
+#   ^^^^^^^^^           variable.other.constant.path.b2jam
+#            ^^^^       variable.other.target.b2jam
+#    ^                  punctuation.separator.drive.b2jam
+#     ^^                constant.language.path.root.b2jam
+#          ^^           punctuation.separator.path.b2jam
+
+   "x:\\dir\\file"
+#  ^^^^^^^^^^^^^^^      meta.function-call.arguments.b2jam    
+#   ^^^^^^^^^           variable.other.constant.path.b2jam
+#            ^^^^       variable.other.target.b2jam
+#    ^                  punctuation.separator.drive.b2jam
+#     ^^                constant.language.path.root.b2jam
+#          ^^           punctuation.separator.path.b2jam
+
+
+    ./dir//project      
+#   ^^^^^^^^^^^^^^      meta.function-call.arguments.b2jam    
+#   ^^^^^               variable.other.constant.path.b2jam
+#          ^^^^^^^      variable.other.target.b2jam
+#   ^                   constant.language.path.self.b2jam    
+#    ^                  punctuation.separator.path.b2jam
+#        ^^             constant.language.project-separator.b2jam
+
+   "./dir//project"
+#  ^^^^^^^^^^^^^^^^     meta.function-call.arguments.b2jam    
+#   ^^^^^               variable.other.constant.path.b2jam
+#          ^^^^^^^      variable.other.target.b2jam
+#   ^                   constant.language.path.self.b2jam    
+#    ^                  punctuation.separator.path.b2jam
+#        ^^             constant.language.project-separator.b2jam
+
+# odd path separators don't always match
+    /// \\\ \n\\\\ 
+#   ^^^                 variable.other.constant.path.b2jam
+#       ^^^^^^^^^^      variable.other.constant.path.b2jam
+#   ^^^                 - constant 
+#   ^^^                 - punctuation
+#       ^^              constant.language.path.root.b2jam
+#         ^^^^          constant.character.escape.b2jam
+#             ^^^^      constant.character.escape.b2jam 
+
+   "///" "\\\ \n\\\\"
+#  ^^^^^                meta.string.b2jam   
+#        ^^^^^^^^^^^^   meta.string.b2jam
+# ^^^^^^^^^^^^^^^^^^^^  - meta.string meta.string
+#  ^^^^^                variable.other.constant.path.b2jam
+#        ^^^^^^^^^^^^   variable.other.constant.path.b2jam
+#   ^^^                 - constant 
+#   ^^^                 - punctuation
+#         ^^            constant.language.path.root.b2jam
+#           ^           constant.character.escape.impotent.b2jam
+#               ^^^^    constant.character.escape.b2jam 
+
+
+    /. /.. foo. foo..   
+#   ^                   constant.language.path.root.b2jam    
+#    ^                  constant.language.path.self.b2jam    
+#      ^                constant.language.path.root.b2jam    
+#       ^^              constant.language.path.parent.b2jam
+#             ^         - constant.language
+#                  ^^   - constant.language
+#             ^         punctuation.separator.file.b2jam
+#                  ^^   punctuation.separator.file.b2jam
+
+  "/." "/.." "f." "f.."
+#  ^                    constant.language.path.root.b2jam    
+#   ^                   constant.language.path.self.b2jam    
+#       ^               constant.language.path.root.b2jam    
+#        ^^             constant.language.path.parent.b2jam
+#              ^        - constant.language
+#                   ^^  - constant.language
+#              ^        punctuation.separator.file.b2jam
+#                   ^^  punctuation.separator.file.b2jam
+
+
+    ;
+
+

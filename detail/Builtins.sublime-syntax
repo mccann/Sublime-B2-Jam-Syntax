@@ -1,0 +1,1006 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+version: 2
+extends:
+  - Packages/B2Jam/detail/core.sublime-syntax
+
+
+contexts:
+
+  main:
+    - include: builtins
+
+  identifier:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - include: immediately-pop
+
+##[ ARGUMENT TYPES ]###########################################################
+
+  # 1st- = first_strict variant, no expectation of :, sets identifier scope
+  # param-1    = list-1-useful
+  # param-list = list
+  # param-lol  = lol
+  # --         = colon
+
+  # TODO: consider way to mark 'required' arg.
+
+  # catch all for tail
+  remainder:
+    - include: Packages/B2Jam/detail/value/value-deprecated.sublime-syntax#lol
+
+  deprecated:
+    - include: Packages/B2Jam/detail/value/value-deprecated.sublime-syntax#expr
+
+  deprecated-list:
+    - include: Packages/B2Jam/detail/value/value-deprecated.sublime-syntax#list
+
+  # only literal values are illegal
+  illegal-literal:
+    - include: Packages/B2Jam/detail/value/value-illegal-literal.sublime-syntax#expr
+
+  --:
+    - match: '{{colon}}'
+      scope: punctuation.separator.sequence.b2jam
+      pop: 1
+    - include: until-list-punctuation
+    # - include: invalid-until-colon
+
+  # feature = jam argument that can takes feature args
+  feature-meta:
+    - meta_scope: meta.type.args.feature.b2jam
+    - include: immediately-pop
+
+  1st-feature:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set:
+        - feature-meta
+        - Packages/B2Jam/detail/value/value-feature-args.sublime-syntax#restricted-expr
+
+  1st-feature-1:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set:
+        - feature-meta
+        - Packages/B2Jam/detail/value/value-feature-args.sublime-syntax#first-strict-list-1-useful
+
+  1st-feature-list:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set:
+        - feature-meta
+        - Packages/B2Jam/detail/value/value-feature-args.sublime-syntax#first-strict-list
+
+  1st-feature-lol:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set:
+        - feature-meta
+        - Packages/B2Jam/detail/value/value-feature-args.sublime-syntax#first-strict-lol
+
+  feature-1:
+    - match: ''
+      set:
+        - feature-meta
+        - Packages/B2Jam/detail/value/value-feature-args.sublime-syntax#list-1-useful
+
+  feature-list:
+    - match: ''
+      set:
+        - feature-meta
+        - Packages/B2Jam/detail/value/value-feature-args.sublime-syntax#list
+
+  feature-lol:
+    - match: ''
+      set:
+        - feature-meta
+        - Packages/B2Jam/detail/value/value-feature-args.sublime-syntax#lol
+
+  feature:
+    - match: ''
+      set:
+        - feature-meta
+        - Packages/B2Jam/detail/value/value-feature-args.sublime-syntax#expr
+
+
+  # plain args
+  plain-meta:
+    - meta_scope: meta.type.args.plain.b2jam
+    - include: immediately-pop
+
+  1st-plain:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set:
+        - plain-meta
+        - Packages/B2Jam/detail/value/value-plain-args.sublime-syntax#restricted-expr
+
+  1st-plain-1:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set:
+        - plain-meta
+        - Packages/B2Jam/detail/value/value-plain-args.sublime-syntax#first-strict-list-1-useful
+
+  1st-plain-list:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set:
+        - plain-meta
+        - Packages/B2Jam/detail/value/value-plain-args.sublime-syntax#first-strict-list
+
+  1st-plain-lol:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set:
+        - plain-meta
+        - Packages/B2Jam/detail/value/value-plain-args.sublime-syntax#first-strict-lol
+
+  plain-1:
+    - match: ''
+      set:
+        - plain-meta
+        - Packages/B2Jam/detail/value/value-plain-args.sublime-syntax#list-1-useful
+
+  plain-list:
+    - match: ''
+      set:
+        - plain-meta
+        - Packages/B2Jam/detail/value/value-plain-args.sublime-syntax#list
+
+  plain-lol:
+    - match: ''
+      set:
+        - plain-meta
+        - Packages/B2Jam/detail/value/value-plain-args.sublime-syntax#lol
+
+  plain:
+    - match: ''
+      set:
+        - plain-meta
+        - Packages/B2Jam/detail/value/value-plain-args.sublime-syntax#expr
+
+
+  # target = reference to some existing identifier/target/etc.. empty scope
+  1st-target-1:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: Packages/B2Jam/detail/value/value-path-or-target.sublime-syntax#first-strict-list-1-useful
+
+  1st-target:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: Packages/B2Jam/detail/value/value-path-or-target.sublime-syntax#restricted-expr
+
+  1st-target-list:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: Packages/B2Jam/detail/value/value-path-or-target.sublime-syntax#first-strict-list
+
+  target:
+    - include: Packages/B2Jam/detail/value/value-path-or-target.sublime-syntax#expr
+
+  target-1:
+    - include: Packages/B2Jam/detail/value/value-path-or-target.sublime-syntax#list-1-useful
+
+  target-list:
+    - include: Packages/B2Jam/detail/value/value-path-or-target.sublime-syntax#list
+
+  1st-target-entity:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: Packages/B2Jam/detail/value/value-target-entity.sublime-syntax#restricted-expr
+
+  1st-target-entity-1:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: Packages/B2Jam/detail/value/value-target-entity.sublime-syntax#first-strict-list-1-useful
+
+  target-entity:
+    - include: Packages/B2Jam/detail/value/value-target-entity.sublime-syntax#expr
+
+  target-entity-1:
+    - include: Packages/B2Jam/detail/value/value-target-entity.sublime-syntax#list-1-useful
+
+  target-entity-list:
+    - include: Packages/B2Jam/detail/value/value-target-entity.sublime-syntax#list
+
+ ## feature
+  1st-feature-entity-1:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: Packages/B2Jam/detail/value/value-feature-entity.sublime-syntax#first-strict-list-1-useful
+
+ ## int
+  1st-int:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: Packages/B2Jam/detail/value/constant-integer.sublime-syntax#expr
+
+  1st-int-1:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: Packages/B2Jam/detail/value/constant-integer.sublime-syntax#first-strict-list-1-useful
+
+  int:
+    - include: Packages/B2Jam/detail/value/constant-integer.sublime-syntax#expr
+
+  int-1:
+    - include: Packages/B2Jam/detail/value/constant-integer.sublime-syntax#list-1-useful
+
+  int-list:
+    - include: Packages/B2Jam/detail/value/constant-integer.sublime-syntax#list
+
+ ## glob
+  1st-glob-list:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: Packages/B2Jam/detail/value/value-glob-pattern-string.sublime-syntax#first-strict-list
+
+  glob-list:
+    - include: Packages/B2Jam/detail/value/value-glob-pattern-string.sublime-syntax#list
+
+ ## regex
+  1st-regex:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: Packages/B2Jam/detail/value/value-regex.sublime-syntax#first-strict-list
+
+  1st-regex-1:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: Packages/B2Jam/detail/value/value-regex.sublime-syntax#first-strict-list-1-useful
+
+  regex:
+    - include: Packages/B2Jam/detail/value/value-regex.sublime-syntax#expr
+
+  regex-1:
+    - include: Packages/B2Jam/detail/value/value-regex.sublime-syntax#list-1-useful
+
+  regex-list:
+    - include: Packages/B2Jam/detail/value/value-regex.sublime-syntax#list
+
+ ## Langref - reference to language identifier, module, rule, classname, etc
+  1st-langref:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: Packages/B2Jam/detail/value/value-langref.sublime-syntax#restricted-expr
+
+  1st-langref-1:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: Packages/B2Jam/detail/value/value-langref.sublime-syntax#first-strict-list-1-useful
+
+  1st-langref-list:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: Packages/B2Jam/detail/value/value-langref.sublime-syntax#first-strict-list
+
+  langref:
+    - include: Packages/B2Jam/detail/value/value-langref.sublime-syntax#expr
+
+  langref-1:
+    - include: Packages/B2Jam/detail/value/value-langref.sublime-syntax#list-1-useful
+
+  langref-list:
+    - include: Packages/B2Jam/detail/value/value-langref.sublime-syntax#list
+
+## Calc Op
+  calc-op:
+    - match: '{{ws_lb}}[-+]{{right_edge}}'
+      scope: keyword.operator.arithmetic.calc.b2jam
+      pop: 1
+    - match: (?=\[)|{{is_interpolation}}
+      set: plain
+    - match: '{{token_begin}}'
+      set: deprecated
+
+
+## project arg-list
+
+
+  project-arg-list:
+    # target/path options
+    - match: '{{ws_lb}}(?:build-dir|source-location|location|project-root|projects-to-build){{right_edge}}'
+      scope: support.constant.parameter.type.b2jam
+      set: target-list
+    # feature options
+    - match: '{{ws_lb}}(?:requirements|usage-requirements|common-requirements){{right_edge}}'
+      scope: support.constant.parameter.type.b2jam
+      set: feature-list
+    # plain options
+    - match: '{{ws_lb}}(?:default-build){{right_edge}}'
+      scope: support.constant.parameter.type.b2jam
+      set: plain-list
+    # entity options
+    - match: '{{ws_lb}}(?:id){{right_edge}}'
+      scope: support.constant.parameter.type.b2jam
+      set: target-entity-list
+    # - match: (?=\[)|{{is_interpolation}}
+    #   set: plain-list
+    - include: until-list-punctuation
+    - match: '{{token_begin}}'
+      set: [ plain-list, illegal-literal ]
+
+
+  as-project-arg-lol:
+    - match: ''
+      set: project-arg-lol
+
+  project-arg-lol:
+    - meta_scope: meta.support.project.args.b2jam
+    - match: '{{colon}}'
+      scope: punctuation.separator.sequence.b2jam
+    - include: until-list-punctuation
+    - match: '{{token_begin}}'
+      push: project-arg-list
+
+
+##[ COMMON SIGNATURES ]########################################################
+
+  main-target:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: [ remainder, feature-list, -- , plain-list, -- , feature-list, -- , target-list, -- , 1st-target-entity-1 ]
+
+  unit-testing-rule:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: [ remainder, target-1, -- , feature-list, --, 1st-target-list ]
+
+  unit-testing-run-rule:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: [ remainder, plain-list, --, target-1, --, feature-list, --, target-list, --  , plain-list , --,   1st-target-list ]
+
+  builtins:
+
+##[ LANGUAGE BUILTINS ]########################################################
+
+  # Builtins - builtins.cpp
+    - match: '{{ws_lb}}(?:ALWAYS|Always){{right_edge}}'
+      scope: support.function.ALWAYS.b2jam
+      set: [ remainder, 1st-target-list ]
+
+    - match: '{{ws_lb}}(?:DEPENDS|Depends){{right_edge}}'
+      scope: support.function.DEPENDS.b2jam
+      set: [ remainder, target-list, --, 1st-target-list ]
+
+    - match: '{{ws_lb}}(?:ECHO|Echo|echo){{right_edge}}'
+      scope: support.function.ECHO.b2jam
+      set: [ remainder, 1st-plain-list ]
+
+    - match: '{{ws_lb}}(?:EXIT|Exit|exit){{right_edge}}'
+      scope: support.function.EXIT.b2jam
+      set: [ remainder, int-1, --, 1st-plain-list ]
+
+    # rule GLOB ( directories * : patterns * : downcase-opt ? )
+    - match: '{{ws_lb}}(?:GLOB|Glob){{right_edge}}'
+      scope: support.function.GLOB.b2jam
+      set: [ remainder, plain-1, --, glob-list, --, 1st-target-list ]
+    # rule GLOB-RECURSIVELY ( patterns * )
+    - match: '{{ws_lb}}GLOB-RECURSIVELY{{right_edge}}'
+      scope: support.function.GLOB-RECURSIVELY.b2jam
+      set: [ remainder, 1st-glob-list ]
+
+    - match: '{{ws_lb}}(?:INCLUDES|Includes){{right_edge}}'
+      scope: support.function.INCLUDES.b2jam
+      set: [ remainder, target-list, --, 1st-target-list ]
+
+    - match: '{{ws_lb}}REBUILDS{{right_edge}}'
+      scope: support.function.REBUILDS.b2jam
+      set: [ remainder, target-list, --, 1st-target-list ]
+
+    - match: '{{ws_lb}}(?:LEAVES|Leaves){{right_edge}}'
+      scope: support.function.LEAVES.b2jam
+      set: [ remainder, 1st-target-list ]
+
+    # rule MATCH ( regexps + : list * )
+    - match: '{{ws_lb}}(?:MATCH|Match){{right_edge}}'
+      scope: support.function.MATCH.b2jam
+      set: [ remainder, plain-list, --, 1st-regex ]
+
+    - match: '{{ws_lb}}SPLIT_BY_CHARACTERS{{right_edge}}'
+      scope: support.function.SPLIT_BY_CHARACTERS.b2jam
+      set: [ remainder, plain-1, --, 1st-plain-1 ]
+
+    - match: '{{ws_lb}}(?:NOCARE|NoCare){{right_edge}}'
+      scope: support.function.NOCARE.b2jam
+      set: [ remainder, 1st-target-list ]
+
+    - match: '{{ws_lb}}(?:NOTFILE|NOTIME|NotFile){{right_edge}}'
+      scope: support.function.NOTFILE.b2jam
+      set: [ remainder, 1st-target-list ]
+
+    - match: '{{ws_lb}}(?:NOUPDATE|NoUpdate){{right_edge}}'
+      scope: support.function.NOUPDATE.b2jam
+      set: [ remainder, 1st-target-list ]
+
+    - match: '{{ws_lb}}(?:TEMPORARY|Temporary){{right_edge}}'
+      scope: support.function.TEMPORARY.b2jam
+      set: [ remainder, 1st-target-list ]
+
+    - match: '{{ws_lb}}ISFILE{{right_edge}}'
+      scope: support.function.ISFILE.b2jam
+      set: [ remainder, 1st-target-list ]
+
+    - match: '{{ws_lb}}(?:HDRMACRO|HdrMacro){{right_edge}}'
+      scope: support.function.HDRMACRO.b2jam
+      set: [ remainder, 1st-target-list ]
+
+    - match: '{{ws_lb}}FAIL_EXPECTED{{right_edge}}'
+      scope: support.function.FAIL_EXPECTED.b2jam
+      set: [ remainder, 1st-target-list ]
+
+    - match: '{{ws_lb}}RMOLD{{right_edge}}'
+      scope: support.function.RMOLD.b2jam
+      set: [ remainder, 1st-target-list ]
+
+    - match: '{{ws_lb}}UPDATE{{right_edge}}'
+      scope: support.function.UPDATE.b2jam
+      set: [ remainder, 1st-target-list ]
+
+    - match: '{{ws_lb}}UPDATE_NOW{{right_edge}}'
+      scope: support.function.UPDATE_NOW.b2jam
+      set: [ remainder, plain-1, --, plain-1, --, plain-1, --, 1st-target-list ]
+
+    - match: '{{ws_lb}}(?:SUBST|subst){{right_edge}}'
+      scope: support.function.SUBST.b2jam
+      set: [ remainder, plain-list, regex, 1st-plain ]
+
+    - match: '{{ws_lb}}VARNAMES{{right_edge}}'
+      scope: support.function.VARNAMES.b2jam
+      set: [ remainder, 1st-target-1 ]
+
+    - match: '{{ws_lb}}DELETE_MODULE{{right_edge}}'
+      scope: support.function.DELETE_MODULE.b2jam
+      set: [ remainder, 1st-target-1 ]
+
+
+    # rule IMPORT ( source_module ? : source_rules *
+    #             : target_module ? : target_rules * : localize ? )
+    - match: '{{ws_lb}}IMPORT{{right_edge}}'
+      scope: support.function.IMPORT.b2jam
+      set: [ remainder, plain-1, --, langref-list, --, langref-1, --, langref-list, --, 1st-langref-1 ]
+
+    - match: '{{ws_lb}}EXPORT{{right_edge}}'
+      scope: support.function.EXPORT.b2jam
+      set: [ remainder, target-entity-list, --, 1st-langref-1 ]
+
+    - match: '{{ws_lb}}CALLER_MODULE{{right_edge}}'
+      scope: support.function.CALLER_MODULE.b2jam
+      set: [ remainder, 1st-langref-1 ]
+
+    - match: '{{ws_lb}}BACKTRACE{{right_edge}}'
+      scope: support.function.BACKTRACE.b2jam
+      set: [ remainder, 1st-int-1 ]
+
+    - match: '{{ws_lb}}PWD{{right_edge}}'
+      scope: support.function.PWD.b2jam
+      set: [ remainder, identifier ]
+
+    - match: '{{ws_lb}}IMPORT_MODULE{{right_edge}}'
+      scope: support.function.IMPORT_MODULE.b2jam
+      set: [ remainder, target-entity-1, --, 1st-langref-list ]
+
+    - match: '{{ws_lb}}IMPORTED_MODULES{{right_edge}}'
+      scope: support.function.IMPORTED_MODULES.b2jam
+      set: [ remainder, 1st-langref-1 ]
+
+    - match: '{{ws_lb}}SORT{{right_edge}}'
+      scope: support.function.SORT.b2jam
+      set: [ remainder, 1st-plain-list ]
+
+    - match: '{{ws_lb}}NORMALIZE_PATH{{right_edge}}'
+      scope: support.function.NORMALIZE_PATH.b2jam
+      set: [ remainder, 1st-target-list ]
+
+    - match: '{{ws_lb}}CALC{{right_edge}}'
+      scope: support.function.CALC.b2jam
+      set: [ remainder, int, calc-op, 1st-int ]
+
+    - match: '{{ws_lb}}NATIVE_RULE{{right_edge}}'
+      scope: support.function.NATIVE_RULE.b2jam
+      set: [ remainder, langref-1, --, 1st-langref-1 ]
+
+    - match: '{{ws_lb}}HAS_NATIVE_RULE{{right_edge}}'
+      scope: support.function.HAS_NATIVE_RULE.b2jam
+      set: [ remainder, plain-1, --, langref-1, --, 1st-langref-1 ]
+
+    - match: '{{ws_lb}}USER_MODULE{{right_edge}}'
+      scope: support.function.USER_MODULE.b2jam
+      set: [ remainder, 1st-langref-list ]
+
+    - match: '{{ws_lb}}NEAREST_USER_LOCATION{{right_edge}}'
+      scope: support.function.NEAREST_USER_LOCATION.b2jam
+      set: [ remainder, identifier ]
+
+    - match: '{{ws_lb}}CHECK_IF_FILE{{right_edge}}'
+      scope: support.function.CHECK_IF_FILE.b2jam
+      set: [ remainder, 1st-target-1 ]
+
+    - match: '{{ws_lb}}W32_GETREG{{right_edge}}'
+      scope: support.function.W32_GETREG.b2jam
+      set: [ remainder, target-1, --, 1st-target-1 ]
+
+    - match: '{{ws_lb}}W32_GETREGNAMES{{right_edge}}'
+      scope: support.function.W32_GETREGNAMES.b2jam
+      set: [ remainder, target-1, --, 1st-target-1 ]
+
+      #TODO: consider shell plain
+    - match: '{{ws_lb}}(?:SHELL|COMMAND){{right_edge}}'
+      scope: support.function.SHELL.b2jam
+      set: [ remainder, plain-lol, --, 1st-plain-1 ]
+
+    - match: '{{ws_lb}}MD5{{right_edge}}'
+      scope: support.function.MD5.b2jam
+      set: [ remainder, 1st-plain-1 ]
+
+    - match: '{{ws_lb}}FILE_OPEN{{right_edge}}'
+      scope: support.function.FILE_OPEN.b2jam
+      set: [ remainder, plain-1, --, 1st-target-1 ]
+
+    - match: '{{ws_lb}}PAD{{right_edge}}'
+      scope: support.function.PAD.b2jam
+      set: [ remainder, int, --, 1st-plain-1 ]
+
+    - match: '{{ws_lb}}PRECIOUS{{right_edge}}'
+      scope: support.function.PRECIOUS.b2jam
+      set: [ remainder, 1st-target-list ]
+
+    - match: '{{ws_lb}}SELF_PATH{{right_edge}}'
+      scope: support.function.SELF_PATH.b2jam
+      set: [ remainder, identifier ]
+
+    - match: '{{ws_lb}}MAKEDIR{{right_edge}}'
+      scope: support.function.MAKEDIR.b2jam
+      set: [ remainder, 1st-target-1 ]
+
+    - match: '{{ws_lb}}READLINK{{right_edge}}'
+      scope: support.function.READLINK.b2jam
+      set: [ remainder, 1st-target-1 ]
+
+    - match: '{{ws_lb}}GLOB_ARCHIVE{{right_edge}}'
+      scope: support.function.GLOB_ARCHIVE.b2jam
+      set: [ remainder, glob-list, --, plain-1, --, glob-list, --, 1st-target-list ]
+
+##[ BUILD LIBRARY BUILTINS - EXTENDER ]########################################
+ ##[ MODULE plugin-rules ]#####################################################
+    # if these match too often, consider some sort of Jamfile only commands
+
+    # `rule import ( module-names + : rules-opt * : rename-opt * )`
+    - match: '{{ws_lb}}import{{right_edge}}'
+      scope: support.function.project-rules.import.b2jam
+      set: [ remainder, langref-list, --, langref-list, --, 1st-langref-list ]
+
+    # rule new ( class args * : * )
+    - match: '{{ws_lb}}new{{right_edge}}'
+      scope: support.function.new.b2jam
+      set: [ plain-lol, 1st-langref ]
+
+
+ ##[ MODULE REGEX ]#############################################################
+    # rule regex.match ( pattern : plain : indices * )
+    - match: '{{ws_lb}}(?:((regex)(\.)(match))|(match)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.regex.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.regex.match.b2jam
+        5: support.function.regex.match.b2jam
+      set: [ remainder, int-list, --, plain-1, --, 1st-regex-1 ]
+
+    # rule regex.transform ( list * : pattern : indices * )
+    - match: '{{ws_lb}}(?:((regex)(\.)(transform))|(transform)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.regex.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.regex.transform.b2jam
+        5: support.function.regex.transform.b2jam
+      set: [ remainder, int-list, --, regex-1, --, 1st-plain-list ]
+
+    # rule regex.split ( plain pattern )
+    - match: '{{ws_lb}}(?:((regex)(\.)(split))|(split)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.regex.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.regex.split.b2jam
+        5: support.function.regex.split.b2jam
+      set: [ remainder, regex-1, 1st-plain ]
+
+    # rule split-list ( list * : separator )
+    - match: '{{ws_lb}}(?:((regex)(\.)(split-list))|(split-list)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.regex.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.regex.split-list.b2jam
+        5: support.function.regex.split-list.b2jam
+      set: [ remainder, regex-1, --, 1st-plain-list ]
+    #  rule escape ( plain : symbols : escape-symbol )
+    - match: '{{ws_lb}}(?:((regex)(\.)(escape))|(escape)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.regex.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.regex.escape.b2jam
+        5: support.function.regex.escape.b2jam
+      set: [ remainder, plain-1, --, plain-1, --, 1st-plain-1 ]
+    # rule replace ( plain match replacement )
+    - match: '{{ws_lb}}(?:((regex)(\.)(replace))|(replace)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.regex.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.regex.replace.b2jam
+        5: support.function.regex.replace.b2jam
+      set: [ remainder, plain-1, regex, 1st-plain ]
+    # rule replace-list ( list * : match : replacement )
+    - match: '{{ws_lb}}(?:((regex)(\.)(replace-list))|(replace-list)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.regex.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.regex.replace-list.b2jam
+        5: support.function.regex.replace-list.b2jam
+      set: [ remainder, plain-1, --, regex-1, --, 1st-plain-list ]
+    # rule grep ( directories + : files + : patterns + : result_expressions * : options * )
+    - match: '{{ws_lb}}(?:((regex)(\.)(grep))|(grep)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.regex.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.regex.grep.b2jam
+        5: support.function.regex.grep.b2jam
+      set: [ remainder, plain-list, -- , int-list, --, regex-list, --, glob-list, --, 1st-target-list ]
+
+ ##[ MODULE FEATURE ]#############################################################
+
+    # rule feature ( name : values * : attributes * )
+    - match: '{{ws_lb}}(?:((feature)(\.)(feature))|(feature)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.feature.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.feature.feature.b2jam
+        5: support.function.feature.feature.b2jam
+      set: [ remainder, feature-list, --, target-entity-list, --, 1st-feature-entity-1 ]
+
+    - match: '{{ws_lb}}(?:((feature)(\.)(compose))|(compose)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.feature.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.feature.compose.b2jam
+        5: support.function.feature.compose.b2jam
+      set: [ remainder, feature-list, --, 1st-feature-1 ]
+
+ ##[ MODULE modules ]#############################################################
+
+    - match: '{{ws_lb}}(?:((modules)(\.)(poke))|(poke)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.modules.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.modules.poke.b2jam
+        5: support.function.modules.poke.b2jam
+      set: [ remainder, plain-list, --, target-entity-list, --, 1st-langref-1 ]
+
+    - match: '{{ws_lb}}(?:((modules)(\.)(peek))|(peek)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.modules.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.modules.peek.b2jam
+        5: support.function.modules.peek.b2jam
+      set: [ remainder, langref-list, --, 1st-langref-1 ]
+
+    - match: '{{ws_lb}}(?:((modules)(\.)(call-in))|(call-in)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.modules.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.modules.call-in.b2jam
+        5: support.function.modules.call-in.b2jam
+      set: [ plain-lol, langref, --, 1st-langref-1 ]
+
+    - match: '{{ws_lb}}(?:((modules)(\.)(call-locally))|(call-locally)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.modules.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.modules.call-locally.b2jam
+        5: support.function.modules.call-locally.b2jam
+      set: [ plain-lol, 1st-langref ]
+
+ ##[ MODULE toolset ]#############################################################
+
+    # rule flags ( rule-module variable : cond * : vals * : uncheck ?  : hack ?  )
+    - match: '{{ws_lb}}(?:((toolset)(\.)(flags))|(flags)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.toolset.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.toolset.flags.b2jam
+        5: support.function.toolset.flags.b2jam
+        # TODO: what kind of entity should this really be?
+      set: [ remainder, plain-1, --, plain-1, --, plain-list, --, plain-list, target-entity, 1st-langref ]
+
+ ##[ MODULE configure ]###########################################################
+
+
+    - match: '{{ws_lb}}((configure)(\.)(builds)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.configure.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.configure.builds.b2jam
+      set: [ remainder,  plain-1, --, plain-1, --, feature-list, 1st-target-1 ]
+
+ ##[ MODULE path ]#############################################################
+
+    - match: '{{ws_lb}}((path)(\.)(exists)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.exists.b2jam
+      set: [ remainder, 1st-target-1 ]
+
+    - match: '{{ws_lb}}((path)(\.)(make)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.make.b2jam
+      set: [ remainder, 1st-target-1 ]
+
+    - match: '{{ws_lb}}((path)(\.)(native)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.native.b2jam
+      set: [ remainder, 1st-target-1 ]
+
+    - match: '{{ws_lb}}((path)(\.)(is\-rooted)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.is-rooted.b2jam
+      set: [ remainder, 1st-target-1 ]
+
+    - match: '{{ws_lb}}((path)(\.)(has\-parent)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.has-parent.b2jam
+      set: [ remainder, 1st-target-1 ]
+
+    - match: '{{ws_lb}}((path)(\.)(basename)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.basename.b2jam
+      set: [ remainder, 1st-target-1 ]
+
+    - match: '{{ws_lb}}((path)(\.)(parent)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.parent.b2jam
+      set: [ remainder, 1st-target-1 ]
+
+    - match: '{{ws_lb}}((path)(\.)(reverse)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.reverse.b2jam
+      set: [ remainder, 1st-target-1 ]
+
+    - match: '{{ws_lb}}((path)(\.)(join)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.join.b2jam
+      set: [ remainder, 1st-target-list ]
+
+    - match: '{{ws_lb}}((path)(\.)(root)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.root.b2jam
+      set: [ remainder, target-1, 1st-target ]
+
+    - match: '{{ws_lb}}((path)(\.)(pwd)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.pwd.b2jam
+      set: [ remainder, identifier ]
+
+    - match: '{{ws_lb}}((path)(\.)(glob)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.glob.b2jam
+      set: [ remainder, glob-list, --, glob-list, --, 1st-target-list ]
+
+    - match: '{{ws_lb}}((path)(\.)(glob-tree)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.glob-tree.b2jam
+      set: [ remainder, glob-list, --, glob-list, --, 1st-target-list ]
+
+    - match: '{{ws_lb}}((path)(\.)(all-parents)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.all-parents.b2jam
+      set: [ remainder, plain-1, --, plain-1, --, 1st-target-1 ]
+
+    - match: '{{ws_lb}}((path)(\.)(glob-in-parents)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.glob-in-parents.b2jam
+      set: [ remainder, plain-1, --, glob-list, --, 1st-target-1 ]
+
+    - match: '{{ws_lb}}((path)(\.)(relative)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.relative.b2jam
+      set: [ remainder, plain-1, --, target-1,  1st-target ]
+
+
+    - match: '{{ws_lb}}((path)(\.)(relative-to)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.relative-to.b2jam
+      set: [ remainder, target-1,  1st-target ]
+
+
+    - match: '{{ws_lb}}((path)(\.)(makedirs)){{right_edge}}'
+      captures:
+        1: meta.path.b2jam
+        2: support.namespace.path.b2jam
+        3: punctuation.accessor.dot.b2jam
+        4: support.function.path.makedirs.b2jam
+      set: [ remainder, 1st-target-1 ]
+
+##[ BUILD LIBRARY BUILTINS - TARGETS ]#########################################
+    - match: '{{ws_lb}}exe{{right_edge}}'
+      scope: support.function.exe.b2jam
+      set: main-target
+    - match: '{{ws_lb}}lib{{right_edge}}'
+      scope: support.function.lib.b2jam
+      set: main-target
+    - match: '{{ws_lb}}install{{right_edge}}'
+      scope: support.function.install.b2jam
+      set: main-target
+    - match: '{{ws_lb}}alias{{right_edge}}'
+      scope: support.function.alias.b2jam
+      set: main-target
+    - match: '{{ws_lb}}unit-test{{right_edge}}'
+      scope: support.function.unit-test.b2jam
+      set: main-target
+    - match: '{{ws_lb}}compile{{right_edge}}'
+      scope: support.function.compile.b2jam
+      set: unit-testing-rule
+    - match: '{{ws_lb}}compile-fail{{right_edge}}'
+      scope: support.function.compile-fail.b2jam
+      set: unit-testing-rule
+    - match: '{{ws_lb}}link{{right_edge}}'
+      scope: support.function.link.b2jam
+      set: unit-testing-rule
+    - match: '{{ws_lb}}link-fail{{right_edge}}'
+      scope: support.function.link-fail.b2jam
+      set: unit-testing-rule
+    - match: '{{ws_lb}}run{{right_edge}}'
+      scope: support.function.run.b2jam
+      set: unit-testing-run-rule
+    - match: '{{ws_lb}}run-fail{{right_edge}}'
+      scope: support.function.run-fail.b2jam
+      set: unit-testing-run-rule
+    - match: '{{ws_lb}}check-target-builds{{right_edge}}'
+      scope: support.function.check-target-builds.b2jam
+      set: [ remainder, feature-list, --, feature-list, --, plain-1, 1st-target ]
+    - match: '{{ws_lb}}obj{{right_edge}}'
+      scope: support.function.obj.b2jam
+      set: main-target
+    - match: '{{ws_lb}}preprocessed{{right_edge}}'
+      scope: support.function.preprocessed.b2jam
+      set: main-target
+    - match: '{{ws_lb}}glob{{right_edge}}'
+      scope: support.function.project.glob.b2jam
+      set: [ remainder, glob-list, --, 1st-glob-list ]
+    - match: '{{ws_lb}}glob-tree{{right_edge}}'
+      scope: support.function.project.glob-tree.b2jam
+      set: [ remainder, glob-list, --, 1st-glob-list ]
+    - match: '{{ws_lb}}project{{right_edge}}'
+      scope: support.function.project.project.b2jam
+      set: [ remainder, as-project-arg-lol, --, 1st-target-entity-1 ]
+    - match: '{{ws_lb}}use-project{{right_edge}}'
+      scope: support.function.project.use-project.b2jam
+      set: [ remainder, target-1, --, 1st-target-1 ]
+    - match: '{{ws_lb}}explicit{{right_edge}}'
+      scope: support.function.project.explicit.b2jam
+      set: [ remainder, 1st-target-list ]
+    - match: '{{ws_lb}}always{{right_edge}}'
+      scope: support.function.project.always.b2jam
+      set: [ remainder, 1st-target-list ]
+    - match: '{{ws_lb}}constant{{right_edge}}'
+      scope: support.function.project.constant.b2jam
+      set: [ remainder, plain-list, --, 1st-target-entity-1 ]
+    - match: '{{ws_lb}}path-constant{{right_edge}}'
+      #probably should be a langref entity
+      scope: support.function.project.path-constant.b2jam
+      set: [ remainder, target-list, --, 1st-target-entity-1 ]
+    - match: '{{ws_lb}}build-project{{right_edge}}'
+      scope: support.function.project.build-project.b2jam
+      set: [ remainder, 1st-target-1 ]
+    - match: '{{ws_lb}}test-suite{{right_edge}}'
+      scope: support.function.alias.b2jam
+      set: main-target
+    - match: '{{ws_lb}}variant{{right_edge}}'
+      scope: support.function.variant.b2jam
+      set: [ remainder, plain-list, --, plain-list, --, 1st-feature-entity-1 ]
+    - match: '{{ws_lb}}make{{right_edge}}'
+      scope: support.function.make.b2jam
+      # similiar to main-target
+      #rule make ( target-name : sources * : generating-rule + : requirements * : usage-requirements * )
+      set: [ remainder, feature-list, -- , feature-list, --, langref-list, -- , target-list, -- , 1st-target-entity-1 ]
+

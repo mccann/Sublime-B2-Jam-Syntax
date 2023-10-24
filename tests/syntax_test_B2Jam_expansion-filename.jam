@@ -1,0 +1,128 @@
+#  SYNTAX TEST "Packages/B2Jam/B2Jam.sublime-syntax"
+
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+# filename expansions
+    
+    @(fname:E=value) ;
+#   ^^^^^^^^^^^^^^^^                meta.function-call.identifier.b2jam meta.interpolation.filename
+#     ^^^^^                         meta.interpolation.filename.identifier.b2jam
+#   ^^^^^^^^^^^^^^^^                - variable.function.b2jam
+#   ^                               punctuation.definition.variable.b2jam
+#     ^^^^^                         meta.string.b2jam string.unquoted.b2jam
+#          ^^^                      - meta.string.b2jam 
+#             ^^^^^                 meta.string.b2jam string.unquoted.b2jam
+#          ^                        keyword.operator.expansion.b2jam
+#           ^                       variable.parameter.switch.b2jam
+#            ^                      keyword.operator.assignment.b2jam
+
+   "@(fname:E=value)" ;
+#   ^^^^^^^^^^^^^^^^                meta.function-call.identifier.b2jam meta.interpolation.filename    
+#     ^^^^^                         meta.interpolation.filename.identifier.b2jam
+#   ^^^^^^^^^^^^^^^^                - variable.function.b2jam
+#  ^^^^^^^^^^^^^^^^^^               meta.string.b2jam
+#  ^^^^^^^^^^^^^^^^^^               - meta.string.b2jam meta.string.b2jam
+#   ^                               punctuation.definition.variable.b2jam
+#   ^^                              - string.quoted
+#     ^^^^^                         string.quoted.double.b2jam
+#          ^^^                      - string.quoted
+#             ^^^^^                 string.quoted.double.b2jam
+#                  ^                - string.quoted
+#          ^                        keyword.operator.expansion.b2jam
+#           ^                       variable.parameter.switch.b2jam
+#            ^                      keyword.operator.assignment.b2jam
+
+# impotent index acessor
+    @(filename[1]:E=) ;
+#   ^^^^^^^^^^^^^^^^^               meta.function-call.identifier.b2jam meta.interpolation.filename    
+#     ^^^^^^^^                      meta.interpolation.filename.identifier.b2jam
+#   ^^^^^^^^^^^^^^^^^               - variable.function.b2jam
+#   ^                               punctuation.definition.variable.b2jam
+#     ^^^^^^^^                      string.unquoted.b2jam
+#             ^^^^^^                - meta.string.b2jam 
+#                ^                  keyword.operator.expansion.b2jam
+#                 ^                 variable.parameter.switch.b2jam
+#                  ^                keyword.operator.assignment.b2jam
+#   ^^^^^^^^^^                      - invalid.deprecated
+#             ^^^                   invalid.deprecated.impotent.item-access.b2jam
+#                ^^^^^^             - invalid.deprecated
+
+# invalid.illegal for invalid accessors 
+    @(asdf[word]:E=) ;
+#          ^^^^                     invalid.deprecated.impotent.item-access.b2jam invalid.illegal.b2jam
+
+# without :E, it's just a plain value, fun-fact, : not warned about!
+  @(asdf:GE) @(asdf:GE) ;
+# ^^^^^^^^^^^^^^^^^^^^^             meta.function-call  
+# ^^^^^^^^^^^^^^^^^^^^^             - meta.interpolation.filename
+# ^^^^^^^^^^                        meta.function-call.identifier.b2jam variable.function.b2jam
+#           ^^^^^^^^^^^^^           meta.function-call.arguments.b2jam
+#            ^^^^^^^^^^             string.other.b2jam
+# ^^^^^^^^^^^^^^^^^^^^^             - punctuation
+# ^^^^^^^^^^^^^^^^^^^^^             - string.quoted.double.b2jam
+# ^^^^^^^^^^^^^^^^^^^^^             - meta.string meta.string 
+    
+  "@(asdf:GE)"  "@(asdf:GE)"  ;
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^        meta.function-call  
+# ^^^^^^^^^^^^                      meta.function-call.identifier.b2jam variable.function.b2jam
+#             ^^^^^^^^^^^^^^        meta.function-call.arguments.b2jam
+#                ^^^^^^^^^^         string.other.b2jam
+#  ^^^^^^^^^^                       - punctuation
+#                ^^^^^^^^^^         - punctuation
+# ^^^^^^^^^^^^                      - string.quoted.double.b2jam
+#                ^^^^^^^^^^         - string.quoted.double.b2jam
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^        - meta.string meta.string 
+
+
+# escaping in plain
+    @( s\t\()) @( s\t\()) ;
+#     ^                             invalid.deprecated.b2jam    
+#       ^^                          constant.character.escape.b2jam
+#         ^                         constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#                ^                  invalid.deprecated.b2jam    
+#                  ^^               constant.character.escape.b2jam
+#                    ^              constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+   "@( s\t\()) @( s\t\())" ;
+#     ^                             - invalid.deprecated
+#       ^^                          constant.character.escape.b2jam
+#         ^                         constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#                ^                  - invalid.deprecated
+#                  ^^               constant.character.escape.b2jam
+#                    ^              constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+  
+
+# :) pattern causes crash, in otherwise 'plain' case
+ @(cmd:)  @(arg:) ;
+#     ^                             keyword.operator.expansion.b2jam invalid.illegal.b2jam
+#              ^                    keyword.operator.expansion.b2jam invalid.illegal.b2jam
+
+ "@(cmd:)"  "@(arg:)" ;
+#      ^                            keyword.operator.expansion.b2jam invalid.illegal.b2jam
+#                 ^                 keyword.operator.expansion.b2jam invalid.illegal.b2jam
+
+# :) crashes even with :E=
+ @(cmd:E=:) @(arg:E=:) ;
+ #       ^                          keyword.operator.expansion.b2jam invalid.illegal.b2jam
+ #                  ^               keyword.operator.expansion.b2jam invalid.illegal.b2jam
+ 
+  "@(cmd:E=:)" "@(arg:E=:)" ;
+#          ^                        keyword.operator.expansion.b2jam invalid.illegal.b2jam
+#                       ^           keyword.operator.expansion.b2jam invalid.illegal.b2jam
+ 
+
+# With an :E it activates, though invalid
+  @(asdf:E) @(asdf:E) ;
+# ^^^^^^^^^^^^^^^^^^^^^             meta.function-call  
+# ^^^^^^^^^^^^^^^^^^^^^             - meta.string meta.string
+#             ^^^^                  meta.interpolation.filename meta.string.b2jam string.unquoted.b2jam
+# ^^^^^^^^^                         meta.function-call.identifier.b2jam 
+#          ^^^^^^^^^^^^             meta.function-call.arguments.b2jam
+# ^^^^^^^^^                         - variable.function.b2jam
+# ^                                 meta.interpolation.filename punctuation.definition.variable.b2jam
+#           ^                       meta.interpolation.filename punctuation.definition.variable.b2jam
+#       ^                           keyword.operator.expansion.b2jam
+#                 ^                 keyword.operator.expansion.b2jam
+#        ^                          variable.parameter.switch.b2jam invalid.invalid.b2jam
+#                  ^                variable.parameter.switch.b2jam invalid.invalid.b2jam

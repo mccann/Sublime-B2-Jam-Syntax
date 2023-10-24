@@ -1,0 +1,30 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+extends: Packages/B2Jam/detail/value/LQ-values.sublime-syntax
+
+version: 2
+
+variables:
+
+  L_escapeable_char: '[\stnr\\\":;}{]'
+
+  # same as LQ-escapes, minus []
+  L_needs_escape_char: '[:;}{]'
+
+contexts:
+
+  value-meta:
+    - meta_scope: variable.parameter.b2jam
+    - include: immediately-pop
+
+    # keywords are permitted
+  L-illegal-keyword-or-symbol:
+    - include: L-illegal-symbol

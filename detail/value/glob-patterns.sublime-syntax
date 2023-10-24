@@ -1,0 +1,270 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+extends:
+  - Packages/B2Jam/detail/core.sublime-syntax
+  - Packages/B2Jam/detail/value/LQ-escapes.sublime-syntax
+
+version: 2
+
+variables:
+
+  L_needs_escape_char: ':'
+
+  L_escapeable_char: '[tnr\\"\s:]'
+  Q_escapeable_char: '[tnr\\"]'
+
+  L_hazard_escape_re: '[*?\[]'
+  Q_hazard_escape_re: '[*?\]]'
+
+  LQ_set_hazard_escape_char: '[]^-]'
+
+  LQ_double_escapable_char: '[*?\[]'
+
+contexts:
+
+  ## B2 glob character set characters [ and ] cannot be escaped.
+  ##      Sets cannot be empty, thus '[]' .. is malformed, and simply the start of '[]...]'
+  ##      When a set is not closed, B2 silently doesn't match anything for that pattern
+  ##
+  ##  Marks final character in un-closed set as invalid.illegal
+  ##  Doesn't use string.meta or string.quoted -- maybe it should?
+  ##
+  ##
+  ##
+  ##                     State flow
+  ##                     -------------------------------------------------------------
+  ##      LQ/PS Stack |  pattern-literal  -> pattern-literal       -> pattern-literal
+  ##                  |  pattern-quoted   -> pattern-quoted        -> pattern-quoted
+  ##                  |  set-kind-literal -> set-head-XXX-literal  -> set-tail-literal
+  ##                  V  set-kind-quoted  -> set-head-XXX-quoted   -> set-tail-quoted
+  ##
+  ##
+  ##                     Set transitions
+  ##                     -------------------------------------------------------------
+  ##                                         set_head_positive
+  ##                                       /                   \
+  ##                     set-kind ------> (                     ) --> set_tail
+  ##                                       \                   /
+  ##                                         set_head_negative
+  ##
+
+  LQ-double-escaped-chars:
+    - match: '\\\\[{{LQ_double_escapable_char}}]'
+      scope: constant.character.escape.b2jam
+
+  LQ-glob-pattern-common:
+    - include: LQ-double-escaped-chars
+    - match: '[*?]'
+      scope: keyword.operator.quantifier.regexp.b2jam
+
+
+  glob-pattern:
+    - meta_scope: meta.pattern.regex.b2jam
+    - match: '{{reserved_keywords}}|{{reserved_symbols}}'
+      scope: invalid.illegal.b2jam
+      pop: 1
+    - match: ''
+      set: L-glob-pattern
+
+  L-glob-pattern:
+    - meta_scope: meta.pattern.regex.b2jam
+    - match: '"'
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-glob-pattern
+      # don't think that escape is doing what you think it is
+    - match: \[
+      scope: meta.set.regexp.b2jam punctuation.definition.set.begin.regexp.b2jam
+      push: [ Q-glob-pattern, L-glob-set-kind ]
+    - include: LQ-glob-pattern-common
+    - include: L-needs-escape
+    - include: L-escapes
+    - match: '<'
+      pop: 1
+      push: L-glob-pattern-gristed
+    - include: token-break
+
+  L-glob-pattern-gristed:
+    - meta_scope: meta.pattern.regex.b2jam
+    - match: '>'
+      pop: 1
+      push: L-glob-pattern
+    - match: ':' # safe here
+    - include: L-glob-pattern
+
+
+  Q-glob-pattern:
+    - match: '"'
+      scope: punctuation.definition.string.end.b2jam
+      pop: 1
+    - include: LQ-glob-pattern-common
+    - include: Q-escapes
+    - match: \[
+      scope: meta.set.regexp.b2jam punctuation.definition.set.begin.regexp.b2jam
+      push: [ L-glob-set-kind, Q-glob-set-kind ]
+
+  L-glob-set-unclosed:
+    #TODO: use branch method like regex,
+    #       - maybe see if can parsing can be combined..
+    #       - might be tricky, one is a string, other native object.. escaped/parsed differently
+    - match: '{{metachar}}'
+      scope: meta.set.regexp.b2jam invalid.illegal.b2jam
+      pop: 3
+
+  L-glob-set-kind:
+    - match: '"'
+      scope: meta.set.regexp.b2jam punctuation.definition.string.begin.b2jam
+      push: Q-glob-set-kind
+      # [^X
+    - match: '(\\?)(\^)(?!{{metachar}})'
+      captures:
+        0: meta.set.regexp.b2jam
+        1: invalid.deprecated.b2jam
+        2: keyword.operator.logical.regexp.b2jam
+      pop: 1
+      push: L-glob-set-head-negative
+      # '[^ ' - special fail condition
+    - match: '(\\?)(\^)(?={{metachar}})'
+      captures:
+        0: meta.set.regexp.b2jam
+        1: invalid.deprecated.b2jam
+        2: keyword.operator.logical.regexp.b2jam invalid.illegal.b2jam
+      pop: 3
+    - include: L-glob-set-unclosed
+    - match: ''
+      pop: 1
+      push: L-glob-set-head-positive
+
+  Q-glob-set-kind:
+    - match: '"'
+      scope: meta.set.regexp.b2jam punctuation.definition.string.end.b2jam
+      pop: 1
+      # [^
+    - match: '(\\?)(\^)'
+      captures:
+        0: meta.set.regexp.b2jam
+        1: invalid.deprecated.b2jam
+        2: keyword.operator.logical.regexp.b2jam
+      pop: 2
+      push: [ L-glob-set-head-negative, Q-glob-set-head-negative ]
+    - match: ''
+      pop: 2
+      push: [ L-glob-set-head-positive, Q-glob-set-head-positive ]
+
+  # LQ-glob-set-head-common:
+  #   # ineffective escape doesn't count as 'head' char
+  #   - match: '\\(?!{{LQ_set_escapeable_char}})'
+  #     scope: meta.set.regexp.b2jam invalid.deprecated.b2jam
+
+  # First char is always included
+  L-glob-set-head-common:
+    - include: L-glob-set-unclosed
+    # escaped char, and non-space count as 'head' char, advance
+    - match: '(\\{{L_escapeable_char}})|(\\){{LQ_set_hazard_escape_char}}|(\\?)[^{{metachar}}]'
+      captures:
+        0: meta.set.regexp.b2jam
+        1: constant.character.escape.b2jam
+        2: constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+        3: constant.character.escape.impotent.b2jam
+      pop: 1
+      push: L-glob-set-tail
+
+  L-glob-set-head-positive:
+    - match: '"'
+      scope: meta.set.regexp.b2jam punctuation.definition.string.begin.b2jam
+      push: Q-glob-set-head-positive
+    - include: L-glob-set-head-common
+
+  L-glob-set-head-negative:
+    - match: '"'
+      scope: meta.set.regexp.b2jam punctuation.definition.string.begin.b2jam
+      push: Q-glob-set-head-negative
+    - match: (\\?)(\])
+      captures:
+        0: meta.set.regexp.b2jam
+        1: constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+        2: punctuation.definition.set.end.regexp.b2jam invalid.deprecated.b2jam meta.lint.unexpected-behavior.b2jam
+      pop: 2
+    - include: L-glob-set-head-common
+
+
+  Q-glob-set-head-common:
+    # - include: LQ-glob-set-head-common
+    - match: '"'
+      scope: meta.set.regexp.b2jam punctuation.definition.string.end.b2jam
+      pop: 1
+      # escaped char, and non-quote count as 'head' char, advance
+    - match: '(\\{{Q_escapeable_char}})|(\\){{LQ_set_hazard_escape_char}}|(\\?).'
+      captures:
+        0: meta.set.regexp.b2jam
+        1: constant.character.escape.b2jam
+        2: constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+        3: constant.character.escape.impotent.b2jam
+      pop: 2
+      push: [ L-glob-set-tail, Q-glob-set-tail ]
+    - include: L-glob-set-unclosed
+
+  Q-glob-set-head-positive:
+    - include: Q-glob-set-head-common
+
+  Q-glob-set-head-negative:
+    - match: (\\?)(\])
+      captures:
+        0: meta.set.regexp.b2jam
+        1: constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+        2: punctuation.definition.set.end.regexp.b2jam invalid.deprecated.b2jam meta.lint.unexpected-behavior.b2jam
+      pop: 2
+    - include: Q-glob-set-head-common
+
+  LQ-glob-set-tail-common:
+    # - match: '(\\{{LQ_set_escapeable_char}})|(\\(?!{{LQ_set_escapeable_char}}))'
+    #   captures:
+    #     0: meta.set.regexp.b2jam
+    #     1: constant.character.escape.b2jam
+    #     2: invalid.deprecated.b2jam
+    - match: '-(?!\])|(-(?=\]))'
+      captures:
+        0: meta.set.regexp.b2jam punctuation.separator.range.regexp.b2jam
+        1: invalid.illegal.b2jam
+    - match: \]
+      scope: meta.set.regexp.b2jam punctuation.definition.set.end.regexp.b2jam
+      pop: 2
+
+  L-glob-set-tail:
+    - include: LQ-glob-set-tail-common
+    - match: '(\\{{L_escapeable_char}})|(\\)(?={{LQ_set_hazard_escape_char}})|(\\)'
+      captures:
+        0: meta.set.regexp.b2jam
+        1: constant.character.escape.b2jam
+        2: constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+        3: constant.character.escape.impotent.b2jam
+    - match: '"'
+      scope: meta.set.regexp.b2jam punctuation.definition.string.begin.b2jam
+      push: Q-glob-set-tail
+    - include: L-glob-set-unclosed
+    - match: '.'
+      scope: meta.set.regexp.b2jam
+
+  Q-glob-set-tail:
+    - include: LQ-glob-set-tail-common
+    - match: '(\\{{Q_escapeable_char}})|(\\)(?={{LQ_set_hazard_escape_char}})|(\\)'
+      captures:
+        0: meta.set.regexp.b2jam
+        1: constant.character.escape.b2jam
+        2: constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+        3: constant.character.escape.impotent.b2jam
+    - match: '"(?={{metachar}})'
+      scope: meta.set.regexp.b2jam punctuation.definition.string.end.b2jam invalid.illegal.b2jam
+      pop: 4 # => EXIT
+    - match: '"'
+      scope: meta.set.regexp.b2jam punctuation.definition.string.end.b2jam
+      pop: 1
+    - match: '.'
+      scope: meta.set.regexp.b2jam

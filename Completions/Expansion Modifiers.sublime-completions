@@ -1,0 +1,112 @@
+{
+	"scope": "source.b2jam & ( meta.interpolation.parameter.b2jam | meta.interpolation.filename.b2jam ) & punctuation.section.interpolation.end.b2jam ",
+
+	"completions": [
+		{ "trigger": "B\tB2 Basename",
+		  "details": "Select base filename without extension",
+		  "contents" : "B",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "B=\tB2 Basename",
+		  "details": "Replace filename base with value",
+		  "contents" : "B=",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "E=\tB2 Empty",
+		  "details": "If empty, use the given value instead",
+		  "contents" : "E=",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "J=\tB2 Join",
+		  "details": "Concatenate list elements into one value with join value between each element",
+		  "contents" : "J=",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "S\tB2 Suffix",
+		  "details": "Select suffix (final) of filename",
+		  "contents" : "S",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "S=\tB2 Suffix",
+		  "details": "Replace suffix (final) of filename with value",
+		  "contents" : "S=",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "M\tB2 Member",
+		  "details": "Select archive member name",
+		  "contents" : "M",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "M=\tB2 Member",
+		  "details": "Replace archive member name with value",
+		  "contents" : "M=",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "D\tB2 Directory",
+		  "details": "Select directory path",
+		  "contents" : "D",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "D=\tB2 Directory",
+		  "details": "Replace directory path with value",
+		  "contents" : "D=",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "R=\tB2 Root",
+		  "details": "Prepend root to the path, if not already rooted",
+		  "contents" : "R=",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "O=\tB2 Option",
+		  "details": "Set semantic option",
+		  "contents" : "O=",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "P\tB2 Parent",
+		  "details": "Select parent directory",
+		  "contents" : "P",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "G\tB2 Grist",
+		  "details": "Select grist",
+		  "contents" : "G",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "G=\tB2 Grist",
+		  "details": "Replace grist with value",
+		  "contents" : "G=",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "U\tB2 Uppercase",
+		  "details": "Select with all letters in uppercase",
+		  "contents" : "U",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "L\tB2 Lowercase",
+		  "details": "Select with all letters in lowercase",
+		  "contents" : "L",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "T\tB2 Transform",
+		  "details": "Transform all '\\' into '/' - windows to unix paths",
+		  "contents" : "T",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "W\tB2 Windows/VMS",
+		  "details": "Convert unix path separators into native paths when used with Cywgin or OpenVMS, unchanged otherwise",
+		  "contents" : "W",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": "<=\tB2 Prepend",
+		  "details": "Prepend given value to result",
+		  "contents" : "<=",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+		{ "trigger": ">=",
+		  "annotation": "B2 Append",
+		  "details": "Append given value to result",
+		  "contents" : ">=",
+		  "kind" : [ "keyword", "$", "B2 Expansion Modifier" ]
+		},
+	]
+}

@@ -1,0 +1,26 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+version: 2
+extends:
+  - Packages/B2Jam/detail/expansion/LQ-expansion-strings.sublime-syntax
+
+variables:
+  LQN_stack_terminal_re: '[:\[]'
+  L0_stack_terminal_re: '[:\[\)]'
+  Q0_stack_terminal_re: '[:\[\)]'
+
+
+contexts:
+
+  L_0:
+    - clear_scopes: 2 # - remove meta.string, and interpolation.parameter from L/Q-expansion
+    - meta_scope: meta.interpolation.filename.identifier.b2jam meta.string.b2jam string.unquoted.b2jam
+    - include: L_0-rules

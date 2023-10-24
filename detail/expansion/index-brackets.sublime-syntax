@@ -1,0 +1,156 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+version: 2
+extends:
+  - Packages/B2Jam/detail/core.sublime-syntax
+
+variables:
+  terminal_chars: '[:\]\)]'
+
+contexts:
+
+  main:
+    - match: ''
+      set: index-brackets
+
+  L-as-index-brackets:
+    - match: ''
+      set: L-index-brackets
+
+  Q-as-index-brackets:
+    - match: ''
+      set: [ L-index-brackets, Q-index-brackets ]
+
+  L-index-brackets:
+    - clear_scopes: 1 # - remove meta.string
+    - meta_scope: meta.item-access.b2jam
+    - include: LQ-terminate
+    - match: (?=\[)
+      branch_point: L_index_brackets
+      branch:
+        - L-brackets-good
+        - L-brackets-failed
+
+  Q-index-brackets:
+    - meta_scope: meta.string.b2jam
+    - include: LQ-terminate
+    - match: (?=\[)
+      branch_point: Q_index_brackets
+      branch:
+        - Q-brackets-good
+        - Q-brackets-failed
+
+  LQ-open-bracket:
+    - match: \[
+      scope: punctuation.section.item-access.begin.b2jam
+
+  L-brackets-good:
+    - include: LQ-open-bracket
+    - match: ''
+      set:
+        - Q-index-brackets
+        - L-post-accessor-main
+        - Q-post-accessor-main
+        - L-as-accessor-stack
+
+  L-brackets-failed:
+    - meta_scope: invalid.illegal.b2jam
+    - include: LQ-open-bracket
+    - match: ''
+      scope: punctuation.section.item-access.begin.b2jam
+      set:
+        - Q-index-brackets
+        - L-post-accessor-main-failed
+        - Q-post-accessor-main
+        - L-as-accessor-stack
+
+  Q-brackets-good:
+    - include: LQ-open-bracket
+    - match: ''
+      scope: punctuation.section.item-access.begin.b2jam
+      set:
+        - L-post-accessor-main
+        - Q-post-accessor-main
+        - Q-as-accessor-stack
+
+  Q-brackets-failed:
+    - meta_scope: invalid.illegal.b2jam
+    - include: LQ-open-bracket
+    - match: ''
+      scope: punctuation.section.item-access.begin.b2jam
+      set:
+        - L-post-accessor-main-failed
+        - Q-post-accessor-main
+        - Q-as-accessor-stack
+
+  L-as-accessor-stack:
+    - match: ''
+      set:
+        - Packages/B2Jam/detail/expansion/index-accessor-remainder.sublime-syntax#L_0
+        - Packages/B2Jam/detail/expansion/index-accessor-remainder.sublime-syntax#Q_0
+        - Packages/B2Jam/detail/expansion/index-accessor-num.sublime-syntax#L_0
+        - Packages/B2Jam/detail/expansion/index-accessor-num.sublime-syntax#Q_0
+        - Packages/B2Jam/detail/expansion/index-accessor-expr.sublime-syntax#L_0
+        - Packages/B2Jam/detail/expansion/index-accessor-expr.sublime-syntax#Q_0
+        - Packages/B2Jam/detail/expansion/index-accessor-num.sublime-syntax#L_0
+        - Packages/B2Jam/detail/expansion/index-accessor-num.sublime-syntax#Q_0
+        - Packages/B2Jam/detail/expansion/index-accessor-expr.sublime-syntax#L_0
+
+  Q-as-accessor-stack:
+    - match: ''
+      set:
+        - Packages/B2Jam/detail/expansion/index-accessor-remainder.sublime-syntax#L_0
+        - Packages/B2Jam/detail/expansion/index-accessor-remainder.sublime-syntax#Q_0
+        - Packages/B2Jam/detail/expansion/index-accessor-num.sublime-syntax#L_0
+        - Packages/B2Jam/detail/expansion/index-accessor-num.sublime-syntax#Q_0
+        - Packages/B2Jam/detail/expansion/index-accessor-expr.sublime-syntax#L_0
+        - Packages/B2Jam/detail/expansion/index-accessor-expr.sublime-syntax#Q_0
+        - Packages/B2Jam/detail/expansion/index-accessor-num.sublime-syntax#L_0
+        - Packages/B2Jam/detail/expansion/index-accessor-num.sublime-syntax#Q_0
+        - Packages/B2Jam/detail/expansion/index-accessor-expr.sublime-syntax#L_0
+        - Packages/B2Jam/detail/expansion/index-accessor-expr.sublime-syntax#Q_0
+
+
+  LQ-terminate:
+    - match: (?={{terminal_chars}})
+      pop: 2
+
+  LQ-post-bracket:
+    - match: (?=[:\)])
+      pop: 2
+    - match: '.*(?=[:\)])'
+      scope: invalid.illegal.b2jam
+
+  LQ-post-accessor-common:
+    - match: \]
+      scope: punctuation.section.item-access.end.b2jam
+      set: LQ-post-bracket
+
+  L-post-accessor-main:
+    - clear_scopes: 1
+    - include: LQ-post-accessor-common
+    - match: ''
+      fail: L_index_brackets
+    - match: ''
+      fail: Q_index_brackets
+    - match: ''
+      pop: 2
+
+  L-post-accessor-main-failed:
+    - clear_scopes: 1
+    - meta_scope: invalid.illegal.b2jam
+    - include: LQ-post-accessor-common
+    - match: ''
+      pop: 2
+
+  Q-post-accessor-main:
+    - meta_scope: meta.string.b2jam
+    - include: L-post-accessor-main

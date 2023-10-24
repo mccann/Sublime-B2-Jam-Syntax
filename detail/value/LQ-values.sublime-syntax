@@ -1,0 +1,435 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+# version 2 is required, buggy with 1
+
+version: 2
+
+extends:
+  - Packages/B2Jam/detail/core.sublime-syntax
+  - Packages/B2Jam/detail/value/LQ-escapes.sublime-syntax
+
+variables:
+
+  L_escapeable_char: '[tnr\\\"\s:;}{\[\]]'
+  Q_escapeable_char: '[tnr\\\"]'
+  L_hazard_escape_re: '(?:[<>]|[$@]\()'
+  Q_hazard_escape_re: '(?:[<>]|[$@]\()'
+
+  # LQ-escapes - changing this? change parameters too
+  L_needs_escape_char: '[:;\[\]}{]'
+
+contexts:
+
+## arg, ARG, func, list, lol, terms come from jam yacc grammar
+
+## because sublime-syntax is case insensitive, can't use the arg ARG distinction
+##
+##      ARG = value
+##      arg = expr
+##
+## Additional types:
+##
+##      restricted       -- no keywords
+##      static           -- no keywords or expansions
+
+
+  main:
+    - include: comments
+    - include: as-expr
+    # - include: exprs
+
+# Jam Grammar Values
+
+  exprs:
+    - include: comments
+    - match: '{{token_begin}}'
+      push:
+        - expr
+
+  restricted-exprs:
+    - include: comments
+    - match: '{{token_begin}}'
+      push:
+        - restricted-expr
+  values:
+    - include: comments
+    - match: '{{token_begin}}'
+      push:
+        - value-meta
+        - L-value
+        - L-illegal-symbol
+
+  restricted-values:
+    - include: comments
+    - match: '{{token_begin}}'
+      push:
+        - value-meta
+        - L-value
+        - L-illegal-keyword-or-symbol
+
+  statics:
+    - include: comments
+    - match: '{{token_begin}}'
+      push:
+        - value-meta
+        - L-static
+        - L-illegal-keyword-or-symbol
+
+  as-expr:
+    - include: comments
+    - match: '{{token_begin}}'
+      set:
+        - expr
+
+  as-restricted-expr:
+    - include: comments
+    - match: '{{token_begin}}'
+      set:
+        - restricted-expr
+
+  as-value:
+    - include: comments
+    - match: '{{token_begin}}'
+      set:
+        - value-meta
+        - L-value
+        - L-illegal-symbol
+
+  value:
+    - include: comments
+    - match: '{{token_begin}}'
+      push:
+        - value-meta
+        - L-value
+        - L-illegal-symbol
+    - include: token-break
+
+  as-restricted-value:
+    - include: comments
+    - match: '{{token_begin}}'
+      set:
+        - value-meta
+        - L-value
+        - L-illegal-keyword-or-symbol
+
+  restricted-value:
+    - include: comments
+    - match: '{{token_begin}}'
+      push:
+        - value-meta
+        - L-value
+        - L-illegal-keyword-or-symbol
+    - include: token-break
+
+  as-static:
+    - include: comments
+    - match: '{{token_begin}}'
+      set:
+        - value-meta
+        - L-static
+        - L-illegal-keyword-or-symbol
+
+  static:
+    - include: comments
+    - match: '{{token_begin}}'
+      push:
+        - value-meta
+        - L-static
+        - L-illegal-keyword-or-symbol
+    - include: token-break
+
+
+  # If this is being called from an existing Q of LQ stack, it should pop the L as well
+  # before calling this
+  Q-as-value:
+    - match: ''
+      set: [ value-meta, L-value, Q-value ]
+
+## Jam Grammar Composites
+
+  lol:
+    # need a 'look ahead' colon to match the lookahead of until-
+    - match: '{{metachar}}*({{colon}})'
+      captures:
+        1: punctuation.separator.sequence.b2jam
+    - include: list
+
+
+  # a list of lists, but first item in first list is restricted
+  first-strict-lol:
+    # need a 'look ahead' colon to match the lookahead of until-
+    - match: '{{metachar}}*({{colon}})'
+      captures:
+        1: punctuation.separator.sequence.b2jam
+      set: lol
+    - include: until-list-punctuation-nongreedy
+    - match: '{{token_begin}}'
+      push: first-strict-list
+
+  list:
+    - include: until-list-punctuation-nongreedy
+    - include: exprs
+
+  # many are permitted, but only 1 has utility
+  list-1-useful:
+    - include: until-list-punctuation-nongreedy
+    - match: '{{token_begin}}'
+      push:
+        - list-useless
+        - expr
+
+  first-strict-list-1-useful:
+    - include: until-list-punctuation-nongreedy
+    - match: '{{token_begin}}'
+      push:
+        - list-useless
+        - restricted-expr
+
+  list-useless:
+    - include: until-list-punctuation-nongreedy
+    - match: '{{token_begin}}'
+      push:
+      - expr-value-useless
+      - expr
+
+  first-strict-list:
+    - include: until-list-punctuation-nongreedy
+    - match: '{{token_begin}}'
+      set:
+        - list
+        - restricted-expr
+
+  expr:
+    - include: as-func
+    - include: as-value
+
+  restricted-expr:
+    - include: as-func
+    - include: as-restricted-value
+
+## Interpolations
+
+  expansion-null:
+    - include: immediately-pop2
+
+  L-as-expansion:
+    - match: ''
+      set:
+        - expansion-meta # L place
+        - expansion-null # Q place
+        - Packages/B2Jam/detail/expansion/expansions.sublime-syntax#L-as-expansions
+
+  Q-as-expansion:
+    - match: ''
+      set:
+        - expansion-meta # L place
+        - expansion-null # Q place
+        - Packages/B2Jam/detail/expansion/expansions.sublime-syntax#Q-as-expansions
+
+  as-func:
+    - match: '(?={{open_bracket}})'
+      set:
+        - expr-meta
+        - Packages/B2Jam/B2Jam.sublime-syntax#cmd-expression
+
+  L-expansions:
+    - match: '(?={{is_interpolation}})'
+      push:
+        # L-value
+        - Q-value
+        - L-as-expansion
+
+  Q-expansions:
+    - match: '(?={{is_interpolation}})'
+      push:
+        # L-value
+        # Q-value
+        - Q-as-expansion # expands to L,Q places
+
+## Component Includes
+
+  L-terminal:
+    - match: '{{token_break}}'
+      pop: 1
+
+  L-quote:
+    - match: \"
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-value
+
+  Q-quote-terminal:
+    - match: \"
+      scope: punctuation.definition.string.end.b2jam
+      pop: 1
+
+  L-rules-static:
+    - include: L-escapes
+    - match: \"
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-static
+    - include: L-terminal
+
+  Q-rules-static:
+    - include: Q-quote-terminal
+
+  L-rules-value:
+    - include: L-escapes
+    - include: L-expansions
+    - match: \"
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-value
+    - include: L-terminal
+
+  Q-rules-value:
+    - include: Q-expansions
+    - include: Q-rules-static
+
+  L-needs-escape:
+    - meta_prepend: true
+    # : is not warned about if it looks like a Windows path
+    #   https://github.com/bfgroup/b2/blob/2fc52a7bff95738251ccf39e08f912f3819e24d9/src/engine/scan.cpp#L629
+    - match: '(?:(?<=[\s>][a-zA-Z])|(?<=^[a-zA-Z])):(?=\\\\|/)'
+    # : is not warned about if it comes before <, and not at start
+    - match: '(?<=[^\s]):(?=\<)'
+
+  L-illegal-keywords:
+    - match: '{{reserved_keywords}}'
+      scope: invalid.illegal.b2jam
+
+  L-illegal-symbols:
+    - match: '{{reserved_symbols}}'
+      scope: invalid.illegal.b2jam
+
+  L-illegal-keyword:
+    - include: L-illegal-keywords
+    - include: immediately-pop
+
+    #TODO: refactor - this should be higher up stack
+  L-value-terminal:
+    - include: comments
+    - include: if-empty-assert-empty-until-symbol
+
+    # pop before statement and list terminators
+    - match: '(?={{ws_lb}}(?:(?:{{metachar}}?({{metachar}})\1)|({{metachar}}))?[:;\]]{{right_edge}})'
+      captures: # expected something
+        1: invalid.illegal.b2jam
+        2: invalid.illegal.b2jam
+      pop: 2 # don't process value
+
+    # consume all other symbols
+    - match: '{{reserved_symbols}}'
+      scope: invalid.illegal.b2jam
+      pop: 2 # don't process value
+
+  L-illegal-symbol:
+    - include: L-value-terminal
+#    - include: L-illegal-symbols
+    - include: next-token
+
+  L-illegal-keyword-or-symbol:
+    - include: L-value-terminal
+    - match: '{{reserved_keywords}}'
+      scope: invalid.illegal.b2jam
+      pop: 1
+#    - include: L-illegal-symbols
+    - include: next-token
+
+  LQ-rules-prototype: []
+  LQ-content-prototype: []
+
+  L-content-prototype: []
+  Q-content-prototype: []
+
+  L-content-rules-static:
+    - include: LQ-rules-prototype
+    - include: L-rules-static
+    - include: L-needs-escape
+    - include: L-content-prototype
+    - include: LQ-content-prototype
+
+  Q-content-rules-static:
+    - include: LQ-rules-prototype
+    - include: Q-escapes
+    - include: Q-rules-static
+    - include: Q-content-prototype
+    - include: LQ-content-prototype
+
+  L-content-rules-standard:
+    - include: LQ-rules-prototype
+    - include: L-rules-value
+    - include: L-needs-escape
+    - include: L-content-prototype
+    - include: LQ-content-prototype
+
+  Q-content-rules-standard:
+    - include: LQ-rules-prototype
+    - include: Q-escapes
+    - include: Q-rules-value
+    - include: Q-content-prototype
+    - include: LQ-content-prototype
+
+## Contexts
+
+## in this constext "grist" refers to any content inside <>'s .. even when its doesn't start token
+
+## These are designed to be overridden
+
+## defaults are for plain tokens, such as class name
+## You can give a meta-scope above this, in many cases
+
+  expr-value-useless:
+    - meta_scope: invalid.deprecated.b2jam
+    - include: immediately-pop
+
+  expansion-meta:
+    - include: immediately-pop2
+
+  expr-meta:
+    - include: immediately-pop
+
+  value-meta:
+    - include: immediately-pop
+
+  L-value:
+    - include: L-content-rules-standard
+    - match: '<(?!\s)'
+      pop: 1
+      push: L-value-gristed
+
+  L-value-gristed:
+    - match: '>'
+      pop: 1
+      push: L-value
+    - match: ':'
+    - include: L-value
+
+  Q-value:
+    - meta_scope: meta.string.b2jam
+    - include: Q-content-rules-standard
+
+  # no Q-restricted, uses Q-value
+
+  L-static:
+    - include: L-content-rules-static
+    - match: '<'
+      pop: 1
+      push: L-static-gristed
+
+  L-static-gristed:
+    - match: '>'
+      pop: 1
+      push: L-static
+    - match: ':'
+    - include: L-static
+
+  Q-static:
+    - meta_scope: meta.string.b2jam
+    - include: Q-content-rules-static

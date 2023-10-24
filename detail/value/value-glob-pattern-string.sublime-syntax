@@ -1,0 +1,58 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+extends: Packages/B2Jam/detail/value/value-regex.sublime-syntax
+
+version: 2
+
+###
+### convert regex to glob
+###
+
+variables:
+  # remove '+' from quantifier list
+  character_quantifier: '[?*]'
+contexts:
+
+
+  # glob scope
+  value-meta:
+    - meta_scope: meta.mode.basic.regexp.glob.b2jam
+    - include: immediately-pop
+
+  # no groups
+  L-groups-0: []
+  L-groups-N: []
+  Q-groups: []
+
+  # no anchors
+  L-anchors-0: []
+  L-anchors-N: []
+  Q-anchors: []
+
+  # ) has no special meaning
+  LQ-unmatched-parens: []
+
+  # . and / have meaning
+  LQ-pattern-chars:
+    - include: path-separator-chars
+
+  # quantifiers don't have illegal positions
+  LQ-unexpected-quantifiers: []
+
+  L-maybe-unexpected-quantifiers:
+    - clear_scopes: 1 # meta.string
+    - include: immediately-pop2
+
+  Q-maybe-unexpected-quantifiers:
+    - meta_scope: meta.string.b2jam
+    - include: immediately-pop2
+
+

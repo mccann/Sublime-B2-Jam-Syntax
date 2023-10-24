@@ -1,0 +1,160 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+version: 2
+extends:
+  - Packages/B2Jam/detail/core.sublime-syntax
+
+contexts:
+
+  main:
+    - include: L-expansion
+
+###[ EXPANSION ]###############################################################
+
+  # Nomenclature:
+  #  'expansions' refers to all TYPES of expansions:
+  #     - parameter = $(identifier[array-index]:modifier=value)
+  #     - filename  = @(identifier:modifier=value)
+  #
+  #  for i in $(list)  {  #   i  - is a variable, $(list) is a parameter
+  #     echo $(i) ;       # $(i) - is a parameter
+  #  }                    #  'i' - in all cases is an identifier
+  #                       #      - all parameters are expansions
+  #                       #        , but not all expansions are parameters
+  # The actual b2 parser is quirky: See LQ-Strings
+
+
+  L-as-expansion:
+    - match: (?={{expansion_start_char}}\()
+      set: L-base
+
+  Q-as-expansion:
+    - match: (?={{expansion_start_char}}\()
+      set:
+        - L-base
+        - Q-base
+
+  L-base:
+    - match: (?={{expansion_start_char}}\()
+      branch_point: L_expansion_branch
+      branch:
+        - L-branch
+        - L-branch-failed
+
+  Q-base:
+    - match: (?={{expansion_start_char}}\()
+      branch_point: Q_expansion_branch
+      branch:
+        - Q-branch
+        - Q-branch-failed
+
+  L-branch:
+    - match: ''
+      set: [ Q-base,  L-break-L,  Q-break,    L-expansion,    LQ-punctuation ]
+
+  L-branch-failed:
+    - match: ''
+      set: [ Q-base,  LQ-failed,  LQ-failed,  L-expansion,    LQ-punctuation ]
+
+  Q-branch:
+    - match: ''
+      set: [          L-break-Q,  Q-break,    L-expansion,    Q-expansion,      LQ-punctuation ]
+
+  Q-branch-failed:
+    - match: ''
+      set: [          LQ-failed,  LQ-failed,  L-expansion,    Q-expansion,      LQ-punctuation ]
+
+  L-break-L:
+    - match: ''
+      fail: L_expansion_branch
+
+  L-break-Q:
+    - match: ''
+      fail: Q_expansion_branch
+
+  Q-break:
+    - match: ''
+      pop: 1  # drop down to fail handler
+
+  LQ-failed:
+    - match: ''
+      pop: 4 # drop down to 'L/Q' layer below L/Q-base
+
+  LQ-modifier-punct:
+    - match: ':'
+      scope: keyword.operator.expansion.b2jam
+      pop: 1
+
+  L-modifiers:
+    - match: (?=:)
+      push: [ Q-expansion, L-as-expansion-modifier-name, LQ-modifier-punct ]
+
+  Q-modifiers:
+    - match: (?=:)
+      push: [ Q-as-expansion-modifier-name, LQ-modifier-punct ]
+
+  L-brackets:
+    - match: (?=\[)
+      push:
+        - Q-expansion
+        - L-as-expansion-index-brackets
+
+  Q-brackets:
+    - match: (?=\[)
+      push:
+        - Q-as-expansion-index-brackets
+
+  L-identifiers:
+    - match: ''
+      push:
+        - Q-expansion
+        - L-as-expansion-identifier
+
+  Q-identifiers:
+    - match: ''
+      push:
+        - Q-as-expansion-identifier
+
+  L-expansion:
+    - include: LQ-expansion-terminal
+    - include: L-modifiers
+    - include: L-brackets
+    - include: L-identifiers
+
+  Q-expansion:
+    - meta_scope: meta.string.b2jam
+    - include: LQ-expansion-terminal
+    - include: Q-modifiers
+    - include: Q-brackets
+    - include: Q-identifiers
+
+  LQ-punctuation:
+    - match: ({{expansion_start_char}})(\()
+      captures:
+        1: punctuation.definition.variable.b2jam
+        2: punctuation.section.interpolation.begin.b2jam
+      pop: 1
+
+  LQ-expansion-terminal:
+    - match: \)
+      scope: punctuation.section.interpolation.end.b2jam
+      set: # manage scope with anon
+        - match: ''
+          pop: 6 # skip over branch LQ breaks, and LQ base
+
+
+# Abstract prototypes
+  L-as-expansion-modifier-name: [ ]
+  Q-as-expansion-modifier-name: [ ]
+  L-as-expansion-index-brackets: [ ]
+  Q-as-expansion-index-brackets: [ ]
+  L-as-expansion-identifier: [ ]
+  Q-as-expansion-identifier: [ ]

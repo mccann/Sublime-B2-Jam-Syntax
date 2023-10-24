@@ -1,0 +1,189 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+extends: Packages/B2Jam/detail/value/LQ-values.sublime-syntax
+
+version: 2
+
+variables:
+  # start of line, or un-escaped whitespace
+  left_edge: (?:(?<=^|{{metachar}})(?<!\\{{metachar}}))
+
+  grist_prefix: ''
+  grist_open: (?:\"*{{grist_prefix}}\"*\<\"*(?!{{metachar}}))
+
+  L_grist_start: (?={{left_edge}}{{grist_open}})
+  # in plain, can't match grist in Q (however,   "<grist>" will work, as it matches from L_grist_start)
+  Q_grist_start: (?=$-)
+
+contexts:
+
+  #TODO: if value is entirely integer, use constant.numeric.integer.b2jam
+
+
+  # for plain-filename expansions
+  # filename expansion failure clears the expansion-meta scope, leaving plain-meta to activate
+  expansion-plain-meta:
+    - clear_scopes: 2 # clear meta.string and string type
+    - meta_scope: string.other.b2jam meta.string
+    - include: immediately-pop2
+
+  expansion-meta:
+    - clear_scopes: 2 # clear expansion-plain-meta
+    - include: immediately-pop2
+
+  value-meta:
+    - meta_scope: meta.string.b2jam
+    - include: immediately-pop
+
+  L-as-expansion:
+    - match: ''
+      set:
+        - expansion-plain-meta
+        - expansion-null
+        - expansion-meta # L place
+        - expansion-null # Q place
+        - Packages/B2Jam/detail/expansion/expansions.sublime-syntax#L-as-expansions
+
+  Q-as-expansion:
+    - match: ''
+      set:
+        - expansion-plain-meta
+        - expansion-null
+        - expansion-meta # L place
+        - expansion-null # Q place
+        - Packages/B2Jam/detail/expansion/expansions.sublime-syntax#Q-as-expansions
+
+  L-value:
+    - meta_prepend: true
+    - meta_scope: string.unquoted.b2jam
+    - include: L-value-grists
+
+  L-value-gristed:
+    - meta_prepend: true
+    - meta_scope: string.unquoted.b2jam
+
+  Q-value:
+    - clear_scopes: 1
+    - meta_scope: string.quoted.double.b2jam
+    - include: Q-value-grists
+    - include: Q-content-rules-standard
+
+  L-value-grists:
+    - match: '{{L_grist_start}}'
+      branch_point: L_value_grist
+      branch:
+        - L-value-grist-branch
+        - L-value-grist-failed
+
+  Q-value-grists:
+    - match: '{{Q_grist_start}}'
+      branch_point: Q_value_grist
+      branch:
+        - Q-value-grist-branch
+        - Q-value-grist-failed
+
+  L-value-grist-branch:
+    - match: ''
+      set: [ Q-value, L-grist-break-L, Q-break, L-as-grist ]
+
+  L-value-grist-failed:
+    - match: ''
+      pop: 2 # this + L-value
+      push: [ L-value-gristed, Q-value, L-grist-punctuation-failed ]
+
+  Q-value-grist-branch:
+    - match: ''
+      set: [          L-grist-break-Q, Q-break, Q-as-grist ]
+
+  Q-value-grist-failed:
+    - match: ''
+      push: [ L-grist-punctuation-failed, Q-grist-punctuation-failed ]
+
+  L-as-grist:
+    - match: ''
+      set: [ L-grist, Q-grist, L-grist-punctuation ]
+
+  Q-as-grist:
+    - match: ''
+      set: [ L-grist, Q-grist, L-grist-punctuation, Q-grist-punctuation ]
+
+  LQ-grist-punctuation-start-chars:
+    - match: \<
+      scope: punctuation.definition.variable.begin.b2jam
+      pop: 2
+
+  LQ-grist-punctuation-end-char:
+    - match: \>
+      scope: punctuation.definition.variable.end.b2jam
+      pop: 1
+
+  L-grist-punctuation:
+    - clear_scopes: 1 # Q-grist
+    - match: \"
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-grist-punctuation
+    - include: LQ-grist-punctuation-start-chars
+
+  Q-grist-punctuation:
+    - include: Q-quote-terminal
+    - include: LQ-grist-punctuation-start-chars
+
+  LQ-grist-punctuation-start-chars-failed:
+    - match: \<
+      pop: 2
+
+  L-grist-punctuation-failed:
+    - clear_scopes: 1 # Q-value
+    - meta_scope: string.unquoted.b2jam
+    - match: \"
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-grist-punctuation-failed
+    - include: LQ-grist-punctuation-start-chars-failed
+
+  Q-grist-punctuation-failed:
+    - clear_scopes: 1
+    - meta_scope: string.quoted.double.b2jam
+    - include: Q-quote-terminal
+    - include: LQ-grist-punctuation-start-chars-failed
+
+  L-grist-break-L:
+    - match: ''
+      fail: L_value_grist
+
+  L-grist-break-Q:
+    - match: ''
+      fail: Q_value_grist
+
+  Q-break:
+    - include: immediately-pop
+
+
+  L-grist:
+    - clear_scopes: 1 # Q-Value
+    #- meta_content_scope: variable.other.constant.grist.b2jam
+    - meta_content_scope: variable.other.constant.grist.b2jam
+    - match: \"
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-grist
+    - match: (?=\>)
+      pop: 4 # this, LQ-grist-breaks, Q-value
+      push: LQ-grist-punctuation-end-char
+    - match: ':'  # not a special char inside grist
+    - match: '{{token_break}}'
+      pop: 2 # jump to fail mode
+    - include: L-content-rules-standard
+
+  Q-grist:
+    - match: (?=\>)
+      pop: 4 # this, L-grist, LQ-grist-breaks
+      push: LQ-grist-punctuation-end-char
+    - include: Q-content-rules-standard
+

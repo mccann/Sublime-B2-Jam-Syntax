@@ -1,0 +1,116 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+version: 2
+extends:
+  - Packages/B2Jam/detail/expansion/LQ-expansion.sublime-syntax
+
+variables:
+
+  expansion_start_char: '@'
+
+contexts:
+
+  # if ends with :) , mark : invalid -- and don't fail.
+  LQ-expansion-fail-terminal:
+    - match: (:)(\))
+      captures:
+        1: keyword.operator.expansion.b2jam invalid.illegal.b2jam
+        2: punctuation.section.interpolation.end.b2jam
+      set:
+        - match: ''
+          pop: 6 # skip over branch LQ breaks, and LQ base
+    - match: \) # else
+      set:
+        - match: ''
+          pop: 2 # down to a break! trigger fail
+
+  LQ-expansion-terminal:
+    - match: (:)?(\))
+      captures:
+        1: keyword.operator.expansion.b2jam invalid.illegal.b2jam
+        2: punctuation.section.interpolation.end.b2jam
+      set:
+        - match: ''
+          pop: 6 # skip over branch LQ breaks, and LQ base
+
+  L-expansion:
+    - meta_scope: meta.interpolation.filename.b2jam
+    - match: (?=:E)
+      set: L-expansion-found-E
+    - include: LQ-expansion-fail-terminal
+    - include: L-modifiers
+    - include: L-brackets
+    - include: L-identifiers
+
+  L-expansion-found-E:
+    - meta_scope: meta.interpolation.filename.b2jam
+    - include: LQ-expansion-terminal
+    - include: L-modifiers
+    - include: L-brackets
+    - include: L-identifiers
+
+  Q-expansion:
+    - meta_scope: meta.string.b2jam
+    - match: (?=:E)
+      pop: 2
+      push: [ L-expansion-found-E, Q-expansion-found-E ]
+    - include: LQ-expansion-fail-terminal
+    - include: Q-modifiers
+    - include: Q-brackets
+    - include: Q-identifiers
+
+  Q-expansion-found-E:
+    - meta_scope: meta.string.b2jam
+    - include: LQ-expansion-terminal
+    - include: Q-modifiers
+    - include: Q-brackets
+    - include: Q-identifiers
+
+
+  LQ-punctuation-plain:
+    - match: '{{expansion_start_char}}\('
+      pop: 1
+
+
+  # in failed case, pop off the meta-scopes that were used to push this expansion in place
+  L-branch-failed:
+    - match: ''
+      pop: 4 #
+      set:
+        - Packages/B2Jam/detail/expansion/filename-plain.sublime-syntax#L_0
+        - LQ-punctuation-plain
+
+  Q-branch-failed:
+    - match: ''
+      pop: 5 #
+      set:
+        - Packages/B2Jam/detail/expansion/filename-plain.sublime-syntax#L_0
+        - Packages/B2Jam/detail/expansion/filename-plain.sublime-syntax#Q_0
+        - LQ-punctuation-plain
+
+
+  L-as-expansion-modifier-name:
+    - clear_scopes: 2 # meta.string, meta.interpolation
+    - meta_scope: meta.interpolation.filename.modifier.b2jam
+    - include: Packages/B2Jam/detail/expansion/filename-modifier-names.sublime-syntax#L-as
+  Q-as-expansion-modifier-name:
+    - clear_scopes: 2 # meta.string, meta.interpolation
+    - meta_scope: meta.interpolation.filename.modifier.b2jam meta.string.b2jam
+    - include: Packages/B2Jam/detail/expansion/filename-modifier-names.sublime-syntax#Q-as
+  L-as-expansion-index-brackets:
+    - include: Packages/B2Jam/detail/expansion/filename-index-brackets.sublime-syntax#L-as-index-brackets
+  Q-as-expansion-index-brackets:
+    - include: Packages/B2Jam/detail/expansion/filename-index-brackets.sublime-syntax#Q-as-index-brackets
+  L-as-expansion-identifier:
+    - include: Packages/B2Jam/detail/expansion/filename-identifier.sublime-syntax#L-as
+  Q-as-expansion-identifier:
+    - include: Packages/B2Jam/detail/expansion/filename-identifier.sublime-syntax#Q-as
+

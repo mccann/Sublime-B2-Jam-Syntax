@@ -1,0 +1,157 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+version: 2
+
+extends:
+  - Packages/B2Jam/detail/expansion/LQ-expansion-values.sublime-syntax
+
+variables:
+
+  # LQ-stacks
+  LQN_stack_terminal_re: ':'
+  L0_stack_terminal_re: '[:\)]'
+  Q0_stack_terminal_re: '[:\)]'
+
+  # these modifiers work alone alone $(var:B) for example
+  modifier_simple: 'LPTUW'
+
+  # these modifiers can work alone, or take assignment $(var:G) and $(var:G=foo)
+  modifier_opt_assign: 'BEDGJMS'
+
+  # these modifiers require assignment, ex: $(R=root)
+  # J needs testing
+  modifier_assign: 'OR<>'
+
+  modifier_aloneonly_char:  '[{{modifier_simple}}]'
+  modifier_assignable_char: '[{{modifier_opt_assign}}{{modifier_assign}}]'
+  modifier_worksalone_char: '[{{modifier_simple}}{{modifier_opt_assign}}]'
+  modifier_mustassign_char: '[{{modifier_assign}}]'
+
+  modifier_char: '[^{{metachar}}:$@"\(\)\\]'
+  modifier_chars_partial: '{{modifier_char}}+|{{expansion_invalid_startchar}}'
+
+  # assignable char, or previous char was ) (assume it was an expansion)
+  modifier_assignable: '{{modifier_assignable_char}}|(?<=\))'
+contexts:
+
+
+    # b2 appears to only consume "=token" after modifiers that are marked as having a value
+    # it simply scans the 'chars' otherwise, skipping unknown
+    # -- only mark 'keyword' on known ones.
+
+
+## Modifier Values
+
+  L-modifier-values-0:
+    - match: '({{modifier_assignable}})(=)'
+      captures:
+        1: variable.parameter.switch.b2jam
+        2: keyword.operator.assignment.b2jam
+      push:
+        - match: ''
+          set: [ Q_0, L-as-modifier-value ]
+
+  L-modifier-values-N:
+    - match: '({{modifier_assignable}})(=)'
+      captures:
+        1: variable.parameter.switch.b2jam
+        2: keyword.operator.assignment.b2jam
+      push:
+        - match: ''
+          set: [ Q_N, L-as-modifier-value ]
+
+  Q-modifier-values:
+    - match: '({{modifier_assignable}})(=)'
+      captures:
+        1: variable.parameter.switch.b2jam
+        2: keyword.operator.assignment.b2jam
+      push:
+        - match: ''
+          set: Q-as-modifier-value
+
+  L-as-modifier-value:
+    - include: Packages/B2Jam/detail/expansion/modifier-values.sublime-syntax#L-as
+  Q-as-modifier-value:
+    - include: Packages/B2Jam/detail/expansion/modifier-values.sublime-syntax#Q-as
+
+# Valueless modifiers
+
+  LQ-modifiers-valueless-worksalone:
+    # no assignment
+    - match: '{{modifier_worksalone_char}}+(?!=)'
+      scope: variable.parameter.switch.b2jam
+
+  LQ-modifiers-valueless-mustassign:
+    # requires assignment, but not given
+    - match: '{{modifier_mustassign_char}}(?!=)'
+      scope: variable.parameter.switch.b2jam invalid.deprecated.b2jam
+
+  LQ-modifiers-valueless-aloneonly:
+    # invalid-assignment - modifier doesn't do anything with assigned value
+    - match: '({{modifier_aloneonly_char}})(=?)'
+      captures:
+        1: variable.parameter.switch.b2jam
+        2: invalid.deprecated.b2jam
+
+  LQ-modifiers-valueless:
+    - include: LQ-modifiers-valueless-worksalone
+    - include: LQ-modifiers-valueless-mustassign
+    - include: LQ-modifiers-valueless-aloneonly
+
+  L-unknown-modifier:
+    - match: '.'
+      scope: string.unquoted.b2jam
+
+  Q-unknown-modifier:
+    - match: '.'
+      scope: string.quoted.double.b2jam
+
+## String Contexts
+
+  L-prototype:
+    - meta_append: true
+    - include: LQ-modifiers-valueless
+    - include: L-unknown-modifier
+
+  Q-prototype:
+    - meta_append: true
+    - include: LQ-modifiers-valueless
+    - include: Q-unknown-modifier
+
+  L_0:
+    - meta_prepend: true
+    - clear_scopes: 2 # - remove meta.string , meta.interpolation. from Q-expansion
+    - meta_scope: meta.interpolation.parameter.modifier.b2jam
+    - include: L-modifier-values-0
+
+  L_N:
+    - meta_prepend: true
+    - include: L-modifier-values-N
+
+  L_N-failed:
+    - meta_prepend: true
+    - include: L-modifier-values-N
+
+  Q_0:
+    - meta_prepend: true
+    - include: Q-modifier-values
+
+  Q_0-failed:
+    - meta_prepend: true
+    - include: Q-modifier-values
+
+  Q_N:
+    - meta_prepend: true
+    - include: Q-modifier-values
+
+  Q_N-failed:
+    - meta_prepend: true
+    - include: Q-modifier-values

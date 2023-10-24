@@ -1,0 +1,54 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+version: 2
+
+variables:
+
+  # abstract!
+  # L_escapeable_char: '[tnr\\"\s:;}{\[\]]'
+  # Q_escapeable_char: '[tnr\\"]'
+  # L_hazard_escape_re: '(?:[<>]|[$@]\()'
+  # Q_hazard_escape_re: '(?:[<>]|[$@]\()'
+
+  # special chars that give an illegal warning when not escaped or quoted
+  L_needs_escape_char: ''
+
+contexts:
+
+  main:
+    - match: ''
+      pop: 1
+
+  L-hazard-escapes:
+    - match: '\\(?={{L_hazard_escape_re}})'
+      scope: constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+
+  Q-hazard-escapes:
+    - match: '\\(?={{Q_hazard_escape_re}})'
+      scope: constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+
+  L-escapes:
+    - include: L-hazard-escapes
+    - match: '(\\{{L_escapeable_char}})|(\\)'
+      captures:
+        1: constant.character.escape.b2jam
+        2: constant.character.escape.impotent.b2jam
+
+  Q-escapes:
+    - include: Q-hazard-escapes
+    - match: '(\\{{Q_escapeable_char}})|(\\)'
+      captures:
+        1: constant.character.escape.b2jam
+        2: constant.character.escape.impotent.b2jam
+
+  L-needs-escape: # or quote
+    - match: '{{L_needs_escape_char}}+'
+      scope: invalid.deprecated.b2jam

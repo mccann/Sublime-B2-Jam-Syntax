@@ -1,0 +1,95 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+extends: Packages/B2Jam/detail/value/LQ-values.sublime-syntax
+
+version: 2
+
+variables:
+    left_edge: (?:(?<=^|{{metachar}})(?<!\\{{metachar}}))
+    right_edge: (?:(?=$|{{metachar}}(?<!\\{{metachar}})))
+
+
+  # filename or target
+    # run of chars and balanced quotes that starts unquoted, without /
+    L_target: (?:(?:(?:[^\s/\"\\]|\\[^\\])*(\"(?:[^/\\]|\\[^\\])*\")?)(?:\"(?:[^/\\]|\\[^\\])*)?)
+    # run of chars and balanced quotes that starts quoted, without /
+    Q_target: (?:(?:(?:[^/\"\\]|\\[^\\])*(\"(?:[^\s/\\]|\\[^\\])*\")?)(?:\"(?:[^\s/\\]|\\[^\\])*)?)
+
+contexts:
+
+  value-meta:
+    - meta_scope: variable.other.constant.path.b2jam
+    - include: immediately-pop
+
+
+  L-as-target:
+    - match: ''
+      set:
+        - Packages/B2Jam/detail/value/value-target.sublime-syntax#value-meta
+        - Packages/B2Jam/detail/value/value-target.sublime-syntax#L-value
+
+  Q-as-target:
+    - match: ''
+      set:
+        - Packages/B2Jam/detail/value/value-target.sublime-syntax#value-meta
+        - Packages/B2Jam/detail/value/value-target.sublime-syntax#L-value
+        - Packages/B2Jam/detail/value/value-target.sublime-syntax#Q-value
+
+  L-value:
+    - meta_prepend: true
+  # target/filename
+    - match: '{{left_edge}}(?={{L_target}}{{right_edge}})'
+      pop: 2 # L-Value, value-meta
+      push: L-as-target
+
+  # /file.name
+    - match: '(?<=/|\\\\)(?!(?:\"\")*\")(?={{L_target}}{{right_edge}})'
+      pop: 2 # L-Value, value-meta
+      push: L-as-target
+    # //
+    - match: (?<!/)//(?!/)
+      scope: constant.language.project-separator.b2jam
+      push:
+        - clear_scopes: 1
+        - match: ''
+          pop: 3 # anon, L-Value, value-meta
+          set: L-as-target
+    - match: '{{left_edge}}'
+      push: [ Q-value, L-path-start-char ]
+    - include: L-value-path-chars
+
+  Q-value:
+    - meta_prepend: true
+  # /file.name
+    - match: '(?<=/|\\\\)(?!(?:\"\")*\")(?={{Q_target}}{{right_edge}})'
+      pop: 3 # Q-value, L-Value, value-meta
+      push: Q-as-target
+    # //
+    - match: (?<!/)//(?!/)
+      scope: constant.language.project-separator.b2jam
+      push:
+        - clear_scopes: 1
+        - match: ''
+          pop: 4 # anon, Q-value, L-Value, value-meta
+          set: Q-as-target
+    - include: Q-value-path-chars
+
+  L-path-start-char:
+    - clear_scopes: 1
+    - match: \"
+      scope: punctuation.definition.string.begin.b2jam
+      push: Q-path-start-char
+    - include: LQ-path-start-char-common
+
+  Q-path-start-char:
+    - meta_scope: meta.string.b2jam
+    - include: Q-quote-terminal
+    - include: LQ-path-start-char-common

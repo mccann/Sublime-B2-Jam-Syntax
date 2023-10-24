@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0">
+<dict>
+	<key>scope</key>
+	<string><![CDATA[
+		  	source.b2jam meta.declaration.variable.local variable.other.readwrite.b2jam - ( meta.compound | meta.interpolation ),
+		  	source.b2jam meta.declaration.function.local entity.name.function.rule,
+		  	source.b2jam meta.declaration.function meta.function.parameters variable.parameter
+	]]></string>
+	<key>settings</key>
+	<dict>
+		<key>showInSymbolList</key>
+		<integer>1</integer>
+		<key>showInIndexedSymbolList</key>
+		<integer>0</integer>
+		<key>showInIndexedReferenceList</key>
+		<integer>0</integer>
+	</dict>
+</dict>
+</plist>

@@ -1,0 +1,75 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+extends: Packages/B2Jam/detail/value/LQ-values.sublime-syntax
+
+version: 2
+
+variables:
+  normative_identifier: '[-a-zA-Z0-9_]+'
+  object_and_accessor: '(?:({{ws_lb}}{{normative_identifier}})|(?<=\)))(\.)'
+
+contexts:
+
+  as-rule-call:
+    - include: comments
+    - include: token-break
+    - match: '{{token_begin}}'
+      branch_point: rule_call
+      branch:
+        - identifier-only
+        - object-identifier
+      set:
+        - value-meta
+        - L-value
+
+  identifier-only:
+    - match: '{{token_begin}}'
+      set:
+        - value-meta
+        - L-try-object-value
+
+  object-identifier:
+    - match: '{{token_begin}}'
+      set: Packages/B2Jam/detail/value/rule-call-object.sublime-syntax#L-value
+
+  as-identifier:
+    - match: ''
+      set: [ path-value-meta, L-value ]
+
+  path-value-meta:
+    - clear_scopes: 1 # clear meta.function-call.arguments
+    - meta_content_scope: meta.path.b2jam meta.function-call.identifier.b2jam variable.function.b2jam
+    - include: immediately-pop
+
+
+  expansion-meta:
+    - clear_scopes: 2 # clear meta.string and variable.function
+    - include: immediately-pop2
+
+  expr-meta:
+    - clear_scopes: 1 # clear meta.function-call.arguments
+    - include: immediately-pop
+
+  value-meta:
+    - clear_scopes: 1 # clear meta.function-call.arguments
+    - meta_scope: meta.function-call.identifier.b2jam variable.function.b2jam
+    - include: immediately-pop
+
+  # just like L-value, but looks for objects, and if found, fails
+  L-try-object-value:
+    # if quoted, or gristed don't look for objects
+    - match: (?=[\"\<])
+      set: L-value
+    - include: L-content-rules-standard
+    - match: '{{object_and_accessor}}'
+      fail: rule_call
+
+

@@ -1,0 +1,59 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+
+version: 2
+
+extends:
+  - Packages/B2Jam/detail/expansion/LQ-expansion-values.sublime-syntax
+
+variables: { }
+    # this is still abtract!
+contexts:
+
+
+  expansion-meta:
+    - clear_scopes: 2 # clear meta.string & string.xxx
+    - include: immediately-pop2
+
+  L_0:
+    # add to existing meta.string from lower Q layer
+    - meta_scope: string.unquoted.b2jam
+    - include: L_0-rules
+
+  L_N:
+    - clear_scopes: 1 # remove string.quoted from Q_X
+    - meta_scope: string.unquoted.b2jam
+    - include: L_N-rules
+
+  L_N-failed:
+    - clear_scopes: 1 # remove string.quoted from Q_X
+    - meta_scope: string.unquoted.b2jam
+    - include: L_N-failed-rules
+
+  Q_0:
+    - clear_scopes: 1 # remove string.unquoted
+    - meta_scope: string.quoted.double.b2jam
+    - include: Q_0-rules
+
+  Q_0-failed:
+    - clear_scopes: 1 # remove string.unquoted
+    - meta_scope: string.quoted.double.b2jam
+    - include: Q_0-failed-rules
+
+  Q_N:
+    - clear_scopes: 1 # remove string.unquoted
+    - meta_scope: string.quoted.double.b2jam
+    - include: Q_N-rules
+
+  Q_N-failed:
+    - clear_scopes: 1 # remove string.unquoted
+    - meta_scope: string.quoted.double.b2jam
+    - include: Q_N-failed-rules
+

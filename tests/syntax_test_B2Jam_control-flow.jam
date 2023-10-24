@@ -1,0 +1,1672 @@
+#  SYNTAX TEST partial-symbols "Packages/B2Jam/B2Jam.sublime-syntax"
+
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+
+# Single Line Comment
+#  ^ comment.line.number-sign.b2jam
+# <- punctuation.definition.comment
+
+
+#| Single Line Block Comment |#
+#   ^ comment.block.number-sign-pipe.b2jam
+#  <- comment.block.number-sign-pipe.b2jam punctuation.definition.comment.b2jam
+#                             ^ comment.block.number-sign-pipe.b2jam punctuation.definition.comment.b2jam
+
+
+#|
+Multi-lined
+Block Comment
+With trailing command 
+   |# ecko ;
+#  <-                comment.block.number-sign-pipe.b2jam
+#  ^^                comment.block.number-sign-pipe.b2jam punctuation.definition.comment.b2jam
+#     ^^^^           meta.function-call.identifier.b2jam variable.function.b2jam
+#          ^         punctuation.terminator.b2jam
+
+
+#####[ COMMAND NAME ]#########
+
+# ensure command/rule can span multiple lines
+multi line "rule"
+#  <-                   meta.function-call.identifier.b2jam variable.function.b2jam
+#     ^^^^^^^^^^^       meta.function-call.arguments.b2jam
+  with comments ;
+# ^^^^^^^^^^^^^         meta.function-call.arguments.b2jam
+#               ^       punctuation.terminator.b2jam           
+
+
+# command literal with leading whitespace
+   command ;
+#  <-                   source.b2jam - bjam
+#  ^^^^^^^              meta.function-call.identifier.b2jam variable.function.b2jam
+#  ^^^^^^^              source.b2jam
+#          ^            punctuation.terminator.b2jam
+#  @@@@@@@ reference
+
+# command literal start of line
+command ;
+#  <-                   meta.function-call.identifier.b2jam variable.function.b2jam
+
+
+# quoted command 
+   "do thing" ;
+#  ^^^^^^^^^^           meta.function-call.identifier.b2jam variable.function.b2jam
+#  ^^^^^^^^^^           meta.string.b2jam 
+#  ^^^^^^^^^^           source.b2jam 
+#  ^                    punctuation.definition.string.begin.b2jam
+#           ^           punctuation.definition.string.end.b2jam
+
+# quoted commmand - start of line
+"start of line" ;
+#  <-                   meta.function-call.identifier.b2jam variable.function.b2jam 
+#  <-                   meta.string.b2jam punctuation.definition.string.begin.b2jam
+
+
+# mixed literal and quote
+    literal"quoted" ;
+#   ^^^^^^^^^^^^^^^     meta.function-call.identifier.b2jam variable.function.b2jam
+#          ^^^^^^^^     meta.string.b2jam
+
+# naked literal interpolation
+      $(func) ;
+#     ^^^^^^^           meta.function-call.identifier.b2jam meta.interpolation.parameter
+#     ^^                meta.interpolation.parameter.b2jam
+#       ^^^^            meta.interpolation.parameter.identifier.b2jam
+#           ^           meta.interpolation.parameter.b2jam
+#     ^^^^^^^           source.b2jam
+#     ^^^^^^^           - meta.string
+#     ^                 punctuation.definition.variable.b2jam
+#      ^                punctuation.section.interpolation.begin.b2jam
+#      ^                - variable.other.readwrite.b2jam
+#       ^^^^            variable.other.readwrite.b2jam
+#           ^           punctuation.section.interpolation.end.b2jam
+#           ^           - variable.other.readwrite.b2jam
+ 
+
+# naked literal interpolation - start of line 
+$(start) ;
+#  <-                   meta.function-call.identifier.b2jam meta.interpolation.parameter.b2jam punctuation.definition.variable.b2jam
+# @@@@@ reference 
+
+# dressed literal interpolation 
+   pre$(variable)post ;
+#  ^^^^^^^^^^^^^^^^^^^^  source.b2jam
+#  ^^^^^^^^^^^^^^^^^^    meta.function-call.identifier.b2jam
+#     ^^^^^^^^^^^        meta.interpolation.parameter
+#       ^^^^^^^^         variable.other.readwrite.b2jam
+#      ^                 punctuation.section.interpolation.begin.b2jam
+#               ^        punctuation.section.interpolation.end.b2jam
+#      ^                 punctuation.section.interpolation.begin.b2jam
+#      ^                 - variable.other.readwrite.b2jam 
+#               ^        - variable.other.readwrite.b2jam 
+#  ^^^                   variable.function.b2jam
+#                ^^^^    variable.function.b2jam
+#     ^                  punctuation.definition.variable.b2jam
+
+# identifier deprecated chars - bjam will issue a warning
+   $(func name) ;
+#  ^^^^^^^^^^^^           meta.function-call.identifier.b2jam meta.interpolation.parameter
+#    ^^^^^^^^^            variable.other.readwrite.b2jam
+#        ^                invalid.deprecated.b2jam
+
+
+# The fix:
+   $(func\ name) ;
+#  ^^^^^^^^^^^^^          meta.function-call.identifier.b2jam meta.interpolation.parameter
+#    ^^^^^^^^^^           variable.other.readwrite.b2jam
+#        ^^               constant.character.escape.b2jam
+#        ^^               - invalid.deprecated
+
+# escaping the dollar \$() does nothing
+
+    \$(name) ;
+#   ^^^^^^^^                meta.function-call.identifier.b2jam
+#   ^                       constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#    ^                      - constant.character.escape
+#    ^^^^^^^                meta.interpolation.parameter
+
+
+   $("func name") ;
+#  ^^^^^^^^^^^^^^         meta.function-call.identifier.b2jam meta.interpolation.parameter
+#  ^^                     meta.interpolation.parameter.b2jam
+#    ^^^^^^^^^^^          meta.interpolation.parameter.identifier.b2jam
+#               ^         meta.interpolation.parameter.b2jam
+#    ^^^^^^^^^^^          variable.other.readwrite.b2jam
+#    ^^^^^^^^^^^          meta.string.b2jam
+#         ^               - invalid.deprecated
+
+   $("func\ name") ;
+#  ^^^^^^^^^^^^^^         meta.function-call.identifier.b2jam meta.interpolation.parameter
+#    ^^^^^^^^^^^          variable.other.readwrite.b2jam
+#    ^^^^^^^^^^^          meta.string.b2jam
+#         ^               constant.character.escape.impotent.b2jam
+#          ^              - constant.character.escape
+#         ^^              - invalid
+
+
+# semicolon is special in literals
+
+     semi;colon ;
+#    ^^^^^^^^^^          meta.function-call.identifier.b2jam
+#    ^^^^^^^^^^          variable.function.b2jam
+#        ^               invalid.deprecated.b2jam
+
+     semi\;colon ;
+#    ^^^^^^^^^^^          meta.function-call.identifier.b2jam
+#        ^^               constant.character.escape.b2jam
+
+# but permitted in unquoted expansion
+     $(semi;colon) ;
+#    ^^^^^^^^^^^^^       meta.function-call.identifier.b2jam meta.interpolation.parameter
+#      ^^^^^^^^^^        variable.other.readwrite.b2jam
+#          ^             - invalid.deprecated.b2jam
+
+
+
+# rule literal with special chars - note that () are permitted 
+   }sd][{as:_$_()__\:\[\]\{  ;
+#  ^^^^^^^^^^^^^^^^^^^^^^^^       meta.function-call.identifier.b2jam
+#  ^                              invalid.deprecated.b2jam                             
+#                  ^^^^^^^^       constant.character.escape.b2jam
+#   ^^                            variable.function.b2jam - invalid.deprecated.b2jam
+#        ^^                       variable.function.b2jam - invalid.deprecated.b2jam
+#           ^^^^^^^               variable.function.b2jam - invalid.deprecated.b2jam
+#     ^^^                         invalid.deprecated.b2jam
+#          ^                      invalid.deprecated.b2jam
+#                            ^    punctuation.terminator.b2jam
+
+# escaping of other useful escape chars
+    \n\t\r\\\" ;
+#   ^^^^^^^^^^                      constant.character.escape.b2jam    
+
+# escapes of non-special chars/sequences are marked impotent, but not invalid
+    \a\(\0\.\3\#\$\@ ;
+#   ^^^^^^^^^^^^                    - invalid
+#   ^                               constant.character.escape.impotent.b2jam        
+#     ^                             constant.character.escape.impotent.b2jam
+#       ^                           constant.character.escape.impotent.b2jam
+#         ^                         constant.character.escape.impotent.b2jam
+#           ^                       constant.character.escape.impotent.b2jam
+#             ^                     constant.character.escape.impotent.b2jam
+#    ^                              - constant.character.escape
+#      ^                            - constant.character.escape
+#        ^                          - constant.character.escape
+#          ^                        - constant.character.escape
+#            ^                      - constant.character.escape
+#              ^                    - constant.character.escape
+
+    <:>   ;
+
+# escapes of hazard character/sequences are marked invalid. -- warning user that the escape isn't going to be effective
+# < > are impotent, because parser behaves differently inside <grist> .. escaping doesn't change that
+    \@(f:E=)\$()\<\>  ;
+#   ^^^^^^^^^^^^^^^^                meta.function-call.identifier.b2jam
+#   ^                               constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#    ^^^^^^^                        meta.interpolation.filename
+#    ^^                             meta.interpolation.filename.b2jam
+#      ^                            meta.interpolation.filename.identifier.b2jam
+#       ^^^                         meta.interpolation.filename.modifier.b2jam
+#          ^                        meta.interpolation.filename.b2jam
+#           ^                       constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#            ^^^                    meta.interpolation.parameter.b2jam
+#               ^                   constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#                 ^                 constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+
+   "\@(f:E=)\$()\<\>"  ;
+#  ^^^^^^^^^^^^^^^^^^               meta.function-call.identifier.b2jam
+#   ^                               constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#    ^^^^^^^                        meta.interpolation.filename
+#    ^^                             meta.interpolation.filename.b2jam
+#      ^                            meta.interpolation.filename.identifier.b2jam
+#       ^^^                         meta.interpolation.filename.modifier.b2jam
+#          ^                        meta.interpolation.filename.b2jam
+#           ^                       constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#            ^^^                    meta.interpolation.parameter.b2jam
+#               ^                   constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+#                 ^                 constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+
+
+# quoted identifier
+   "}sd][a\"s:" ; 
+#  ^^^^^^^^^^^^      meta.function-call.identifier.b2jam variable.function.b2jam 
+#  ^^^^^^^^^^^^      meta.string.b2jam
+#  ^                 punctuation.definition.string.begin.b2jam             
+#             ^      punctuation.definition.string.end.b2jam      
+#         ^^         constant.character.escape.b2jam
+
+
+
+# quoted interpolated identifier
+ 
+   "self.$(cmd)" foo  ;
+#  ^^^^^^^^^^^^^^^^^^^^^     source.b2jam   
+#  ^^^^^^^^^^^^^             meta.function-call.identifier.b2jam
+#               ^^^^         - meta.function-call.identifier.b2jam
+#  ^^^^^^^^^^^^^             meta.string.b2jam
+#               ^            - meta.string.b2jam
+#                ^^^         meta.string.b2jam
+#  ^^^^^^                    variable.function.b2jam
+#        ^^^^^^              - variable.function.b2jam
+#              ^             variable.function.b2jam
+#  ^                         punctuation.definition.string.begin.b2jam
+#        ^^^^^^              meta.interpolation.parameter
+#        ^                   punctuation.definition.variable.b2jam
+#         ^                  punctuation.section.interpolation.begin.b2jam
+#          ^^^               variable.other.readwrite.b2jam
+#             ^              punctuation.section.interpolation.end.b2jam
+#              ^             punctuation.definition.string.end.b2jam
+#               ^^^^         meta.function-call.arguments.b2jam
+
+
+
+
+
+#### improper statement endings, and recovery
+
+#  statement ending in }, file scope - use return to verify it exited the statement context
+    cmd   } return ;
+#   ^^^             meta.function-call.identifier.b2jam variable.function.b2jam
+#       ^           invalid.illegal.b2jam
+#        ^          - invalid
+#         ^         invalid.illegal.b2jam
+#          ^        - meta.function-call
+#           ^^^^^^  keyword.control.flow.return.b2jam
+
+#  statement ending in }, block scope - 'return' is outside statement and block
+  { cmd   } return ;
+# ^^^^^^^^^             meta.block.b2jam
+#          ^^^^^^^^     - meta.block.b2jam 
+#   ^^^                 meta.function-call.identifier.b2jam variable.function.b2jam
+#       ^               invalid.illegal.b2jam
+#        ^^^^^^^^^^     - invalid
+#          ^^^^^^^^^    - meta.function-call
+#           ^^^^^^      keyword.control.flow.return.b2jam
+
+#  statement ending in symbol , block scope, final ';'
+    cmd ! return ;  
+#   ^^^                 meta.function-call.identifier.b2jam variable.function.b2jam
+#      ^^^^^^^^^^^      meta.function-call.arguments.b2jam
+#       ^               invalid.illegal.b2jam
+#         ^^^^^^^^      - invalid
+#         ^^^^^^        - keyword
+#                ^      punctuation.terminator.b2jam
+
+#  statement ending in symbol , block scope, final '}'
+   { cmd ! return }  
+#  ^^^^^^^^^^^^^^^^     meta.block.b2jam
+#                  ^    - meta.block.b2jam  
+#    ^^^                meta.function-call.identifier.b2jam variable.function.b2jam
+#       ^^^^^^^^^^      meta.function-call.arguments.b2jam
+#        ^              invalid.illegal.b2jam
+#         ^^^^^^^^^^    - invalid
+#         ^^^^^^^^^^    - keyword
+#                 ^     punctuation.section.block.end.b2jam
+
+# statment, ; in statement space is invalid
+    ;
+#   ^ invalid.illegal.b2jam
+
+
+#TODO: should value list of return have function args meta?
+# keyword statement with literal
+return a ;
+#  <-               keyword.control.flow.return.b2jam
+#      ^            string.unquoted.b2jam
+#        ^          punctuation.terminator.b2jam
+
+# list
+return a b ;
+#      ^          string.unquoted.b2jam
+#        ^        string.unquoted.b2jam
+#          ^      punctuation.terminator.b2jam
+
+# list with strings and interpolations
+return f "o" $(o) ;
+#      ^            meta.string.b2jam string.unquoted.b2jam
+#        ^^^        meta.string.b2jam string.quoted.double.b2jam
+#            ^^^^   - meta.string
+#            ^^^^   meta.interpolation.parameter
+#                 ^ punctuation.terminator.b2jam
+
+# list with expression and non terminating :
+return [ cmd arg ] [ cmd2 arg2 ] : break ;
+#      ^^^^^^^^^^^                          meta.compound.b2jam
+#                ^                          punctuation.section.brackets.end.b2jam
+#                  ^                        meta.compound.b2jam punctuation.section.brackets.begin.b2jam
+#                   ^^^^^^^^^^^^            meta.compound.b2jam
+#                                ^          invalid.illegal.b2jam
+#                                 ^^^^^^^^  - invalid
+#                                  ^^^^^^^  - keyword.control.flow.break.b2jam
+#                                     
+
+#  <-         - meta.block.b2jam
+
+# test basic flow control 
+
+    if 
+#   ^^      meta.conditional.b2jam keyword.control.conditional.if.b2jam
+    foo 
+#   ^^^     meta.conditional.b2jam meta.string.b2jam string.unquoted.b2jam
+    {
+#   ^       meta.block.b2jam punctuation.section.block.begin.b2jam
+
+#   ^^^^^^  meta.block.b2jam
+    }       
+#   ^       meta.block.b2jam punctuation.section.block.end.b2jam
+
+    else 
+#   ^^^^    keyword.control.conditional.else.b2jam    
+    {
+#   ^       meta.block.b2jam punctuation.section.block.begin.b2jam
+
+#   ^^^^^^  meta.block.b2jam
+
+    }
+#   ^       meta.block.b2jam punctuation.section.block.end.b2jam
+
+#  <-         - meta.block.b2jam
+
+# compact 
+   if c { 
+#  ^^       meta.conditional.b2jam keyword.control.conditional.if.b2jam
+#     ^     meta.conditional.b2jam meta.string.b2jam string.unquoted.b2jam
+#       ^^  meta.block.b2jam
+#     ^     meta.conditional.b2jam meta.string.b2jam string.unquoted.b2jam
+#       ^   meta.block.b2jam punctuation.section.block.begin.b2jam
+
+#   ^^^^^^  meta.block.b2jam
+   } else {
+#  ^        punctuation.section.block.end.b2jam
+#    ^^^^   keyword.control.conditional.else.b2jam
+#         ^ punctuation.section.block.begin.b2jam
+
+#   ^^^^^^  meta.block.b2jam
+   }
+#  ^        punctuation.section.block.end.b2jam
+
+while cond {
+#  <-         keyword.control.loop.while.b2jam
+#          ^  punctuation.section.block.begin.b2jam
+    break ;
+#  <-         meta.block.b2jam 
+#   ^         keyword.control.flow.break.b2jam 
+#         ^   punctuation.terminator.b2jam
+
+}
+#  <-         punctuation.section.block.end.b2jam
+
+#  <-         - meta.block.b2jam
+
+for local x in y {
+#  <-               keyword.control.loop.for.b2jam
+#   ^^^^^^^^^^^^    meta.declaration.variable.local.b2jam
+#   ^^^^^           storage.modifier.local.b2jam
+#         ^         - string
+#           ^^      keyword.control.in.b2jam
+#                ^  punctuation.section.block.begin.b2jam
+    for i in j {
+#  ^              meta.block.b2jam 
+#   ^             keyword.control.loop.for.b2jam
+#         ^       keyword.control.in.b2jam
+#              ^  punctuation.section.block.begin.b2jam
+        if i = x {
+#  <-               meta.block.b2jam             
+#       ^           meta.block.b2jam keyword.control.conditional.if.b2jam
+#            ^      meta.block.b2jam meta.block.b2jam keyword.operator.comparison.b2jam
+#                ^  meta.block.b2jam meta.block.b2jam punctuation.section.block.begin.b2jam
+            continue ;
+#  <- meta.block.b2jam meta.block.b2jam 
+#           ^           keyword.control.flow.continue.b2jam 
+#                    ^  meta.block.b2jam meta.block.b2jam punctuation.terminator.b2jam
+        }
+#       ^     meta.block.b2jam meta.block.b2jam punctuation.section.block.end.b2jam
+    }
+#   ^         meta.block.b2jam punctuation.section.block.end.b2jam    
+}
+#  <-         punctuation.section.block.end.b2jam
+
+#  <-         - meta.block.b2jam
+
+# for loop var is not expanded, nor can it be an expression
+  for local [ cmd ] in { }
+#     ^^^^^^^^^^^^^^^^                  meta.declaration.variable.local
+#           ^                           invalid.illegal.b2jam
+
+    switch #||# cond #||# { #||# }
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^      meta.statement.conditional.switch.b2jam
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^      - invalid 
+#          ^^^^                         comment.block.number-sign-pipe.b2jam punctuation.definition.comment.b2jam
+#                    ^^^^               comment.block.number-sign-pipe.b2jam punctuation.definition.comment.b2jam
+#                           ^^^^        meta.block.b2jam comment.block.number-sign-pipe.b2jam punctuation.definition.comment.b2jam
+#  ^                                    - meta.statement.conditional.switch.b2jam
+#                                 ^     - meta.statement.conditional.switch.b2jam
+#  ^                                    - keyword.control.conditional.switch.b2jam
+#   ^^^^^^                              keyword.control.conditional.switch.b2jam
+#         ^^^^^^^^^^^^^^^^^^^^^^^^^     - keyword.control.conditional.switch.b2jam
+#                         ^^^^^^^^      meta.block.b2jam
+#                         ^             punctuation.section.block.begin.b2jam
+#                                ^      punctuation.section.block.end.b2jam
+
+#  <-         - meta.block.b2jam
+
+    switch a { }
+#   ^^^^^^^^^^^^                        meta.statement.conditional.switch.b2jam
+#   ^^^^^^^^^^^^                        - invalid
+#            ^                          punctuation.section.block.begin.b2jam
+#              ^                        punctuation.section.block.end.b2jam
+
+#  <-         - meta.block.b2jam
+
+
+# test case statements of various types.
+    switch cond 
+{
+#  <-                                   meta.statement.conditional.switch.b2jam meta.block.b2jam
+        case pattern : cmd1 arg1 ;
+#     ^^                                - keyword.control.conditional.case.b2jam
+#       ^^^^                            keyword.control.conditional.case.b2jam
+#           ^^^^^^^^^^^^^^^^^^^^^^^     - keyword.control.conditional.case.b2jam
+#           ^                           - meta.pattern.regex.b2jam
+#            ^^^^^^^                    meta.pattern.regex.b2jam
+#                   ^                   - meta.pattern.regex.b2jam
+#                    ^                  punctuation.separator.case-statement.b2jam
+                       cmd2 arg2 ;
+#                      ^^^^             meta.statement.conditional.switch.b2jam meta.block.b2jam meta.function-call.identifier.b2jam variable.function.b2jam
+#                                ^      punctuation.terminator.b2jam
+                        { } # empty block, no need for ; terminator
+#                       ^^^             meta.statement.conditional.switch.b2jam meta.block.b2jam meta.block.b2jam
+#                       ^               punctuation.section.block.begin.b2jam
+#                         ^             punctuation.section.block.end.b2jam
+
+                        if c { } # another valid statement, no ; terminator
+#                       ^^^^^^^^        meta.statement.conditional.switch.b2jam meta.block.b2jam
+#                            ^^^        meta.block.b2jam meta.block.b2jam
+
+        case letter-[A-Z] : { }
+#       ^^^^                            keyword.control.conditional.case.b2jam
+#           ^                           - meta.pattern.regex.b2jam
+#            ^^^^^^^^^^^^               meta.pattern.regex.b2jam
+#                        ^              - meta.pattern.regex.b2jam
+#                           ^^^         meta.statement.conditional.switch.b2jam meta.block.b2jam meta.block.b2jam
+
+}
+
+#  <-         - meta.block.b2jam
+
+
+
+# switch can have multiple 'args'
+#        only first is used: https://github.com/bfgroup/b2/blob/2fc52a7bff95738251ccf39e08f912f3819e24d9/src/engine/function.cpp#L4623
+switch a b c {
+#        ^                      invalid.deprecated.b2jam
+#         ^                     - invalid.deprecated.b2jam
+#          ^                    invalid.deprecated.b2jam
+
+}
+
+# switch can zero 'args', it doesn't error.. just useless
+switch   {
+#      ^                        invalid.deprecated.b2jam
+}
+
+
+#  <-         - meta.block.b2jam
+
+
+
+#######
+
+#  Variables
+
+    variable = one two ;
+#   ^^^^^^^^^^^^^^^^^^^         - meta.declaration.variable
+#   ^^^^^^^^                    variable.other.readwrite.b2jam
+#            ^                  keyword.operator.assignment.b2jam
+#              ^^^              meta.string.b2jam string.unquoted.b2jam
+#                 ^             - ( meta.string.b2jam string.unquoted.b2jam )
+#                  ^^^          meta.string.b2jam string.unquoted.b2jam
+#                      ^        punctuation.terminator.b2jam
+#   @@@@@@@@ reference 
+
+    variable += elements ;
+#   ^^^^^^^^                    variable.other.readwrite.b2jam    
+#            ^^                 keyword.operator.assignment.b2jam
+#                        ^      punctuation.terminator.b2jam
+
+    variable on targets = elements ;
+#   ^^^^^^^^                    variable.other.readwrite.b2jam    
+#            ^^                 keyword.control.on.b2jam
+#               ^^^^^^^         variable.other.readwrite.b2jam 
+#                       ^       keyword.operator.assignment.b2jam
+#                                  ^    punctuation.terminator.b2jam
+
+    variable on one two = elements ;
+#   ^^^^^^^^                    variable.other.readwrite.b2jam    
+#            ^^                 keyword.control.on.b2jam
+#               ^^^             variable.other.readwrite.b2jam 
+#                   ^^^         variable.other.readwrite.b2jam 
+#                       ^       keyword.operator.assignment.b2jam
+#                                  ^    punctuation.terminator.b2jam
+
+# zero target variables or elements (legal)
+    variable on = ;
+#   ^^^^^^^^                    variable.other.readwrite.b2jam    
+#            ^^                 keyword.control.on.b2jam
+#               ^               keyword.operator.assignment.b2jam
+#                 ^             punctuation.terminator.b2jam
+
+variable on targets += elements ;
+#        ^^                       keyword.control.on.b2jam
+#                   ^^            keyword.operator.assignment.b2jam
+
+variable default = elements ;
+#        ^^^^^^^                  keyword.control.default.b2jam
+#                ^                keyword.operator.assignment.b2jam
+
+variable ?= elements ;
+#        ^^                       keyword.operator.assignment.b2jam
+
+# 'on' can have many targets, 
+# regular assignment statements are limited to one 
+# multi-assignment looks like a cmd with = argument, which is invalid
+    var1 var2 = val ;
+#   ^^^^                        meta.function-call.identifier.b2jam variable.function.b2jam
+#        ^^^^                   meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam
+#             ^                 invalid.illegal.b2jam
+#                   ^           punctuation.terminator.b2jam
+
+# local declaration with assignment is also limited to one variable
+    local var1 var2 = value ;   
+#   ^^^^^^^^^^^^^^^             meta.declaration.variable.local.b2jam
+#   ^^^^^^^^^^^^^^^             - meta.declaration.variable.local meta.declaration.variable.local 
+#   ^^^^^                       storage.modifier.local.b2jam
+#         ^^^^                  variable.other.readwrite.b2jam
+#              ^^^^             variable.other.readwrite.b2jam
+#                   ^           invalid.illegal.b2jam
+#                           ^   punctuation.terminator.b2jam
+
+# local declaration without assignment can have multiple
+    local var1 var2 var3 ;
+#   ^^^^^^^^^^^^^^^^^^^^        meta.declaration.variable.local.b2jam     
+#   ^^^^^^^^^^^^^^^^^^^^        - meta.declaration.variable.local meta.declaration.variable.local 
+#   ^^^^^                       storage.modifier.local.b2jam
+#        ^^^^^^^^^^^^^^^^       - storage.modifier.local.b2jam
+#         ^^^^                  variable.other.readwrite.b2jam
+#              ^^^^             variable.other.readwrite.b2jam
+#                   ^^^^        variable.other.readwrite.b2jam
+#                        ^      punctuation.terminator.b2jam
+#         @@@@ local-definition
+#              @@@@ local-definition
+#                   @@@@ local-definition
+
+# local declaration with assignment with one..
+    local var1 = value ;   
+#   ^^^^^^^^^^^                 meta.declaration.variable.local.b2jam
+#   ^^^^^^^^^^^^^^^^^^          - meta.declaration.variable.local meta.declaration.variable.local 
+#   ^^^^^                       storage.modifier.local.b2jam
+#        ^^^^^^^^^^^^^^^^       - storage.modifier.local.b2jam
+#         ^^^^                  variable.other.readwrite.b2jam
+#                ^^^^^          meta.string string.unquoted.b2jam
+#                      ^        punctuation.terminator.b2jam
+#         @@@@ local-definition
+
+
+# variable declarations can be interpolations
+    $(var) = value ;            
+#   ^^^^^^^^^^^^^^^^^           
+#   ^^^^^^                      meta.interpolation.parameter
+#          ^                    keyword.operator.assignment.b2jam
+#            ^^^^^              meta.string.b2jam string.unquoted.b2jam
+
+  local $(var) = value ;
+# ^^^^^^^^^^^^^                 meta.declaration.variable.local.b2jam
+# ^^^^^^^^^^^^^^^^^^^^          - meta.declaration.variable.local meta.declaration.variable.local 
+#       ^^^^^^                  meta.interpolation.parameter
+#              ^                keyword.operator.assignment.b2jam
+#                ^^^^^          meta.string.b2jam string.unquoted.b2jam
+
+
+# target values can be expressions 
+  var on [ cmd arg ] = value ;
+# ^^^                           variable.other.readwrite.b2jam
+#     ^^                        keyword.control.on.b2jam
+#        ^^^^^^^^^^^            meta.compound.b2jam
+#          ^^^                  meta.function-call.identifier.b2jam variable.function.b2jam
+#                    ^          keyword.operator.assignment.b2jam
+#                            ^  punctuation.terminator.b2jam
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^  - invalid     
+# @@@ reference
+
+# expressions can be regular assigment target as well
+    [ cmd arg ] = value ;
+#   ^^^^^^^^^^^                 meta.compound.b2jam
+#     ^^^                       meta.function-call.identifier.b2jam variable.function.b2jam
+#               ^               keyword.operator.assignment.b2jam
+#                       ^       punctuation.terminator.b2jam
+# ^^^^^^^^^^^^^^^^^^^^^^^       - invalid     
+
+
+  [ cmd arg ] on [ cmd arg ] = value ;
+# ^^^^^^^^^^^                   meta.compound.b2jam
+#   ^^^                         meta.function-call.identifier.b2jam variable.function.b2jam
+#             ^^                keyword.control.on.b2jam
+#                ^^^^^^^^^^^            meta.compound.b2jam
+#                  ^^^                  meta.function-call.identifier.b2jam variable.function.b2jam
+#                            ^               keyword.operator.assignment.b2jam
+#                                    ^       punctuation.terminator.b2jam
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^       - invalid     
+
+
+# invalid but recoverable flow control
+else {
+#    ^    punctuation.section.block.begin.b2jam
+#   ^     - meta.block.b2jam
+#    ^    meta.block.b2jam 
+}
+#  <-     punctuation.section.block.end.b2jam
+} ;
+#  <-     invalid.illegal.b2jam
+# ^       invalid.illegal.b2jam
+
+  :
+# ^       invalid.illegal.b2jam
+
+
+#  <-         - meta.block.b2jam
+
+##### conditional expressions
+
+if $(foo) { }
+#  ^^^^^^       meta.conditional.b2jam meta.interpolation.parameter
+#         ^     meta.block.b2jam punctuation.section.block.begin.b2jam
+
+if ! b    { }
+#  ^^^          meta.conditional.b2jam
+#  ^            keyword.operator.logical.b2jam
+#    ^          meta.string.b2jam string.unquoted.b2jam
+#         ^     meta.block.b2jam punctuation.section.block.begin.b2jam
+
+if ! ! ! b { }
+#  ^^^^^^^      meta.conditional.b2jam
+#  ^^^^^^^^^^^  - invalid
+#  ^            keyword.operator.logical.b2jam
+#    ^          keyword.operator.logical.b2jam
+#      ^        keyword.operator.logical.b2jam
+#        ^      meta.string.b2jam string.unquoted.b2jam
+#          ^    meta.block.b2jam punctuation.section.block.begin.b2jam
+
+
+if a && b { }
+#  ^^^^^^           meta.conditional.b2jam
+#    ^^             keyword.operator.logical.b2jam
+#  ^                meta.string.b2jam string.unquoted.b2jam
+#       ^           meta.string.b2jam string.unquoted.b2jam
+#         ^     meta.block.b2jam punctuation.section.block.begin.b2jam
+
+if a || b { }
+#  ^^^^^^           meta.conditional.b2jam
+#    ^^             keyword.operator.logical.b2jam
+#         ^     meta.block.b2jam punctuation.section.block.begin.b2jam
+
+if a =  b { }
+#  ^^^^^^           meta.conditional.b2jam
+#    ^              keyword.operator.comparison.b2jam
+#         ^     meta.block.b2jam punctuation.section.block.begin.b2jam
+
+if a != b { }
+#  ^^^^^^           meta.conditional.b2jam
+#    ^^             keyword.operator.comparison.b2jam
+#         ^     meta.block.b2jam punctuation.section.block.begin.b2jam
+
+if a <  b { }
+#  ^^^^^^           meta.conditional.b2jam
+#    ^              keyword.operator.comparison.b2jam
+#         ^     meta.block.b2jam punctuation.section.block.begin.b2jam
+
+if a <= b { }
+#  ^^^^^^           meta.conditional.b2jam
+#    ^^             keyword.operator.comparison.b2jam
+#         ^     meta.block.b2jam punctuation.section.block.begin.b2jam
+
+if a >= b { }
+#  ^^^^^^           meta.conditional.b2jam
+#    ^^             keyword.operator.comparison.b2jam
+#         ^     meta.block.b2jam punctuation.section.block.begin.b2jam
+
+if a >  b { }
+#  ^^^^^^           meta.conditional.b2jam
+#    ^              keyword.operator.comparison.b2jam
+#         ^     meta.block.b2jam punctuation.section.block.begin.b2jam
+
+if ! a || ! b { }
+#  ^^^^^^^^^^       meta.conditional.b2jam
+#      ^^           keyword.operator.logical.b2jam
+#  ^                keyword.operator.logical.b2jam
+#         ^         keyword.operator.logical.b2jam
+#    ^              meta.string.b2jam string.unquoted.b2jam
+#           ^       meta.string.b2jam string.unquoted.b2jam
+#             ^     meta.block.b2jam punctuation.section.block.begin.b2jam
+
+if ! ( a || ! b ) { }
+#  ^^^^^^^^^^^^^^   meta.conditional.b2jam
+#    ^              meta.group.b2jam punctuation.section.group.begin.b2jam
+#               ^   meta.group.b2jam punctuation.section.group.end.b2jam
+#        ^^         keyword.operator.logical.b2jam
+#  ^                keyword.operator.logical.b2jam
+#           ^       keyword.operator.logical.b2jam
+#      ^            meta.string.b2jam string.unquoted.b2jam
+#             ^     meta.string.b2jam string.unquoted.b2jam
+#                 ^ meta.block.b2jam punctuation.section.block.begin.b2jam
+
+# empty condition is illegal, mark invalid with space when possible 
+   if { }
+#    ^              invalid.illegal.b2jam
+#     ^             meta.block.b2jam punctuation.section.block.begin.b2jam
+
+   if  { }
+#     ^             invalid.illegal.b2jam
+#    ^              - invalid
+#      ^            meta.block.b2jam punctuation.section.block.begin.b2jam
+
+   if   { } 
+#     ^             invalid.illegal.b2jam
+#    ^              - invalid
+#      ^            - invalid
+#       ^           meta.block.b2jam punctuation.section.block.begin.b2jam
+
+# also negating nothing
+   if ! { }
+#     ^             invalid.illegal.b2jam
+#    ^              - invalid
+#       ^           meta.block.b2jam punctuation.section.block.begin.b2jam
+
+# no matter how many - still not legal
+   if ! ! ! ! { }
+#    ^              - invalid
+#     ^             invalid.illegal.b2jam
+#       ^           invalid.illegal.b2jam
+#         ^         invalid.illegal.b2jam
+#           ^       invalid.illegal.b2jam
+#             ^     meta.block.b2jam punctuation.section.block.begin.b2jam
+
+# empty parens
+
+   if ( ) { }
+#     ^^^           meta.conditional.b2jam 
+#     ^^^           meta.group.b2jam
+#     ^             punctuation.section.group.begin.b2jam
+#      ^            invalid.illegal.b2jam
+#       ^           punctuation.section.group.end.b2jam
+
+   if ( ! ) { }
+#     ^^^^^         meta.conditional.b2jam 
+#     ^^^^^         meta.group.b2jam
+#      ^            - invalid
+#       ^           invalid.illegal.b2jam
+#        ^          - invalid
+#     ^             punctuation.section.group.begin.b2jam
+#         ^         punctuation.section.group.end.b2jam
+
+
+   if a &&   { }    
+#     ^^^^^^        meta.conditional.b2jam
+#       ^^          keyword.operator.logical.b2jam
+#         ^         - invalid
+#          ^        invalid.illegal.b2jam
+#           ^       - invalid
+#            ^      meta.block.b2jam punctuation.section.block.begin.b2jam
+
+   if a !  { }
+#     ^^^           meta.conditional.b2jam
+#       ^           invalid.illegal.b2jam
+#        ^          - invalid
+#          ^        meta.block.b2jam punctuation.section.block.begin.b2jam
+
+
+if a ! && { } 
+#  ^^^^^^^          meta.conditional.b2jam
+#    ^              invalid.illegal.b2jam
+#      ^^           - keyword.operator.logical.b2jam
+#         ^         meta.block.b2jam punctuation.section.block.begin.b2jam
+
+if a b && { } 
+#  ^^^^^^^          meta.conditional.b2jam
+#    ^              invalid.illegal.b2jam
+#      ^^           - keyword.operator.logical.b2jam
+#         ^         meta.block.b2jam punctuation.section.block.begin.b2jam
+
+if a ! b && { } 
+#  ^^^^^^^^         meta.conditional.b2jam
+#    ^              invalid.illegal.b2jam
+#      ^            - string.unquoted
+#        ^^         - keyword.operator.logical.b2jam
+#           ^       meta.block.b2jam punctuation.section.block.begin.b2jam
+
+if a && !   { }
+#  ^^^^^^           meta.conditional.b2jam
+#      ^            - invalid
+#       ^           invalid.illegal.b2jam
+#    ^^             keyword.operator.logical.b2jam
+#           ^       meta.block.b2jam punctuation.section.block.begin.b2jam
+
+if 1 && ( b in a b c ) { }
+#  ^^^^^^^^^^^^^^^^^^^      meta.conditional.b2jam
+#    ^^                     keyword.operator.logical.b2jam
+#       ^^^^^^^^^^^^^^      meta.group.b2jam
+#           ^^              keyword.control.in.b2jam
+#                      ^    meta.block.b2jam punctuation.section.block.begin.b2jam
+
+if a <= b || c >= d { }
+#  ^^^^^^^^^^^^^^^^     meta.conditional.b2jam
+#  ^^^^^^^^^^^^^^^^     - invalid
+#    ^^                 keyword.operator.comparison.b2jam
+#              ^^       keyword.operator.comparison.b2jam
+#         ^^            keyword.operator.logical.b2jam
+#                   ^   meta.block.b2jam punctuation.section.block.begin.b2jam
+
+if o = $(o) || [ c a $(v) ] { }
+#  ^^^^^^^^^^^^^^^^^^^^^^^^     meta.conditional.b2jam
+#  ^^^^^^^^^^^^^^^^^^^^^^^^     - invalid
+#                           ^   meta.block.b2jam punctuation.section.block.begin.b2jam
+
+
+# doesn't work, gives warning "Conditional used as a list (check operator precedence)"
+if x in  >=  x {  }
+#    ^^                         meta.conditional.b2jam keyword.control.in.b2jam
+#        ^^                     invalid.illegal.b2jam
+#            ^                  invalid.illegal.b2jam
+#              ^                meta.block.b2jam punctuation.section.block.begin.b2jam
+
+
+# aborts
+if x in  >=  {  }
+#    ^^                         meta.conditional.b2jam keyword.control.in.b2jam
+#        ^^                     meta.conditional.b2jam meta.string.b2jam invalid.illegal.b2jam
+#            ^                  meta.block.b2jam punctuation.section.block.begin.b2jam
+
+
+# works - logical operators are valid terminators of list
+if x in x y z || a < b { }
+#  ^^^^^^^^^^^^^^^^^^^^         meta.conditional.b2jam
+#  ^                            meta.string.b2jam string.unquoted.b2jam
+#    ^^                         keyword.control.in.b2jam
+#       ^                       meta.string.b2jam string.unquoted.b2jam
+#         ^                     meta.string.b2jam string.unquoted.b2jam
+#           ^                   meta.string.b2jam string.unquoted.b2jam
+#             ^^                keyword.operator.logical.b2jam
+#                ^              meta.string.b2jam string.unquoted.b2jam
+#                  ^            keyword.operator.comparison.b2jam
+#                    ^          meta.string.b2jam string.unquoted.b2jam
+#                      ^        meta.block.b2jam punctuation.section.block.begin.b2jam
+
+#  <-         - meta.block.b2jam
+
+#TODO: should terminator be part of meta declaration??
+
+  local f ;
+# ^^^^^^^^                      meta.declaration.variable.local.b2jam
+# ^^^^^^^^                      - meta.declaration.variable.local meta.declaration.variable.local
+# ^^^^^                         storage.modifier.local.b2jam
+#       ^                       variable.other.readwrite.b2jam
+#         ^                     punctuation.terminator.b2jam
+#       @ local-definition
+  local f = ;
+# ^^^^^^^^                      meta.declaration.variable.local.b2jam
+# ^^^^^^^^^^^                   - meta.declaration.variable.local meta.declaration.variable.local
+# ^^^^^^^^^^^                   - invalid 
+# ^^^^^                         storage.modifier.local.b2jam
+#       ^                       variable.other.readwrite.b2jam
+#         ^                     keyword.operator.assignment.b2jam
+#           ^                   punctuation.terminator.b2jam
+#       @ local-definition
+
+# This is here because the extra spaces was being marked invalid. - ensure no regression
+  local f    = ;
+# ^^^^^^^^^^^                   meta.declaration.variable.local.b2jam
+# ^^^^^^^^^^^^^^                - meta.declaration.variable.local meta.declaration.variable.local
+# ^^^^^^^^^^^^^^                - invalid
+
+
+  local f = a b ;
+# ^^^^^^^^                      meta.declaration.variable.local
+# ^^^^^^^^^^^^^^^               - meta.declaration.variable.local meta.declaration.variable.local
+# ^^^^^                         storage.modifier.local.b2jam
+#       ^                       variable.other.readwrite.b2jam
+#         ^                     keyword.operator.assignment.b2jam
+#           ^                   meta.string.b2jam string.unquoted.b2jam
+#             ^                 meta.string.b2jam string.unquoted.b2jam
+#               ^               punctuation.terminator.b2jam
+
+# create variable with name result of funtion call
+  local [ c a ] = v ;
+# ^^^^^^^^^^^^^^                meta.declaration.variable.local
+# ^^^^^^^^^^^^^^^^^             - meta.declaration.variable.local meta.declaration.variable.local
+# ^^^^^                         storage.modifier.local.b2jam
+#       ^^^^^^^                 meta.compound.b2jam
+#               ^               keyword.operator.assignment.b2jam
+#                 ^             meta.string.b2jam string.unquoted.b2jam
+#                   ^           punctuation.terminator.b2jam
+
+  rule no-params {  }
+# ^^^^^^^^^^^^^^^^^^^^^         - invalid 
+# ^^^^^^^^^^^^^^^^^^^           meta.function.rule.b2jam - meta.function.parameters.b2jam
+# ^^^^                          storage.type.function.rule.b2jam keyword.declaration.function.rule.b2jam
+#     ^^^^^^^^^^^^^^^^^         - storage.type.function keyword.declaration.function
+# ^^^^^                         - entity.name.function
+#      ^^^^^^^^^                  entity.name.function.rule.b2jam
+#               ^^^^^^^         - entity.name.function
+# ^^^^^^^^^^^^^^^               - meta.block.b2jam
+#                ^^^^           meta.block.b2jam
+#                    ^          - meta.block.b2jam
+#      @@@@@@@@@ definition
+  rule params ( a ) { }
+# ^^^^^^^^^^^^^^^^^^^^^         - invalid 
+# ^^^^^^^^^^^^                  meta.function.rule.b2jam - meta.function.parameters.b2jam
+#             ^^^^^             meta.function.parameters.b2jam - meta.function.rule.b2jam
+#                  ^^^^         meta.function.rule.b2jam - meta.function.parameters.b2jam
+# ^^^^                          storage.type.function.rule.b2jam keyword.declaration.function.rule.b2jam
+#     ^^^^^^^^^^^^^^^^^         - storage.type.function keyword.declaration.function
+# ^^^^^                         - entity.name.function
+#      ^^^^^^                   entity.name.function.rule.b2jam
+#            ^^^^^^^^^^         - entity.name.function
+# ^^^^^^^^^^^^^^^^^^            - meta.block.b2jam
+#                   ^^^         meta.block.b2jam
+#             ^^^^^             meta.group.b2jam
+#      @@@@@@ definition
+
+# assignment an cmd statements can follow a rule declaration, not just block
+
+  rule sayfoo ecko foo ;
+# ^^^^^^^^^^^^^^^^^^^^^^        meta.function.rule.b2jam 
+# ^^^^^^^^^^^^^^^^^^^^^^        - invalid
+#      ^^^^^^                   entity.name.function.rule.b2jam
+#      ^^^^^^                   - variable.function
+#             ^^^^              meta.function-call.identifier.b2jam variable.function.b2jam
+#                 ^^^^          meta.function-call.arguments.b2jam
+#                  ^^^          string.unquoted.b2jam
+
+
+  rule a FOO on var = 5 ;
+# ^^^^^^^^^^^^^^^^^^^^^^^       meta.function.rule.b2jam 
+# ^^^^^^^^^^^^^^^^^^^^^^^       - invalid
+#        ^^^                    variable.other.readwrite.b2jam
+#            ^^                 keyword.control.on.b2jam
+#                   ^           keyword.operator.assignment.b2jam
+
+# language defined keywords.. no
+  rule a if 1 = 5 { ecko 5 ; } 
+#        ^^                     meta.function.rule.b2jam invalid.illegal.b2jam  
+
+
+# but, when a ( ) is present, all statements are legal
+  rule a ( ) if 1 = 1 { ecko HERE ; }
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  - invalid
+#            ^^                         keyword.control.conditional.if.b2jam
+#                       ^^^^            variable.function.b2jam
+
+  rule a ( v ) on $(v) return $(FOO) ;
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  - invalid
+#              ^^                       keyword.context.conditional.on.b2jam
+#                      ^^^^^^           keyword.control.flow.return.b2jam
+
+  local rule n ( ) {  }
+# ^^^^^^^^^^^^^^^^^^^^^         - invalid 
+# ^^^^^^^^^^^^^^^^^^^^^         - meta.function.rule.b2jam meta.function.rule.b2jam
+# ^^^^^^                        - meta.function.rule.b2jam
+#       ^^^^^^^                 meta.function.rule.b2jam - meta.function.parameters.b2jam
+#              ^^^              meta.function.parameters.b2jam - meta.function.rule.b2jam
+#                 ^^^^^         meta.function.rule.b2jam - meta.function.parameters.b2jam
+# ^^^^^                         storage.modifier.local.b2jam
+#      ^^^^^^^^^^^^^^^^         - storage.modifier
+# ^^^^^^                        - storage.type.function keyword.declaration.function
+#       ^^^^                    storage.type.function.rule.b2jam keyword.declaration.function.rule.b2jam
+#           ^^^^^^^^^^^         - storage.type.function keyword.declaration.function
+# ^^^^^^^^^^^                   - entity.name.function
+#            ^                  entity.name.function.rule.b2jam
+#             ^^^^^^^^^^        - entity.name.function
+#              ^^^              meta.function.parameters.b2jam meta.group.b2jam
+#                 ^^^^^         meta.function.rule.b2jam
+#            @ local-definition
+
+        rule n ( ) {  }
+# ^^^^^^^^^^^^^^^^^^^^^         - invalid 
+# ^^^^^^                        - meta.function.rule.b2jam
+#       ^^^^^^^                 meta.function.rule.b2jam - meta.function.parameters.b2jam
+#              ^^^              meta.function.parameters.b2jam - meta.function.rule.b2jam
+#                 ^^^^^         meta.function.rule.b2jam - meta.function.parameters.b2jam
+# ^^^^^^^^^^^^^^^^^^^^^         - storage.modifier.b2jam
+#       ^^^^                    storage.type.function.rule.b2jam keyword.declaration.function.rule.b2jam
+#           ^^^^^^^^^^^         - storage.type.function keyword.declaration.function
+# ^^^^^^^^^^^                   - entity.name.function
+#            ^                  entity.name.function.rule.b2jam
+#             ^^^^^^^^^^        - entity.name.function
+#              ^^^              meta.function.parameters.b2jam meta.group.b2jam
+#                 ^^^^^         meta.function.rule.b2jam
+
+
+    rule n ( a b ) { }
+#          ^^^^^^^              meta.function.parameters.b2jam meta.group.b2jam
+#                ^              punctuation.section.group.end.b2jam
+#            ^                  variable.parameter.b2jam
+#             ^                 - variable.parameter.b2jam
+#              ^                variable.parameter.b2jam
+
+    rule n ( a b : c ) { }
+#          ^^^^^^^^^^^          meta.function.parameters.b2jam meta.group.b2jam
+#                ^              punctuation.separator.sequence.b2jam
+#                    ^          punctuation.section.group.end.b2jam
+#           ^                   - variable.parameter.b2jam
+#            ^                  variable.parameter.b2jam
+#             ^                 - variable.parameter.b2jam
+#              ^                variable.parameter.b2jam
+#               ^               - variable.parameter.b2jam
+#                 ^             - variable.parameter.b2jam
+#                  ^            variable.parameter.b2jam
+#                   ^           - variable.parameter.b2jam
+
+    rule n ( * : a ? : b + : [t] a ) { }
+#          ^^^^^^^^^^^^^^^^^^^^^^^^^    meta.function.parameters.b2jam meta.group.b2jam
+#          ^^^^^^^^^^^^^^^^^^^^^^^^^    - invalid
+#           ^                           - keyword.operator.quantifier.regexp.b2jam
+#            ^                          keyword.operator.quantifier.regexp.b2jam
+#             ^                         - keyword.operator.quantifier.regexp.b2jam
+#              ^                        punctuation.separator.sequence.b2jam
+#                ^                      variable.parameter.b2jam
+#                 ^                     - variable.parameter.b2jam
+#                 ^                     - keyword.operator.quantifier.regexp.b2jam
+#                  ^                    keyword.operator.quantifier.regexp.b2jam
+#                   ^                    - keyword.operator.quantifier.regexp.b2jam
+#                    ^                  punctuation.separator.sequence.b2jam
+#                      ^                variable.parameter.b2jam
+#                       ^               - variable.parameter.b2jam
+#                       ^               - keyword.operator.quantifier.regexp.b2jam
+#                        ^              keyword.operator.quantifier.regexp.b2jam
+#                         ^             - keyword.operator.quantifier.regexp.b2jam
+#                          ^            punctuation.separator.sequence.b2jam
+#                           ^           - storage.type
+#                            ^^^        storage.type.b2jam
+#                               ^       - storage.type
+#                            ^          punctuation.definition.annotation.begin.b2jam
+#                              ^        punctuation.definition.annotation.end.b2jam
+#                                  ^    punctuation.section.group.end.b2jam
+
+
+
+    class foo { }           
+#   ^^^^^^^^^^^^^               - meta.class.b2jam meta.class.b2jam 
+#   ^^^^^^^^^^^^^               meta.class.b2jam 
+#   ^^^^^                       keyword.declaration.class.b2jam
+#        ^^^^^^^^               - keyword.declaration.class.b2jam
+#   ^^^^^^                      - entity.name.class.b2jam
+#         ^^^                   entity.name.class.b2jam
+#            ^^^^               - entity.name.class.b2jam
+#             ^                 punctuation.section.block.begin.b2jam
+#   ^^^^^^^^^^^^^                - entity.other.inherited-class.b2jam
+#   ^^^^^^^^^^                  - meta.block
+#             ^^^               meta.block.b2jam
+#                ^              - meta.block
+#         @@@ definition
+
+    class foo : bar { }
+#   ^^^^^^^^^^^^^^^^^^^         - meta.class.b2jam meta.class.b2jam 
+#   ^^^^^^^^^^^^^^^^^^^         meta.class.b2jam 
+#   ^^^^^                       keyword.declaration.class.b2jam
+#        ^^^^^^^^^^^^^^^        - keyword.declaration.class.b2jam
+#   ^^^^^^                      - entity.name.class.b2jam
+#         ^^^                   entity.name.class.b2jam
+#            ^^^^^^^^^^         - entity.name.class.b2jam
+#             ^                 punctuation.separator.b2jam
+#   ^^^^^^^^^^^^                - entity.other.inherited-class.b2jam
+#               ^^^             entity.other.inherited-class.b2jam
+#                  ^^^^         - entity.other.inherited-class.b2jam
+#   ^^^^^^^^^^^^^^^^            - meta.block
+#                   ^^^         meta.block.b2jam
+#                   ^^^         - meta.block.b2jam meta.block.b2jam
+#         @@@ definition
+#               @@@ reference
+
+
+# multiple base classes
+    class foo : bar baz { }
+#   ^^^^^^^^^^^^^^^^^^^^^^^     - meta.class.b2jam meta.class.b2jam 
+#   ^^^^^^^^^^^^^^^^^^^^^^^     meta.class.b2jam 
+#               ^^^             entity.other.inherited-class.b2jam
+#                  ^            - entity.other.inherited-class.b2jam
+#                   ^^^         entity.other.inherited-class.b2jam
+#                       ^^^     meta.block.b2jam
+
+    class foo       # only one class name permitted
+    af              
+# ^^^^^             meta.class.b2jam
+# ^^                - invalid
+#   ^^              invalid.deprecated.b2jam
+#     ^             - invalid
+    asdf
+# ^^^^^^^^          meta.class.b2jam    
+    { 
+#   ^               meta.class.b2jam meta.block.b2jam punctuation.section.block.begin.b2jam
+        command asdf : adf : 
+#       ^^^^        meta.class.b2jam meta.block.b2jam
+#       ^^^^        variable.other.readwrite.b2jam, meta.function-call.identifier.b2jam variable.function.b2jam
+#       ^^^^        - invalid
+
+# 'command' above hasn't terminated. 
+    }
+# ^^^               meta.class.b2jam meta.block.b2jam
+# <-                - invalid 
+# ^                 invalid.illegal.b2jam
+#  ^^               - invalid
+#   ^               punctuation.section.block.end.b2jam
+#    ^^             - meta.class.b2jam meta.block.b2jam  
+
+# ensure despite not terminated properly, the parser recovered
+#  <-         - meta.block.b2jam
+
+
+
+
+### [ ] chars in literals gives warning in some places, but not others.
+
+local [var] = value ;
+#     ^                 invalid.deprecated.b2jam
+#         ^             invalid.deprecated.b2jam
+
+      [var] = value ;
+#     ^                 invalid.deprecated.b2jam
+#         ^             invalid.deprecated.b2jam
+
+rule  [name] ( ) { }
+#     ^^^^^^            meta.function.rule.b2jam entity.name.function.rule.b2jam
+#     ^                 invalid.deprecated.b2jam
+#          ^            invalid.deprecated.b2jam
+
+class [name] : [base] { }
+#     ^^^^^^            meta.class.b2jam entity.name.class.b2jam
+#              ^^^^^^   meta.class.b2jam entity.other.inherited-class.b2jam
+#     ^                 invalid.deprecated.b2jam
+#          ^            invalid.deprecated.b2jam
+#              ^        invalid.deprecated.b2jam
+#                   ^   invalid.deprecated.b2jam
+
+
+
+# return was leaving too many blocks, ensure no regression
+# and break, continue 
+    { rule a {
+#  <-                       - meta.block.b2jam
+#     ^                     meta.block.b2jam - meta.block.b2jam meta.block.b2jam
+#             ^             meta.block.b2jam meta.block.b2jam 
+        return ;
+#             ^             meta.block.b2jam meta.block.b2jam                    
+#               ^           meta.block.b2jam meta.block.b2jam            
+        break ;
+#            ^              meta.block.b2jam meta.block.b2jam                    
+#              ^            meta.block.b2jam meta.block.b2jam            
+        continue ;
+#               ^           meta.block.b2jam meta.block.b2jam                    
+#                 ^         meta.block.b2jam meta.block.b2jam            
+        }
+#  <-                       meta.block.b2jam meta.block.b2jam                    
+#       ^                   - invalid
+#        ^                  meta.block.b2jam - meta.block.b2jam meta.block.b2jam
+    }
+#  <-                       meta.block.b2jam - meta.block.b2jam meta.block.b2jam
+#   ^                       - invalid
+#    ^                      - meta.block.b2jam
+
+
+# Rule doesn't have to be followed by block { } , any statement will do
+
+    rule a return ;
+
+
+# B2 parser has special code to permit <foo> in if statement
+if <foo> in $(list) { }
+#  ^^^^^                    - invalid
+
+
+    module name { }
+#   ^^^^^^^^^^^^^^^         meta.namespace.b2jam    
+#   ^^^^^^                  keyword.declaration.namespace.b2jam
+#          ^^^^             entity.name.namespace.b2jam
+#               ^^^         meta.block.b2jam
+
+
+# module can have multiple 'names'
+#        Only first is used: https://github.com/bfgroup/b2/blob/2fc52a7bff95738251ccf39e08f912f3819e24d9/src/engine/function.cpp#L5268
+    module a b { }
+#            ^              invalid.deprecated.b2jam
+
+# empty is valid (root module)
+    module { }
+#   ^^^^^^^^^^              - invalid
+
+    module [ $(project).project-module ] { }
+#   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^      - invalid        
+#              ^^^^^^^                          - entity.name.namespace.b2jam 
+
+
+###
+###  Keyword Testing 
+###
+
+# Keyword cannot be first argument to a command, but can be 2nd or later 
+
+    ecko local      local      ;
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+    ecko rule       rule       ;
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+    ecko class      class      ;
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+    ecko if         if         ;
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+    ecko else       else       ;
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+    ecko for        for        ;
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+    ecko while      while      ;
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+    ecko switch     switch     ;
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+    ecko case       case       ;
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+    ecko break      break      ;
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+    ecko continue   continue   ;
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+    ecko return     return     ;    
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+    ecko in         in         ; 
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+    ecko module     module     ; 
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+    ecko actions    actions    ; 
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+    ecko bind       bind    ; 
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+
+# special case: looks like assignment
+    ecko default    default   ;
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+
+# special case: looks like an on-assignment statement
+    ecko on         on         ;
+#   ^^^^                            meta.function-call.identifier.b2jam variable.function.b2jam    
+#        ^^                         meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam invalid.illegal.b2jam
+#                   ^^              meta.function-call.arguments.b2jam meta.string.b2jam string.unquoted.b2jam - invalid
+
+
+# symbolic operators terminate argument lists.
+
+# assignment ops
+    ecko a = ;  
+#          ^    invalid.illegal.b2jam    
+#            ^  punctuation.terminator.b2jam  
+    ecko a += ; 
+#          ^^   invalid.illegal.b2jam    
+#             ^ punctuation.terminator.b2jam  
+    ecko a ?= ; 
+#          ^^   invalid.illegal.b2jam    
+#             ^ punctuation.terminator.b2jam  
+
+
+# comparison ops
+    ecko a != ;
+#          ^^   invalid.illegal.b2jam    
+#             ^ punctuation.terminator.b2jam  
+    ecko a <  ;
+#          ^    invalid.illegal.b2jam    
+#             ^ punctuation.terminator.b2jam  
+    ecko a <= ;
+#          ^^   invalid.illegal.b2jam    
+#             ^ punctuation.terminator.b2jam  
+    ecko a >= ;
+#          ^^   invalid.illegal.b2jam    
+#             ^ punctuation.terminator.b2jam  
+    ecko a >  ;
+#          ^    invalid.illegal.b2jam    
+#             ^ punctuation.terminator.b2jam  
+
+# logical ops
+    ecko a && ;
+#          ^^   invalid.illegal.b2jam    
+#             ^ punctuation.terminator.b2jam  
+    ecko a || ;
+#          ^^   invalid.illegal.b2jam    
+#             ^ punctuation.terminator.b2jam  
+    ecko a !  ;
+#          ^   invalid.illegal.b2jam    
+#             ^ punctuation.terminator.b2jam  
+    ecko a &  ;
+#          ^    invalid.illegal.b2jam    
+#             ^ punctuation.terminator.b2jam  
+    ecko a |  ;
+#          ^    invalid.illegal.b2jam    
+#             ^ punctuation.terminator.b2jam  
+
+
+# first symbol can be a ':' though!
+    ecko :  ;
+#   ^^^^^^^^^   - invalid
+#        ^      punctuation.separator.sequence.b2jam
+
+
+# <- - meta.block.b2jam 
+
+# keywords are permitted as parameters 
+rule name ( local rule class 
+#    ^^^^                           meta.function.rule.b2jam entity.name.function.rule.b2jam
+#         ^                         meta.function.parameters.b2jam meta.group.b2jam punctuation.section.group.begin.b2jam
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^     - invalid
+  if else for while module bind
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^     - invalid    
+  switch case break continue 
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^     - invalid    
+  return default on in actions ) { }
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^     - invalid
+#                              ^    punctuation.section.group.end.b2jam
+# @@@@@@ local-definition
+
+
+# Keywords are permitted in return statement, first and beyond. - but not symbols
+# First invalid represents the unterminated statement
+    return rule for return = ;
+#   ^^^^^^                          keyword.control.flow.return.b2jam
+#          ^^^^^^^^^^^^^^^          - invalid
+#                          ^        invalid.illegal.b2jam
+#                            ^      punctuation.terminator.b2jam
+
+# statement on
+    on var ecko $(foo) ;
+#   ^^                      keyword.context.conditional.on.b2jam
+#      ^^^                  variable.other.readwrite.b2jam
+#          ^^^^             meta.function-call.identifier.b2jam variable.function.b2jam
+#               ^^^^^^      meta.function-call.arguments.b2jam
+#                      ^    punctuation.terminator.b2jam
+#      @@@ reference
+
+# statement on return
+    on var return $(foo) ;
+#   ^^                      keyword.context.conditional.on.b2jam
+#      ^^^                  variable.other.readwrite.b2jam
+#          ^^^^^^           keyword.control.flow.return.b2jam
+#          ^^^^^^           - variable.function.b2jam 
+#                 ^^^^^^    meta.interpolation.parameter
+#                        ^  punctuation.terminator.b2jam
+
+
+# [ on - return type ]
+  ecko [ on var return $(foo) ] ;
+# ^^^^                              meta.function-call.identifier.b2jam variable.function.b2jam
+#      ^^^^^^^^^^^^^^^^^^^^^^^^     meta.function-call.arguments.b2jam meta.compound.b2jam
+#           ^^^                     variable.other.readwrite.b2jam
+#        ^^                         keyword.context.conditional.on.b2jam
+#               ^^^^^^              keyword.control.flow.return.b2jam
+#               ^^^^^^              - variable.function.b2jam
+#                      ^^^^^^       meta.interpolation.parameter
+#      ^                            punctuation.section.brackets.begin.b2jam
+#                             ^     punctuation.section.brackets.end.b2jam
+#                               ^   punctuation.terminator.b2jam
+
+# [ on - ARG type ]
+  ecko [ on var ecko $(foo) ] ;
+# ^^^^                              meta.function-call.identifier.b2jam variable.function.b2jam
+#      ^^^^^^^^^^^^^^^^^^^^^^       meta.function-call.arguments.b2jam meta.compound.b2jam
+#           ^^^                     variable.other.readwrite.b2jam
+#        ^^                         keyword.context.conditional.on.b2jam
+#               ^^^^                variable.function.b2jam
+#               ^^^^                - keyword
+#                    ^^^^^^         meta.interpolation.parameter
+#      ^                            punctuation.section.brackets.begin.b2jam
+#                           ^       punctuation.section.brackets.end.b2jam
+#                             ^     punctuation.terminator.b2jam
+
+   if  while in a b c while { }
+#      ^^^^^                        meta.conditional.b2jam 
+#      ^^^^^                        invalid.illegal.b2jam
+#                     ^^^^^         meta.conditional.b2jam meta.string.b2jam string.unquoted.b2jam
+#                     ^^^^^         - invalid 
+
+# <- - meta.block.b2jam 
+
+
+
+
+# <- - meta.block.b2jam 
+
+
+# this works with '|'
+if x in a b c |  3 in 1 2 3 { }
+#  ^^^^^^^^^^^^^^^^^^^^^^^^         meta.conditional.b2jam
+#  ^                                - meta.string meta.string
+#  ^                                meta.string.b2jam string.unquoted.b2jam
+#             ^                     keyword.operator.logical.b2jam
+#             ^                     invalid.deprecated.b2jam
+#                ^                  - meta.string meta.string
+#                ^                  meta.string.b2jam string.unquoted.b2jam
+
+# this does not work with | - what's going on? -- Using deprecated for this for now
+if a < b | c < d { }
+#  ^^^^^^^^^^^^^^                   meta.conditional.b2jam
+#  ^                                - meta.string meta.string
+#  ^                                meta.string.b2jam string.unquoted.b2jam
+#        ^                          keyword.operator.logical.b2jam
+#        ^                          invalid.deprecated.b2jam
+#          ^                        - meta.string meta.string
+#          ^                        meta.string.b2jam string.unquoted.b2jam
+
+
+  actions updated together ignore quietly piecemeal existing 
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    meta.function.actions
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    - meta.function.actions meta.function.actions
+# ^^^^^^^                                                       meta.function.actions.b2jam 
+#        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    meta.function.actions.flags.b2jam
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    - entity.name.function.b2jam 
+# ^^^^^^^                                                       storage.type.function.actions.b2jam keyword.declaration.function.actions.b2jam
+#         ^^^^^^^                                               storage.modifier.b2jam
+#                 ^^^^^^^^                                      storage.modifier.b2jam
+#                          ^^^^^^                               storage.modifier.b2jam
+#                                 ^^^^^^^                       storage.modifier.b2jam
+#                                         ^^^^^^^^^             storage.modifier.b2jam
+#                                                   ^^^^^^^^    storage.modifier.b2jam
+ action-jackson bind VAL $(var) [ cmd arg ]
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                     meta.function.actions
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                     - meta.function.actions meta.function.actions
+#^^^^^^^^^^^^^^                                                 meta.function.actions.identifier.b2jam 
+#^^^^^^^^^^^^^^                                                 entity.name.function.actions.b2jam
+#              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                    meta.function.actions.binding.b2jam
+#              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^                     - entity.name.function
+#               ^^^^                                            storage.modifier.b2jam
+#                   ^^^^^^^^^^^^^^^^^^^^^^^                     - storage.modifier.b2jam
+#                    ^^^                                        variable.other.readwrite.b2jam
+#                        ^^^^^^                                 meta.interpolation.parameter
+#                               ^^^^^^^^^^^                     meta.compound.b2jam
+#@@@@@@@@@@@@@@ definition
+
+{
+# <-                                                            meta.function.actions.b2jam meta.interpolation.shell.b2jam punctuation.section.interpolation.begin.b2jam
+# <-                                                            - source.shell.bash.embedded.b2jam
+#   ^                                                           source.shell.bash.embedded.b2jam
+    for i in "${[@]}" ; do 
+#   ^^^^^^^^^^^^^^^^^^^^^^^^                                    meta.function.actions.b2jam
+#   ^^^^^^^^^^^^^^^^^^^^^^^^                                    meta.interpolation.shell.b2jam source.shell.bash.embedded.b2jam
+#   ^^^                                                         keyword.control.loop.for.shell 
+#             ^^^^^^                                            meta.string.shell meta.interpolation.parameter.shell
+         ls -al ${i}
+    done 
+#   ^^^^                                                        meta.function.actions.b2jam keyword.control.loop.end.shell
+
+
+# B2 Jam variable expansions in shell
+    printf "%s"  "$(B2JAMVAR:J=,)"
+#                 ^^^^^^^^^^^^^^^                               source.b2jam meta.function.actions.b2jam
+#                 ^^^^^^^^^^^^^^^                               meta.interpolation.parameter
+#                 ^^^^^^^^^^^^^^^                               meta.string.b2jam
+#                   ^^^^^^^^                                    variable.other.readwrite.b2jam
+#                           ^                                   keyword.operator.expansion.b2jam
+#                            ^                                  variable.parameter.switch.b2jam
+#                             ^                                 keyword.operator.assignment.b2jam
+#                              ^                                string.quoted.double.b2jam
+#                   @@@@@@@@ reference
+
+# B2 Jam filename expansions
+    printf "%s"  "@(B2JAMFILE:E=,)"
+#                 ^^^^^^^^^^^^^^^^                              source.b2jam meta.function.actions.b2jam
+#                 ^^^^^^^^^^^^^^^^                              meta.interpolation.filename
+#                 ^^^^^^^^^^^^^^^^                              meta.string.b2jam
+#                   ^^^^^^^^^                                   string.quoted.double.b2jam
+#                            ^                                  keyword.operator.expansion.b2jam
+#                             ^                                 variable.parameter.switch.b2jam
+#                              ^                                keyword.operator.assignment.b2jam
+#                               ^                               string.quoted.double.b2jam
+#                   @@@@@@@@@ none
+
+# if a B2 Jam expansion doesn't look like one, fall back to shell
+    echo $(ls -al | grep foo)
+#        ^^^^^^^^^^^^^^^^^^^^                                   meta.interpolation.command.shell    
+#              ^^                                               meta.function-call.arguments.shell meta.parameter.option.shell variable.parameter.option.shell
+#                 ^                                             keyword.operator.assignment.pipe.shell
+
+}
+# <-                                                            meta.function.actions.b2jam meta.interpolation.shell.b2jam punctuation.section.interpolation.end.b2jam
+# <-                                                            - source.shell.bash.embedded.b2jam
+  # space intentional
+# <-                                                            - meta.function.actions.b2jam
+
+# <- - meta.block.b2jam 
+
+    include somefile ;
+#   ^^^^^^^^^^^^^^^^                meta.include.b2jam
+#   ^^^^^^^                         keyword.control.import.include.b2jam
+#           ^^^^^^^^                variable.other.target.b2jam
+#           @@@@@@@@ reference
+
+    include "somefile" ;
+#   ^^^^^^^^^^^^^^^^^^              meta.include.b2jam
+#   ^^^^^^^                         keyword.control.import.include.b2jam
+#           ^^^^^^^^^^              variable.other.target.b2jam meta.string.b2jam
+
+
+    identifier-with-dashes ;
+
+# though not technically always true, assume  . in a variable name is a member accessor
+
+    $(var).method ;
+#          ^^^^^^           meta.function-call.identifier.b2jam
+#   ^^^^^^                  - variable.function
+#          ^^^^^^           variable.function.b2jam
+#         ^                 punctuation.accessor.dot.b2jam
+#          @@@@@@ reference
+
+    name.cmd ;
+#   ^^^^^^^^                meta.path.b2jam    
+#   ^^^^^^^^                - meta.path meta.path 
+#   ^^^^^^^^                meta.function-call
+#   ^^^^                    - entity.name
+#   ^^^^                    support.namespace.b2jam
+#       ^                   punctuation.accessor.dot.b2jam
+#        ^^^                meta.function-call.identifier.b2jam variable.function.b2jam
+
+
+
+# : inside <grist> is not warned about  -- implemetation is not foolproof, but won't warn in simple cases
+# include escpaped whitespace for additional testing
+
+ <c\ :>:  <\ :>: ;
+#^^^^^^^                        meta.function-call.identifier.b2jam variable.function.b2jam 
+#         ^^^^^^                meta.function-call.arguments.b2jam meta.string.b2jam 
+#          ^^^                  variable.other.constant.grist.b2jam
+#  ^^                           constant.character.escape.b2jam
+#          ^^                   constant.character.escape.b2jam
+#    ^                          - invalid
+#            ^                  - invalid
+#      ^                        invalid.deprecated.b2jam
+#              ^                invalid.deprecated.b2jam
+
+  foo<:> restricted<:> value<:> ;
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ - invalid
+
+switch a { case <\ ?*:>: : cmd ; }
+#                    ^          - invalid
+#               ^^^^^^          meta.pattern.regex.b2jam
+#                ^^             constant.character.escape.b2jam
+#                  ^^           keyword.operator.quantifier.regexp.b2jam
+#                      ^        invalid.deprecated.b2jam
+rule a ( <\ :>: ) {  }
+#        ^^^^                   variable.parameter.b2jam
+#           ^                   - invalid
+#             ^                 invalid.deprecated.b2jam
+MATCH <\ :>: <(.*):(.*)> ;
+#     ^^^^                      meta.mode.basic.regexp.b2jam
+#            ^^^^^^^^^^^        meta.mode.basic.regexp.b2jam
+#      ^^                       constant.character.escape.b2jam
+#        ^                      - invalid
+#                 ^             - invalid
+#          ^                    invalid.deprecated.b2jam
+ <\ :>: = 10 ;
+#^^^^                           variable.other.readwrite.b2jam
+# ^^                            constant.character.escape.b2jam
+#   ^                           - invalid
+#     ^                         invalid.deprecated.b2jam
+
+class <\ :>: {  }
+#     ^^^^                      entity.name.class.b2jam
+#      ^^                       constant.character.escape.b2jam
+#        ^                      - invalid
+#          ^                    invalid.deprecated.b2jam
+
+

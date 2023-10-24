@@ -1,0 +1,586 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+hidden: true
+name: B2 Jam
+scope: source.b2jam
+version: 2
+variables:
+
+  # is \s ASCII only? should be.
+  # start boundary .. line begin or ws to left, non-space to right
+  left_boundary: '(?<=^|\s)(?=[^\s])'
+  # end boundary   .. non-space to left, space or eol on right
+  right_boundary: '(?<=[^\s])(?=\s|$)'
+
+  right_edge: (?=\s|$)
+  ws_lb: (?<=^|\s)   # is preceeding character whitespace/start of line
+
+
+  # A character that, when unquoted, separates words.
+  # BoostJam is an unusual language in that only whitespace breaks
+  metachar: '\s'
+
+  is_interpolation: (?=[\$@]\()
+
+  # tokens are literals, quoted strings, expansions and interpolations
+  # TODO: make this look back, like left boundary, but be aware of escaped whitespace
+  ##      This worked for one place that was using (?={{token_break}})  => (?=(?<!\\){{metachar}})
+  ##
+  token_begin: (?={{token_char}})             # is the cursor at token start,
+  token_break: (?!{{token_char}})    # is the cursor at token end, not currenlty aware of escaped whitespace
+  token_char: '[^{{metachar}}]'
+  token_opt_ws: '{{metachar}}*'
+
+
+  # not sure if left-boundary is necessary
+  colon:          '{{ws_lb}}:{{right_edge}}'
+  equal:          '{{ws_lb}}={{right_edge}}'
+  semicolon:      '{{ws_lb}};{{right_edge}}'
+  open_brace:     '{{ws_lb}}{{{right_edge}}'
+  close_brace:    '{{ws_lb}}}{{right_edge}}'
+  open_bracket:   '{{ws_lb}}\[{{right_edge}}'
+  close_bracket:  '{{ws_lb}}\]{{right_edge}}'
+  open_parens:    '{{ws_lb}}\({{right_edge}}'
+  close_parens:   '{{ws_lb}}\){{right_edge}}'
+
+  # anon        => doesn't require named param
+  # chain       => can be followed
+  # final       => cannot be followed
+  # param       => quantifier is actually a param name
+  # named       => requires named param
+  # coalescing  => can collapse left ie ( a ? b ? ) -> can be passed 0, 1, 2 args
+  param_quantifier_anon_final:  '{{ws_lb}}[\*]{{right_edge}}'
+  param_quantifier_named_chain: '{{ws_lb}}[\?]{{right_edge}}'
+  param_quantifier_named_final: '{{ws_lb}}[\*\+]{{right_edge}}'
+
+
+  keyword_actions:  '{{ws_lb}}actions{{right_edge}}'
+  keyword_bind:     '{{ws_lb}}bind{{right_edge}}'
+  keyword_break:    '{{ws_lb}}break{{right_edge}}'
+  keyword_case:     '{{ws_lb}}case{{right_edge}}'
+  keyword_class:    '{{ws_lb}}class{{right_edge}}'
+  keyword_continue: '{{ws_lb}}continue{{right_edge}}'
+  keyword_default:  '{{ws_lb}}default{{right_edge}}'
+  keyword_else:     '{{ws_lb}}else{{right_edge}}'
+  # actions                   existing
+  keyword_for:      '{{ws_lb}}for{{right_edge}}'
+  keyword_if:       '{{ws_lb}}if{{right_edge}}'
+  # actions                   ignore
+  keyword_in:       '{{ws_lb}}in{{right_edge}}'
+  keyword_include:  '{{ws_lb}}include{{right_edge}}'
+  keyword_local:    '{{ws_lb}}local{{right_edge}}'
+  keyword_module:   '{{ws_lb}}module{{right_edge}}'
+  keyword_on:       '{{ws_lb}}on{{right_edge}}'
+  # actions                   piecemeal
+  # actions                   quietly
+  keyword_return:   '{{ws_lb}}return{{right_edge}}'
+  keyword_rule:     '{{ws_lb}}rule{{right_edge}}'
+  keyword_switch:   '{{ws_lb}}switch{{right_edge}}'
+  # actions                   together
+  # actions                   updated
+  keyword_while:    '{{ws_lb}}while{{right_edge}}'
+
+  # All, including action flags
+  keywords:      'actions|bind|break|case|class|continue|default|else|existing|for|if|ignore|in|include|local|module|on|piecemeal|quietly|return|rule|switch|together|updated|while'
+
+  actions_flag_keywords:    '{{ws_lb}}existing|ignore|piecemeal|quietly|together|updated{{right_edge}}'
+
+  # $ and @ not followed by (
+  expansion_invalid_startchar: '[$@](?!\()'
+
+
+  invalid_until_colon:                      '{{ws_lb}}(?:[^:][^{{metachar}}]*|[:][^{{metachar}}]+)'
+  invalid_until_equal:                      '{{ws_lb}}(?:[^=][^{{metachar}}]*|[=][^{{metachar}}]+)'
+  invalid_until_equal_or_semicolon:         '{{ws_lb}}(?:[^=;][^{{metachar}}]*|[=;][^{{metachar}}]+)'
+  invalid_until_colon_or_open_brace:        '{{ws_lb}}(?:[^:{][^{{metachar}}]*|[:{][^{{metachar}}]+)'
+  invalid_until_colon_or_close_parens:      '{{ws_lb}}(?:[^:\)][^{{metachar}}]*|[:\)][^{{metachar}}]+)'
+  invalid_until_open_brace:                 '{{ws_lb}}(?:[^{][^{{metachar}}]*|[{][^{{metachar}}]+)'
+  invalid_until_open_parens:                '{{ws_lb}}(?:[^\(][^{{metachar}}]*|[\(][^{{metachar}}]+)'
+  invalid_until_open_parens_or_brace:       '{{ws_lb}}(?:[^\({][^{{metachar}}]*|[\({][^{{metachar}}]+)'
+  invalid_until_close_parens_or_open_brace: '{{ws_lb}}(?:[^\(}][^{{metachar}}]*|[\(}][^{{metachar}}]+)'
+
+
+  #symbolic ops
+  conditional_ops_compare_token: '{{ws_lb}}(?:!=|<|<=|=||>=|>){{right_edge}}'
+  conditional_ops_logical_double: '&&|\|\|'
+  conditional_ops_logical_single: '&|\|'
+  conditional_ops_logical_all: '{{conditional_ops_logical_double}}|{{conditional_ops_logical_single}}'
+  conditional_ops_unary_logical: '\!'
+
+  conditional_ops_logical_double_token: '{{ws_lb}}(?:{{conditional_ops_logical_double}}){{right_edge}}'
+  conditional_ops_logical_single_token: '{{ws_lb}}(?:{{conditional_ops_logical_single}}){{right_edge}}'
+  conditional_ops_logical_all_token: '{{ws_lb}}(?:{{conditional_ops_logical_all}}){{right_edge}}'
+
+
+  # from jamgramtab.h
+  reserved_symbol_list_without_open_brace: '\!|\!=|\&|\&\&|\(|\)|\+=|:|;|<|<=|=|>|>=|\?=|\]|\{|\||\|\||\}'
+  reserved_symbol_list: '\[|{{reserved_symbol_list_without_open_brace}}'
+  reserved_symbols: '{{ws_lb}}(?:{{reserved_symbol_list}}){{right_edge}}'
+  reserved_keywords: '{{ws_lb}}(?:{{keywords}}){{right_edge}}'
+  reserved_keywords_and_symbols_except_open_brace: '{{ws_lb}}(?:{{reserved_symbol_list_without_open_brace}}|{{keywords}}){{right_edge}}'
+
+
+  feature_value_terminal: '(?:&\"*&|:\"*!?\-?\"*\<|,\"*\-?\"*\<)'
+
+
+
+
+###[ PROTOTYPES ]##############################################################
+
+contexts:
+
+  main:
+      - include: immediately-pop
+
+  immediately-pop:
+    - match: ''
+      pop: 1
+
+  immediately-pop2:
+    - match: ''
+      pop: 2
+
+  illegal-meta:
+    - meta_scope: invalid.illegal.b2jam
+    - include: immediately-pop
+
+  next-token:
+    - include: comments
+    - match: '{{token_begin}}'
+      pop: 1
+
+  # like next-token, but clears 1 level of scope
+  next-token-cleared:
+    - clear_scopes: 1
+    - include: next-token
+
+  token-break:
+    - match: '{{token_break}}'
+      pop: 1
+
+  invalid-punctuation-pop:
+    - match: '{{metachar}}*?({{metachar}}?)(?={{reserved_symbols}})'
+      captures:
+        1: invalid.illegal.b2jam
+      pop: 1
+
+  section-end-pop:
+    - match: '{{metachar}}*(?={{colon}}|{{semicolon}}|{{close_bracket}})'
+      pop: 1
+    - include: invalid-punctuation-pop
+
+  eoc-pop:
+    - match: '{{metachar}}*(?={{semicolon}}|{{close_bracket}})'
+      pop: 1
+
+    # try and warn about unexpected closing, (done for recovery)
+    - include: invalid-punctuation-pop
+
+  white-space:
+    - match: '{{metachar}}*|'
+      pop: 1
+
+  # while-not-<LITERAL> -- pop if literal is next
+
+
+  until-list-punctuation-nongreedy:
+    - include: comments
+    - match: '(?={{metachar}}*{{reserved_symbols}})(?!{{metachar}}*(?:{{open_bracket}}))'
+      pop: 1
+
+  until-list-punctuation:
+    - include: comments
+    - match: '(?={{reserved_symbols}})(?!{{open_bracket}})'
+      pop: 1
+
+  until-punctuation:
+    - include: comments
+    - match: '(?={{reserved_symbols}})'
+      pop: 1
+
+  until-open-brace:
+    - include: comments
+    - match: '(?={{open_brace}})'
+      pop: 1
+
+  until-open-parens:
+    - include: comments
+    - match: '(?={{open_parens}})'
+      pop: 1
+
+  until-open-parens-or-brace:
+    - include: comments
+    - match: '(?={{open_parens}}|{{open_brace}})'
+      pop: 1
+
+  until-close-parens:
+    - include: comments
+    - match: '(?={{close_parens}})'
+      pop: 1
+
+  until-close-bracket:
+    - include: comments
+    - match: '(?={{close_bracket}})'
+      pop: 1
+
+  until-close-parens-or-open-brace:
+    - include: comments
+    - match: '(?={{close_parens}}|{{open_brace}})'
+      pop: 1
+
+  until-colon:
+    - include: comments
+    - match: '(?={{colon}})'
+      pop: 1
+
+  until-equal:
+    - include: comments
+    - match: '(?={{equal}})'
+      pop: 1
+
+  until-semicolon:
+    - include: comments
+    - match: '(?={{semicolon}})'
+      pop: 1
+
+  until-equal-or-semicolon:
+    - include: comments
+    - match: '(?={{equal}}|{{semicolon}})'
+      pop: 1
+
+  until-colon-or-close-parens:
+    - include: comments
+    - match: '(?={{colon}}|{{close_parens}})'
+      pop: 1
+
+  until-colon-or-open-brace:
+    - include: comments
+    - match: '(?={{colon}}|{{open_brace}})'
+      pop: 1
+
+  # invalid-<LITERAL>, mark content invalid until named literal
+
+  invalid-until-common:
+    - match: (?=#)
+      push:
+        - clear_scopes: 1
+        - include: comments
+        - include: next-token
+
+  invalid-until-colon:
+    - meta_scope: invalid.illegal.b2jam
+    - include: invalid-until-common
+    - include: until-colon
+    - match: '(?={{metachar}}*({{colon}}|$))'
+      set: until-colon
+    - match: '{{invalid_until_colon}}'
+
+  invalid-until-equal:
+    - meta_scope: invalid.illegal.b2jam
+    - include: invalid-until-common
+    - include: until-equal
+    - match: '(?={{metachar}}*({{equal}}|$))'
+      set: until-equal
+    - match: '{{invalid_until_equal}}'
+
+  invalid-until-equal-or-semicolon:
+    - meta_scope: invalid.illegal.b2jam
+    - include: invalid-until-common
+    - include: until-equal-or-semicolon
+    - match: '(?={{metachar}}*({{equal}}|{{semicolon}}|$))'
+      set: until-equal-or-semicolon
+    - match: '{{invalid_until_equal_or_semicolon}}'
+
+  invalid-until-open-brace:
+    - meta_scope: invalid.illegal.b2jam
+    - include: invalid-until-common
+    - include: until-open-brace
+    - match: '(?={{metachar}}*({{open_brace}}|$))'
+      set: until-open-brace
+    - match: '{{invalid_until_open_brace}}'
+
+  invalid-until-open-parens:
+    - meta_scope: invalid.illegal.b2jam
+    - include: invalid-until-common
+    - include: until-open-parens
+    - match: '(?={{metachar}}*({{open_parens}}|$))'
+      set: until-open-parens
+    - match: '{{invalid_until_open_parens}}'
+
+  invalid-until-open-parens-or-brace:
+    - meta_scope: invalid.illegal.b2jam
+    - include: invalid-until-common
+    - include: until-open-parens-or-brace
+    - match: '(?={{metachar}}*({{open_parens}}|{{open_brace}}|$))'
+      set: until-open-parens-or-brace
+    - match: '{{invalid_until_open_parens_or_brace}}'
+
+  invalid-until-close-parens-or-open-brace:
+    - meta_scope: invalid.illegal.b2jam
+    - include: invalid-until-common
+    - include: until-close-parens-or-open-brace
+    - match: '(?={{metachar}}*({{close_parens}}|{{open_brace}}|$))'
+      set: until-close-parens-or-open-brace
+    - match: '{{invalid_until_close_parens_or_open_brace}}'
+
+
+  invalid-until-colon-or-close-parens:
+    - meta_scope: invalid.illegal.b2jam
+    - include: invalid-until-common
+    - include: until-colon-or-close-parens
+    - match: '(?={{metachar}}*({{colon}}|{{close_parens}}|$))'
+      set: until-colon-or-close-parens
+    - match: '{{invalid_until_colon_or_close_parens}}'
+
+  invalid-until-colon-or-open-brace:
+    - meta_scope: invalid.illegal.b2jam
+    - include: invalid-until-common
+    - include: until-colon-or-open-brace
+    - match: '(?={{metachar}}*({{colon}}|{{open_brace}}|$))'
+      set: until-colon-or-open-brace
+    - match: '{{invalid_until_colon_or_open_brace}}'
+
+  # advance to next named literal, and mark first token of unexpected invalid
+  advance-until-colon:
+    - include: until-colon
+    - match: '{{ws_lb}}[^{{metachar}}]+{{token_break}}'
+      scope: invalid.illegal.b2jam
+      set: until-colon
+
+  advance-until-equal:
+    - include: until-equal
+    - match: '{{ws_lb}}[^{{metachar}}]+{{token_break}}'
+      scope: invalid.illegal.b2jam
+      set: until-equal
+
+  advance-until-equal-or-semicolon:
+    - include: until-equal-or-semicolon
+    - match: '{{ws_lb}}[^{{metachar}}]+{{token_break}}'
+      scope: invalid.illegal.b2jam
+      set: until-equal-or-semicolon
+
+  advance-until-open-brace:
+    - include: until-open-brace
+    - match: '{{ws_lb}}[^{{metachar}}]+{{token_break}}'
+      scope: invalid.illegal.b2jam
+      set: until-open-brace
+
+  advance-until-open-parens:
+    - include: until-open-parens
+    - match: '{{ws_lb}}[^{{metachar}}]+{{token_break}}'
+      scope: invalid.illegal.b2jam
+      set: until-open-parens
+
+  advance-until-open-parens-or-brace:
+    - include: until-open-parens-or-brace
+    - match: '{{ws_lb}}[^{{metachar}}]+{{token_break}}'
+      scope: invalid.illegal.b2jam
+      set: until-open-parens-or-brace
+
+  advance-until-close-parens-or-open-brace:
+    - include: until-close-parens-or-open-brace
+    - match: '{{ws_lb}}[^{{metachar}}]+{{token_break}}'
+      scope: invalid.illegal.b2jam
+      set: until-close-parens-or-open-brace
+
+  advance-until-colon-or-close-parens:
+    - include: until-colon-or-close-parens
+    - match: '{{ws_lb}}[^{{metachar}}]+{{token_break}}'
+      scope: invalid.illegal.b2jam
+      set: until-colon-or-close-parens
+
+  advance-until-colon-or-open-brace:
+    - include: until-colon-or-open-brace
+    - match: '{{ws_lb}}[^{{metachar}}]+{{token_break}}'
+      scope: invalid.illegal.b2jam
+      set: until-colon-or-open-brace
+
+  # from end of token, advance until named literal
+  token-break-until-open-brace:
+    - match: '{{token_break}}'
+      set: advance-until-open-brace
+
+  token-break-until-open-parens:
+    - match: '{{token_break}}'
+      set: advance-until-open-parens
+
+  token-break-until-open-parens-or-brace:
+    - match: '{{token_break}}'
+      set: advance-until-open-parens-or-brace
+
+  token-break-until-close-parens-or-open-brace:
+    - match: '{{token_break}}'
+      set: advance-until-close-parens-or-open-brace
+
+  token-break-until-colon-or-close-parens:
+    - match: '{{token_break}}'
+      set: advance-until-colon-or-close-parens
+
+  token-break-until-colon-or-open-brace:
+    - match: '{{token_break}}'
+      set: advance-until-colon-or-open-brace
+
+
+  # invalidate minimal whitespace up to next <literal>
+  if-empty-assert-empty-until-token:
+    - match: '({{metachar}}?)({{metachar}})(\1){{token_begin}}'
+      captures:
+        2: invalid.illegal.b2jam
+
+  if-empty-assert-empty-until-symbol:
+    - match: '({{metachar}}?)({{metachar}})(\1)(?={{reserved_symbols}})'
+      captures:
+        2: invalid.illegal.b2jam
+
+  if-empty-assert-empty-until-colon:
+    - match: '({{metachar}}?)({{metachar}})(\1)(?={{colon}})'
+      captures:
+        2: invalid.illegal.b2jam
+
+  if-empty-assert-empty-until-semicolon:
+    - match: '({{metachar}}?)({{metachar}})(\1)(?={{semicolon}})'
+      captures:
+        2: invalid.illegal.b2jam
+
+  if-empty-assert-empty-until-open-brace:
+    - match: '({{metachar}}?)({{metachar}})(\1)(?={{open_brace}})'
+      captures:
+        2: invalid.illegal.b2jam
+
+  # if next token is <LITERAL>, mark the whitespace
+  expect-token-before-open-brace-deprecated:
+    - match: '({{metachar}}?)({{metachar}})(\1)(?={{open_brace}})'
+      captures:
+        2: invalid.deprecated.b2jam
+    - include: next-token
+
+###[ COMMENTS ]################################################################
+
+  comments:
+    # Block Comments begin with a '#|' and finish at next '|#'
+    - match: '#\|'
+      scope: punctuation.definition.comment.b2jam
+      push:
+        - meta_scope: comment.block.number-sign-pipe.b2jam
+        - match: '\|#'
+          scope: punctuation.definition.comment.b2jam
+          pop: true
+
+    # Line Comments begin with a '#' and finish at the end of the line.
+    - match: '#'
+      scope: punctuation.definition.comment.b2jam
+      push:
+        - meta_scope: comment.line.number-sign.b2jam
+        - match: '$\n?'
+          pop: true
+
+  comments-and-space:
+    - include: comments
+    - include: white-space
+
+
+###[ PATH-CHARS ]##############################################################
+
+  # implemented here, so that all path stuff is together
+
+  project-separator-chars:
+    # //
+    - match: (?<!/)//(?!/)
+      scope: constant.language.project-separator.b2jam
+
+
+  path-separator-chars:
+    - include: project-separator-chars
+    # / and \\
+    - match: (?<!/)/(?!/)|(?<!\\\\)\\\\(?!\\\\)
+      scope: punctuation.separator.path.b2jam
+
+  path-filedot-chars:
+    # regular .
+    - match: \.
+      scope: punctuation.separator.file.b2jam
+
+
+  # starting after a >
+  LQ-feature-value-path-start-char-common:
+    # root /
+    - match: /(?!/)
+      scope: constant.language.path.root.b2jam
+      pop: 2
+    # . and ..
+    - match: '(?:(\.)|(\.\.))(?=\"*(?:$|\s|/|\\\"*\\|{{feature_value_terminal}}))'
+      captures:
+        1: constant.language.path.self.b2jam
+        2: constant.language.path.parent.b2jam
+      pop: 2
+    # windows paths c:/ , c:\\ etc
+    - match: '(?:[a-zA-Z])(:)(\\\\|/)'
+      captures:
+        1: punctuation.separator.drive.b2jam
+        2: constant.language.path.root.b2jam
+      pop: 2
+    - include: path-separator-chars
+    - include: path-filedot-chars
+    - include: immediately-pop2
+
+  # regular token
+  LQ-path-start-char-common:
+    # root / or \\
+    - match: (?:/(?=\"*(?!/))|\\\\(?=\"*(?!\\\\)))
+      scope: constant.language.path.root.b2jam
+      pop: 2
+    # windows paths c:/ , c:\\ etc
+    - match: '(?:[a-zA-Z])(:)(\\\\|/)'
+      captures:
+        1: punctuation.separator.drive.b2jam
+        2: constant.language.path.root.b2jam
+      pop: 2
+    # . or .. , followed by / or \\
+    - match: '(?:(\.)|(\.\.))(?=\"*(?:/|\\))'
+      captures:
+        1: constant.language.path.self.b2jam
+        2: constant.language.path.parent.b2jam
+      pop: 2
+    - include: path-separator-chars
+    - include: path-filedot-chars
+    - include: immediately-pop2
+
+  L-feature-value-path-chars:
+    # . and ..
+    - match: '(?<=^|\s|/|\\\\)(?:(\.)|(\.\.))(?=(?:\"\")*(?:$|\s)|(?:\"*(?:/|\\\"*\\|{{feature_value_terminal}})))'
+      captures:
+        1: constant.language.path.self.b2jam
+        2: constant.language.path.parent.b2jam
+    - include: path-separator-chars
+    - include: path-filedot-chars
+
+  Q-feature-value-path-chars:
+    # . and ..
+    - match: '(?<=^|\s|/|\\\\)(?:(\.)|(\.\.))(?=(?:(?:\"\")*\")?(?:$|\s)|(?:\"*(?:/|\\\"*\\|{{feature_value_terminal}})))'
+      captures:
+        1: constant.language.path.self.b2jam
+        2: constant.language.path.parent.b2jam
+    - include: path-separator-chars
+    - include: path-filedot-chars
+
+  L-value-path-chars:
+    # . and .. - same as feature-value-path-char, minus feature-value-terminal
+    - match: '(?<=^|\s|/|\\\\)(?:(\.)|(\.\.))(?=(?:\"\")*(?:$|\s)|(?:\"*(?:/|\\\"*\\)))'
+      captures:
+        1: constant.language.path.self.b2jam
+        2: constant.language.path.parent.b2jam
+    - include: path-separator-chars
+    - include: path-filedot-chars
+
+  Q-value-path-chars:
+    # . and .. - same as feature-value-path-char, minus feature-value-terminal
+    - match: '(?<=^|\s|/|\\\\)(?:(\.)|(\.\.))(?=(?:(?:\"\")*\")?(?:$|\s)|(?:\"*(?:/|\\\"*\\)))'
+      captures:
+        1: constant.language.path.self.b2jam
+        2: constant.language.path.parent.b2jam
+    - include: path-separator-chars
+    - include: path-filedot-chars

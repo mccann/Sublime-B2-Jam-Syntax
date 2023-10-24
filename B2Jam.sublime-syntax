@@ -1,0 +1,1011 @@
+%YAML 1.2
+---
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+file_extensions:
+  - jam
+  - Jamfile
+  - Jamfile.v2
+  - Jamroot
+name: B2 Jam
+scope: source.b2jam
+version: 2
+extends:
+  - Packages/B2Jam/detail/core.sublime-syntax
+
+variables: { }
+contexts:
+ ##[ CONTEXTS ]################################################################
+
+  main:
+    - include: statements
+
+  statements:
+    - include: comments
+    - match: '{{token_begin}}'
+      push: statement
+
+  # one statement
+  statement:
+    - include: comments
+    - include: statement-blocks
+    - include: statement-flow-control
+    - include: statement-declaration
+    - include: as-statement-assignment-or-function
+
+###[ VALUES ]##################################################################
+
+  argument-restricted-expr:
+    - include: Packages/B2Jam/detail/value/value-plain-args.sublime-syntax#as-restricted-expr
+
+  argument-list:
+    - include: Packages/B2Jam/detail/value/value-plain-args.sublime-syntax#list
+
+  argument-list-1-useful:
+    - include: Packages/B2Jam/detail/value/value-plain-args.sublime-syntax#list-1-useful
+
+  argument-lol:
+    - include: Packages/B2Jam/detail/value/value-plain-args.sublime-syntax#lol
+
+  target-list:
+    - include: Packages/B2Jam/detail/value/value-target.sublime-syntax#list
+
+  argument-meta:
+    - meta_scope: meta.type.args.string.b2jam
+    - include: immediately-pop
+
+  argument-first-strict-lol:
+    - match: ''
+      set:
+        - argument-meta
+        - Packages/B2Jam/detail/value/value-plain-args.sublime-syntax#first-strict-lol
+
+  variable-expr:
+    - include: Packages/B2Jam/detail/value/variables.sublime-syntax#as-expr
+
+  variable-static:
+    - include: Packages/B2Jam/detail/value/variables.sublime-syntax#as-static
+
+  variable-list:
+    - include: Packages/B2Jam/detail/value/variables.sublime-syntax#list
+
+  rule-call:
+      - include: Packages/B2Jam/detail/value/rule-calls.sublime-syntax#as-rule-call
+
+  plain-value:
+    - include: Packages/B2Jam/detail/value/LQ-values.sublime-syntax#as-value
+
+  plain-exprs:
+    - include: Packages/B2Jam/detail/value/LQ-values.sublime-syntax#exprs
+
+  static-value:
+    - include: Packages/B2Jam/detail/value/LQ-values.sublime-syntax#as-static
+
+  static-values:
+    - include: Packages/B2Jam/detail/value/LQ-values.sublime-syntax#statics
+
+  plain-lol:
+    - include: Packages/B2Jam/detail/value/LQ-values.sublime-syntax#lol
+
+
+###[ STATEMENTS ]##############################################################
+
+  # any statement that doesn't start with a keyword
+  as-statement-assignment-or-function:
+    - match: '{{token_begin}}'
+      set: statement-assignment-or-function
+
+  statement-assignment-or-function:
+    # at this point, all keywords should have been considered
+    # -- except [
+    - match: '{{reserved_keywords_and_symbols_except_open_brace}}'
+      scope: invalid.illegal.b2jam
+      pop: 1
+    - match: '{{token_begin}}'
+      branch_point: assignment_or_command
+      branch:
+        - test-assignment-statement
+        - test-assignment-statement-failed
+    - include: token-break
+
+###[ DECLARATIONS ]############################################################
+
+  statement-declaration:
+    - include: comments
+    - match: '(?={{keyword_local}})'
+      branch_point: declaration_local
+      branch:
+        - statement-declaration-local-rule
+        - statement-declaration-local-variable
+
+    - match: '(?={{keyword_rule}})'
+      set: statement-declaration-rule
+
+    - match: '(?={{keyword_class}})'
+      set: statement-declaration-class
+
+    - match: '(?={{keyword_module}})'
+      set: statement-declaration-module
+
+    - match: (?={{keyword_actions}})
+      set: statement-declaration-actions
+
+  statement-declaration-local-rule:
+    - match: '{{keyword_local}}'
+      scope: storage.modifier.local.b2jam
+      set:
+        - include: comments
+        - match: '(?={{keyword_rule}})'
+          pop: 2 # branch point goes away
+          push: statement-declaration-rule-local
+        - match: '{{token_begin}}'
+          fail: declaration_local
+
+###[ CLASS DECLARATION ]#######################################################
+
+  statement-declaration-class:
+    - include: comments
+    - match: '{{keyword_class}}'
+      scope: meta.declaration.class.b2jam storage.type.class.b2jam keyword.declaration.class.b2jam
+      set:
+        - class
+        - statement-block
+        - class-deprecated-lol
+        - class-extends
+        - class-name
+
+  class:
+    - meta_scope: meta.class.b2jam
+    - include: immediately-pop
+
+  class-name:
+    - include: Packages/B2Jam/detail/value/class-names.sublime-syntax#first-strict-list-1-useful
+
+  class-deprecated-lol:
+    - include: until-open-brace
+    - match: '{{token_begin}}'
+      set:
+        - meta_scope: invalid.deprecated.b2jam
+        - include: plain-lol
+
+  class-extends:
+    - match: '{{colon}}'
+      scope: punctuation.separator.b2jam
+      set: class-basenames
+    - include: until-list-punctuation
+
+  class-basenames:
+    - include: until-list-punctuation
+    - match: '{{token_begin}}'
+      push: class-basename
+
+  class-basename:
+    - meta_scope: entity.other.inherited-class.b2jam
+    - include: plain-exprs
+    - include: token-break
+
+###[ MODULE DECLARATION ]######################################################
+
+
+  statement-declaration-module:
+    - include: comments
+    - match: '{{keyword_module}}'
+      scope: meta.namespace.b2jam keyword.declaration.namespace.b2jam
+      set:
+        - module
+        - statement-block
+        - module-name
+
+  module:
+    - meta_scope: meta.namespace.b2jam
+    - include: immediately-pop
+
+  module-name:
+    - include: Packages/B2Jam/detail/value/module-names.sublime-syntax#list-1-useful
+
+###[ ACTIONS DECLARATION ]#####################################################
+
+  # `actions` eflags ARG bindlist `{` STRING `}`
+
+  statement-declaration-actions:
+    - include: comments
+    - match: '{{keyword_actions}}'
+      scope: meta.function.actions.b2jam storage.type.function.actions.b2jam keyword.declaration.function.actions.b2jam
+      set: actions-eflags
+
+  actions-eflags:
+    - meta_content_scope: meta.function.actions.flags.b2jam
+    - include: comments
+    - match: '{{actions_flag_keywords}}'
+      scope: storage.modifier.b2jam
+    - match: '{{token_begin}}'
+      set: [ actions-name-meta, plain-value ]
+
+  actions-name-meta:
+    - meta_scope: meta.function.actions.identifier.b2jam entity.name.function.actions.b2jam
+    - match: '{{right_edge}}'
+      set: actions-bindlist
+
+  actions-bindlist:
+    - meta_scope: meta.function.actions.binding.b2jam
+    - include: comments
+    - match: '{{keyword_bind}}'
+      scope: storage.modifier.b2jam
+      push: variable-list
+    - match: '{{token_begin}}'
+      set: actions-script
+
+  actions-script:
+    - include: Packages/B2Jam/detail/value/actions-scripts.sublime-syntax#as-actions-script
+
+###[ VARIABLE DECLARATION ]####################################################
+
+  statement-declaration-local-variable:
+    - match: '{{keyword_local}}'
+      scope: storage.modifier.local.b2jam
+      pop: 2 # escape branch context
+      push:
+        - statement-semicolon
+        - variable-declaration-local-meta
+        - variable-declarations-or-assignment
+        - variable-expr
+
+  variable-declaration-local-meta:
+    - meta_scope: meta.declaration.variable.local.b2jam
+    - include: immediately-pop
+
+  variable-declaration-meta:
+    - meta_scope: meta.declaration.variable.b2jam
+    - include: immediately-pop
+
+    # after first variable, next token determines
+  variable-declarations-or-assignment:
+    - include: comments
+    # it is an assignment statement
+    - match: '{{ws_lb}}(=){{right_edge}}'
+      scope: keyword.operator.assignment.b2jam
+      pop: 2 # clear meta
+      push: argument-list
+    # is is muliple variable declaration
+    - match: '{{token_begin}}'
+      set: variable-list
+
+###[ RULE DECLARATION ]########################################################
+
+  rule-declaration-meta:
+    - meta_scope: meta.declaration.function.b2jam
+    - include: immediately-pop
+
+  rule-declaration-local-meta:
+    - meta_scope: meta.declaration.function.local.b2jam
+    - include: immediately-pop
+
+  statement-declaration-rule:
+    - include: comments
+    - match: '{{keyword_rule}}'
+      scope: storage.type.function.rule.b2jam keyword.declaration.function.rule.b2jam
+      set:
+        - rule-declaration-meta
+        - rule
+        - rule-names
+
+  statement-declaration-rule-local:
+    - include: comments
+    - match: '{{keyword_rule}}'
+      scope: storage.type.function.rule.b2jam keyword.declaration.function.rule.b2jam
+      set:
+        - rule-declaration-local-meta
+        - rule
+        - rule-names
+
+  rule:
+    - meta_scope: meta.function.rule.b2jam
+    - include: immediately-pop
+
+  rule-names:
+    - match: '{{ws_lb}}__init__{{right_edge}}'
+      scope: entity.name.function.constructor.b2jam
+      set: rule-parameters
+    - match: '{{token_begin}}'
+      set: rule-name-generic
+
+  rule-name-generic:
+    - meta_scope: entity.name.function.rule.b2jam
+    - include: static-values
+    - match: '{{right_edge}}'
+      set: rule-parameters
+
+
+  ##[ rule parameters ]########################################################
+
+
+  #TODO clean this up - could be simpler
+
+  rule-parameters:
+    - match: '(?={{open_parens}})'
+      pop: 2 # remove rule-meta
+      push: rule-parameter-group
+
+      # without ( ) , b2 jam appears to only support plain statements "ARG lol ;" in jam grammar
+    - match: '{{token_begin}}'
+      pop: 3 # parameters, rule-meta, decl-meta   # remove decl-meta
+      push: [ rule, rule-parameter-free-statements ]
+
+  rule-parameter-free-statements:
+    - include: statement-blocks
+    - include: as-statement-assignment-or-function
+
+
+  rule-parameter-group:
+    - meta_scope: meta.function.parameters.b2jam meta.group.b2jam
+    - include: comments
+    - match: '{{open_parens}}'
+      scope: punctuation.section.group.begin.b2jam
+      push: rule-parameter-lists
+
+  # List-head  : END                       List-Tail : NULL
+  #            | Anon [ deprecated ] END             | Anon [ illegal ] END
+  #            | Named                               | Named
+  #
+  # Anon  : [ Type ] '*'                                      anon_final
+  #
+  # Named : [ Type ] Named [ '?' ] [ List-Tail ]              named_chain
+  #       | [ Type ] Named [ < '*' | '+' > [ illegal] END ]   named_final
+
+  rule-parameter-lists:
+    - include: comments
+    - match: '{{colon}}'
+      scope: punctuation.separator.sequence.b2jam
+    - match: '{{close_parens}}'
+      scope: meta.function.parameters.b2jam meta.group.b2jam punctuation.section.group.end.b2jam
+      pop: 3  # - parameter-lists, parameter-group, rule decl meta
+      push:
+        - match: '' # avoid meta capture for close-parens
+          set: [ rule, statement ] # remove decl meta, put rule-meta back
+      # after a ( ), b2 jam allows any statement, including control flow,
+      # where block aka { } is the most common.
+    - match: '{{token_begin}}'
+      push: rule-parameter-head
+
+  rule-parameter-list-end-head:
+    - include: comments
+    - include: until-colon-or-close-parens
+    - match: '(?={{token_begin}})'
+      set: rule-parameter-list-args-illegal-after-head-parameter
+
+  rule-parameter-list-end-tail:
+    - include: comments
+    - include: until-colon-or-close-parens
+    - match: '(?={{token_begin}})'
+      set: rule-parameter-list-args-ignored-after-tail-parameter
+
+  rule-parameter-list-args-ignored-after-tail-parameter:
+      - meta_scope: invalid.deprecated.b2jam
+      - include: invalid-until-colon-or-close-parens
+
+  rule-parameter-list-args-illegal-after-head-parameter:
+      - meta_scope: invalid.illegal.b2jam
+      - include: invalid-until-colon-or-close-parens
+
+  rule-parameter-quantifier-common:
+    - include: comments
+    - include: until-colon-or-close-parens
+    - match: '{{param_quantifier_named_chain}}'
+      scope: keyword.operator.quantifier.regexp.b2jam
+    # - match: '{{token_begin}}'
+      set: rule-parameter-tail
+
+  rule-parameter-quantifier-head:
+    - match: '{{param_quantifier_named_final}}'
+      scope: keyword.operator.quantifier.regexp.b2jam
+      set: rule-parameter-list-end-head
+    - include: rule-parameter-quantifier-common
+    - match: '{{token_begin}}'
+      set: rule-parameter-head
+
+  rule-parameter-quantifier-tail:
+    - match: '{{param_quantifier_named_final}}'
+      scope: keyword.operator.quantifier.regexp.b2jam
+      set: rule-parameter-list-end-tail
+    - include: rule-parameter-quantifier-common
+    - match: '{{token_begin}}'
+      set: rule-parameter-tail
+
+  rule-parameter-head:
+    - include: until-colon-or-close-parens
+    - match: '(?=\\?\[[^{{metachar}}])'
+      branch_point: rule_parameter_head
+      branch: [ rule-parameter-type-head, rule-parameter-anon-head ]
+    - match: '{{token_begin}}'
+      set: rule-parameter-anon-head
+    - include: token-break
+
+  rule-parameter-tail:
+    - include: until-colon-or-close-parens
+    - match: '(?=\\?\[[^{{metachar}}])'
+      branch_point: rule_parameter_tail
+      branch: [ rule-parameter-type-tail, rule-parameter-anon-tail ]
+    - match: '{{token_begin}}'
+      set: rule-parameter-anon-tail
+    - include: token-break
+
+  rule-parameter-type-head:
+    - include: until-colon-or-close-parens
+    - match: '(\\?)(\[)(?=[^{{metachar}}])'
+      captures:
+        1: constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+        2: punctuation.definition.annotation.begin.b2jam
+      branch_point: rule_parameter_type_requires_parameter_head
+      branch: [ rule-parameter-type-name-pair-head, rule-parameter-type-alone ]
+    - include: token-break
+
+  rule-parameter-type-tail:
+    - include: until-colon-or-close-parens
+    - match: '(\\?)(\[)(?=[^{{metachar}}])'
+      captures:
+        1: constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+        2: punctuation.definition.annotation.begin.b2jam
+      branch_point: rule_parameter_type_requires_parameter_tail
+      branch: [ rule-parameter-type-name-pair-tail, rule-parameter-type-alone ]
+    - include: token-break
+
+  rule-paramater-type-close:
+    - match: '(\\?)(\]){{right_edge}}'
+      captures:
+        0: storage.type.b2jam
+        1: constant.character.escape.impotent.b2jam invalid.deprecated.impotent.escape.b2jam
+        2: punctuation.definition.annotation.end.b2jam
+      pop: 1
+
+  rule-parameter-type-name-pair-head:
+    - meta_scope: storage.type.b2jam
+    - match: '(?=\\?\]{{right_edge}})'
+      set: [ rule-parameter-typed-name-head, rule-paramater-type-close ]
+    - match: '{{right_edge}}'
+      fail: rule_parameter_head
+
+  rule-parameter-type-name-pair-tail:
+    - meta_scope: storage.type.b2jam
+    - match: '(?=\\?\]{{right_edge}})'
+      set: [ rule-parameter-typed-name-tail, rule-paramater-type-close ]
+    - match: '{{right_edge}}'
+      fail: rule_parameter_tail
+
+  rule-parameter-type-alone:
+    - meta_scope: storage.type.b2jam invalid.illegal.b2jam
+    - match: '(?=\\?\]{{right_edge}})'
+      set: [ illegal-meta, rule-paramater-type-close ]
+
+  rule-parameter-typed-name-head:
+    - include: comments
+    - match: '{{colon}}|{{close_parens}}'
+      fail: rule_parameter_type_requires_parameter_head
+    - match: '{{token_begin}}'
+      set: rule-parameter-anon-head
+
+  rule-parameter-typed-name-tail:
+    - include: comments
+    - match: '{{colon}}|{{close_parens}}'
+      fail: rule_parameter_type_requires_parameter_tail
+    - match: '{{token_begin}}'
+      set: rule-parameter-anon-tail
+
+  rule-paramanter-name-value:
+    - include: Packages/B2Jam/detail/value/parameters.sublime-syntax#as-static
+
+  rule-parameter-anon-head:
+    - match: '{{param_quantifier_anon_final}}'
+      scope: keyword.operator.quantifier.regexp.b2jam
+      set: rule-parameter-list-end-head
+    - match: '{{token_begin}}'
+      set: [ rule-parameter-quantifier-head, rule-paramanter-name-value ]
+
+  rule-parameter-anon-tail:
+    - match: '{{param_quantifier_anon_final}}'
+      scope: keyword.operator.quantifier.regexp.b2jam
+      set: rule-parameter-list-end-tail
+    - match: '{{token_begin}}'
+      set: [ rule-parameter-quantifier-tail, rule-paramanter-name-value ]
+
+
+###[ ASSIGNMENT STATEMENTS ]###################################################
+
+
+  test-assignment-statement:
+    - match: '{{token_begin}}'
+      set:
+        - test-assignment-operator
+        - variable-expr
+
+  test-assignment-operator-succeeded:
+    # assignment confirmed, remove branch and continue
+    - match: ''
+      pop: 2
+      push:
+        - statement-semicolon
+        - argument-list
+
+  test-assignment-statement-failed:
+    - include: comments
+
+    # assignment failed, remove branch and continue as cmd-statement
+    - match: '{{open_bracket}}'
+      pop: 2
+      push:
+        - illegal-meta
+        - statement-semicolon
+        - argument-lol
+
+    - match: '{{token_begin}}'
+      pop: 2
+      push: cmd-statement
+
+
+  test-assignment-operator:
+    - include: comments
+    - match: '{{keyword_default}}'
+      scope: keyword.control.default.b2jam
+      set: test-assignment-operator-default-ops
+
+    - match: '{{keyword_on}}'
+      scope: keyword.control.on.b2jam
+      set: test-assignment-operator-on-vars
+
+    - match: '{{ws_lb}}(=|\+=|\?=){{right_edge}}'
+      scope: keyword.operator.assignment.b2jam
+      set: test-assignment-operator-succeeded
+
+    - match: '{{token_begin}}'
+      fail: assignment_or_command
+
+  test-assignment-operator-default-ops:
+    - include: comments
+    - match: '{{ws_lb}}(=){{right_edge}}'
+      scope: keyword.operator.assignment.b2jam
+      set: test-assignment-operator-succeeded
+      # next token isn't =, abort
+    - match: '{{token_begin}}'
+      fail: assignment_or_command
+
+  test-assignment-operator-on-vars:
+    - include: comments
+    - match: '{{ws_lb}}(=|\+=){{right_edge}}'
+      scope: keyword.operator.assignment.b2jam
+      set: test-assignment-operator-succeeded
+
+    - match: '{{semicolon}}'
+      fail: assignment_or_command
+    - match: '{{token_begin}}'
+      push: variable-expr
+
+###[ CONTROL FLOW ]############################################################
+
+
+  # one cflow statement
+  statement-flow-control:
+    - include: comments
+    - match: '{{keyword_if}}'
+      scope: keyword.control.conditional.if.b2jam
+      set:
+        - trailing-else
+        - statement-block
+        - conditional-expr
+
+    - match: '{{keyword_switch}}'
+      scope: keyword.control.conditional.switch.b2jam
+      set:
+        - switch-statement
+        - argument-list-1-useful
+        - expect-token-before-open-brace-deprecated
+
+    - match: '{{keyword_for}}'
+      scope: keyword.control.loop.for.b2jam
+      set:
+        - forloop-expr
+
+    - match: '{{keyword_while}}'
+      scope: keyword.control.loop.while.b2jam
+      set:
+        - statement-block
+        - conditional-expr
+
+    - match: '{{keyword_return}}'
+      scope: keyword.control.flow.return.b2jam
+      set:
+        - statement-semicolon
+        - argument-list
+
+      # statement on
+    - match: '{{keyword_on}}'
+      scope: keyword.context.conditional.on.b2jam
+      set:
+        - statement
+        - variable-expr
+
+      # syntactically valid in any statements scope
+      # -- semantically, only valid when nested inside a loop
+    - match: '{{keyword_break}}'
+      scope: keyword.control.flow.break.b2jam
+      set: statement-semicolon
+
+    - match: '{{keyword_continue}}'
+      scope: keyword.control.flow.continue.b2jam
+      set: statement-semicolon
+
+    - match: '{{keyword_include}}'
+      scope: keyword.control.import.include.b2jam
+      set: [ statement-semicolon, include-meta,  target-list ]
+
+  include-meta:
+    - meta_scope: meta.include.b2jam
+    - include: immediately-pop
+
+
+  trailing-else:
+    - include: comments
+    - match: '{{keyword_else}}'
+      scope: keyword.control.conditional.else.b2jam
+      set: statement
+    - include: next-token
+
+  statement-blocks:
+    - match: '(?={{open_brace}})'
+      set: statement-block
+
+  statement-block:
+    - include: comments
+    - match: '(?!{{open_brace}})'
+      push: advance-until-open-brace
+    - match: '{{open_brace}}'
+      scope: punctuation.section.block.begin.b2jam
+      set: statements-block
+
+  statements-block:
+    - meta_scope: meta.block.b2jam
+    - include: comments
+    - match: '{{close_brace}}'
+      scope: punctuation.section.block.end.b2jam
+      pop: 1
+    - match: '{{token_begin}}'
+      push: statement
+
+###[ SWITCH & CASE ]###########################################################
+
+  switch-statement:
+    - meta_scope: meta.statement.conditional.switch.b2jam
+    - include: comments
+    - match: '(?!{{open_brace}})'
+      push: advance-until-open-brace
+    - match: '{{open_brace}}'
+      scope: punctuation.section.block.begin.b2jam
+      push: switch-block
+
+  switch-block:
+    - meta_scope: meta.block.b2jam
+    - include: case-patterns
+    - match: '{{close_brace}}'
+      scope: punctuation.section.block.end.b2jam
+      pop: 2 # exit switch-statement as well
+
+  case-patterns:
+    - include: comments
+    - match: '{{keyword_case}}'
+      scope: keyword.control.conditional.case.b2jam
+      push:
+        - case-pattern
+        - Packages/B2Jam/detail/value/glob-patterns.sublime-syntax#glob-pattern
+        - next-token-cleared
+
+  case-pattern:
+    - include: comments
+    - match: '(?!{{colon}})'
+      push: advance-until-colon
+    - match: '{{colon}}'
+      scope: punctuation.separator.case-statement.b2jam
+      set: case-statements
+
+  case-statements:
+    - include: comments
+    # let case keyword be a terminator for this set of 'statements'
+    - match: '(?={{keyword_case}})'
+      pop: 1
+    - include: case-patterns
+    - match: '{{close_brace}}'
+      scope: punctuation.section.block.end.b2jam
+      pop: 3 # out of this, switch-block, and switch-statement
+    - match: '{{token_begin}}'
+      push: statement
+
+###[ CONDITIONAL EXPRESSION ]##################################################
+
+  # expects frame above to handle { }
+  conditional-expr:
+    - meta_scope: meta.conditional.b2jam
+    - match: '(?={{open_brace}})'
+      pop: 1
+    - include: conditional-expr-term-sequence
+
+  conditional-expr-term-sequence:
+    - include: comments
+    - match: ''
+      push:
+        - conditional-expr-unary-clause
+
+  conditional-expr-unary-clause:
+    - include: comments
+    - match: ''
+      # any unary ops before a non-existent term should be invalid.
+      branch_point: unary_clause
+      branch:
+        - conditional-expr-unary-operator
+        - conditional-expr-unary-operator-failed
+
+  conditional-expr-unary-operator:
+    - include: comments
+    # match as many unary ops as possible
+    - match: '{{ws_lb}}({{conditional_ops_unary_logical}}){{right_edge}}'
+      scope: keyword.operator.logical.b2jam
+    - match: '{{token_begin}}'
+      set:
+        - conditional-expr-unary-clause-term
+        - conditional-expr-unary-clause-value
+
+  conditional-expr-unary-operator-failed:
+    - include: comments
+    - match: '{{metachar}}*({{conditional_ops_unary_logical}}){{metachar}}*{{token_begin}}'
+      captures:
+        1: invalid.illegal.b2jam
+
+    - include: if-empty-assert-empty-until-token
+    - match: '{{token_begin}}'
+      set:
+        - conditional-expr-unary-clause-term
+        - conditional-expr-unary-clause-value-failed
+
+  conditional-expr-unary-clause-term:
+    - include: comments
+    - match: '(?={{open_brace}}|{{close_parens}})'
+      pop: 2
+    - match: '{{token_begin}}'
+      pop: 2
+      push: conditional-expr-binary-clause
+
+  conditional-expr-end-of-pop:
+    - match: '(?={{open_brace}}|{{close_parens}})'
+      pop: 1
+  conditional-expr-end-of-pop2:
+    - match: '(?={{open_brace}}|{{close_parens}})'
+      pop: 2
+  conditional-expr-end-of-fail-unary:
+    - match: '(?={{open_brace}}|{{close_parens}})'
+      fail: unary_clause
+
+  conditional-expr-clause-value-common:
+    - match: '{{open_parens}}'
+      scope: punctuation.section.group.begin.b2jam
+      set: conditional-expr-group
+    - include: argument-restricted-expr  # pops stack when matched
+
+  conditional-expr-unary-clause-value:
+    - include: conditional-expr-end-of-fail-unary
+    - include: conditional-expr-clause-value-common
+
+  conditional-expr-list-term:
+    - match: '(?={{conditional_ops_logical_all_token}})'
+      set: conditional-expr-binary-clause
+    - include: conditional-expr-end-of-pop
+    - include: until-list-punctuation
+    - match: '{{token_begin}}'
+      push: argument-list  # allow keywords
+
+  conditional-expr-unary-clause-value-failed:
+    - include: conditional-expr-end-of-pop
+    - include: conditional-expr-clause-value-common
+
+  conditional-expr-binary-clause:
+    - include: comments
+    - include: conditional-expr-end-of-pop
+    - match: '{{token_begin}}'
+      branch_point: binary_clause
+      branch:
+        - conditional-expr-binary-operator
+        - conditional-expr-binary-operator-failed
+
+  conditional-expr-binary-operator:
+    - include: comments
+    - include: conditional-expr-end-of-pop2
+    - match: '({{conditional_ops_compare_token}})|({{conditional_ops_logical_double_token}})|({{conditional_ops_logical_single_token}})'
+      captures:
+        1: keyword.operator.comparison.b2jam
+        2: keyword.operator.logical.b2jam
+        3: keyword.operator.logical.b2jam invalid.deprecated.b2jam
+      pop: 2
+      push: conditional-expr-unary-clause
+    - match: '{{keyword_in}}'
+      scope: keyword.control.in.b2jam
+      pop: 2
+      push: conditional-expr-list-term
+    - match: '{{token_begin}}'
+      fail: binary_clause
+
+  conditional-expr-binary-operator-failed:
+    - include: comments
+    - include: conditional-expr-end-of-pop2
+    - match: ''
+      push: advance-until-close-parens-or-open-brace
+
+  conditional-expr-group:
+    - meta_scope: meta.group.b2jam
+    - include: comments
+    - match: '{{close_parens}}'
+      scope: punctuation.section.group.end.b2jam
+      pop: 1
+    - include: conditional-expr-term-sequence
+
+###[ FOR-LOOP EXPRESSION ]#####################################################
+
+  # TODO: handle errors, and merge perhaps with variable declaration  - local var =
+  forloop-expr:
+    - include: comments
+    - match: '{{token_begin}}'
+      set: [ statement-block, forloop-expr-storage ]
+
+  forloop-expr-common:
+    - include: comments
+    - match: '{{metachar}}*(?={{open_brace}})'
+      set:
+        - include: if-empty-assert-empty-until-token
+        - include: immediately-pop
+
+  forloop-expr-storage:
+    - include: forloop-expr-common
+    - match: '{{keyword_local}}'
+      scope: storage.modifier.local.b2jam
+      set:
+        - variable-declaration-local-meta
+        - forloop-expr-body
+    - match: '{{token_begin}}'
+      set:
+        - variable-declaration-meta
+        - forloop-expr-body
+
+  forloop-expr-body:
+    - match: '{{token_begin}}'
+      set: [ argument-list, forloop-expr-in, forloop-expr-variable ]
+
+  forloop-expr-in:
+    - include: forloop-expr-common
+    - match: '{{metachar}}*({{keyword_in}})'
+      captures:
+        1: keyword.control.in.b2jam
+      pop: 1
+    - include: if-empty-assert-empty-until-token
+    - include: until-open-brace
+
+  forloop-expr-variable:
+    - include: comments
+    - match: '{{metachar}}*(?={{keyword_in}})'
+      set:
+        - include: if-empty-assert-empty-until-token
+        - include: immediately-pop
+    - match: '{{token_begin}}'
+      set: variable-static
+
+###[ TERMINATION ]#############################################################
+
+  ## Dealing with invalid syntax, for statements and expressions
+  ##
+  ## Strategy - Minimally mark invalid syntax, and terminate on
+  ##            common terminating symbols, even if not the correct ones.
+
+  until-statement-terminating-punctuation:
+    - include: comments
+    # the real deal
+    - match: '{{semicolon}}'
+      scope: punctuation.terminator.b2jam
+      pop: 1
+
+    # fake terminal
+    - match: '(?={{close_brace}})'
+      pop: 1
+
+  statement-semicolon:
+    # proper close
+    - match: '{{metachar}}*({{semicolon}})'
+      captures:
+        1: punctuation.terminator.b2jam
+      pop: 1
+
+    # if a ';' is forgotten before a '}' , we can guess
+    # that the } was a closing black, and terminate on it.
+    # In that case, mark the space before it invalid.
+    #
+    # mark whitespace before terminating symbol invalid #
+    - match: '(?:(?:{{metachar}}*?)({{metachar}})(?:{{metachar}}?))(?={{close_brace}})'
+      captures:
+        1: invalid.illegal.b2jam
+      pop: 1
+
+    # other wise, mark whichever symbol that triggered an end invalid
+    # and 'clear' until a proper terminator ';' or '}'
+    - match: '{{metachar}}*({{reserved_symbols}})'
+      captures:
+        1: invalid.illegal.b2jam
+      set: until-statement-terminating-punctuation
+
+
+  # (Bash syntax calls subshell () and { } block statements meta.compound
+  # these [ ] seem similar, so doing the same
+  expression-end:
+    - meta_scope: meta.compound.b2jam meta.function-call.arguments.b2jam
+
+    # proper close
+    - match: '{{metachar}}*({{close_bracket}})'
+      scope: punctuation.section.brackets.end.b2jam
+      pop: 1
+
+    # some symbol got us here, mark it, and 'clear' till ']'
+    - match: '{{metachar}}*({{reserved_symbols}})'
+      captures:
+        1: invalid.illegal.b2jam
+      push: until-close-bracket
+
+###[ COMMANDS ]################################################################
+
+  # block scope
+  cmd-statement:
+    - match: '{{token_begin}}'
+      set: [ cmd-meta, statement-semicolon, cmd-all ]
+
+  cmd-meta:
+    - meta_content_scope: meta.function-call.arguments.b2jam
+    - include: immediately-pop
+
+  # expression scope
+  cmd-expressions:
+    - match: '(?={{open_bracket}})'
+      push: cmd-expression
+
+  cmd-expression:
+    - match: '{{open_bracket}}'
+      scope: punctuation.section.brackets.begin.b2jam
+      set: [ expression-end, cmd-expression-statements ]
+
+  cmd-expression-statements:
+    - include: comments
+    - include: cmd-expression-ons
+    - include: cmd-all
+
+  cmd-expression-ons:
+      #    [ on arg ARG lol       ]
+      # or [ on arg `return` list ]
+    - match: '{{keyword_on}}'
+      scope: keyword.context.conditional.on.b2jam
+      set:
+        - cmd-expression-on-kind
+        - variable-expr
+
+  cmd-expression-on-kind:
+    - include: comments
+    - match: '{{keyword_return}}'
+      scope: keyword.control.flow.return.b2jam
+      set: argument-list
+    - match: '{{token_begin}}'
+      set: cmd-all
+
+  cmd-all:
+    - include: cmd-builtins
+    - include: cmd-basic
+
+  cmd-basic:
+    # basic user defined or not specialized cmds
+    - match: '{{token_begin}}'
+      set: [ argument-first-strict-lol, rule-call ]
+
+  cmd-builtins:
+    - include: Packages/B2Jam/detail/Builtins.sublime-syntax#builtins
+
+
+###[ END ]#####################################################################

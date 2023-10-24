@@ -1,0 +1,517 @@
+#  SYNTAX TEST "Packages/B2Jam/B2Jam.sublime-syntax"
+
+# Copyright 2023 Andrew McCann
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE or http://www.boost.org/LICENSE_1_0.txt)
+
+# regex pattern tests
+
+    MATCH plain 
+#   ^^^^^               meta.function-call.identifier.b2jam support.function.MATCH.b2jam
+#         ^^^^^         meta.function-call.arguments.b2jam meta.mode.basic.regexp.b2jam
+
+
+    "quoted"
+#   ^^^^^^^^            meta.string.b2jam
+#   ^^^^^^^^            meta.mode.basic.regexp.b2jam 
+
+# parameter expansions work
+    $(var) "$(var)"
+#   ^^^^^^^^^^^^^^^     - meta.disposed        
+#   ^^^^^^              meta.interpolation.parameter
+#          ^^^^^^^^     meta.string.b2jam
+#           ^^^^^^      meta.interpolation.parameter
+
+
+# filename expansions work
+    @(f:E=) "@(f:E=)"
+#   ^^^^^^^^^^^^^^^^^   - meta.disposed        
+#   ^^^^^^^             meta.interpolation.filename
+#           ^^^^^^^^^   meta.string.b2jam
+#            ^^^^^^^    meta.interpolation.filename
+
+
+# parens make groups
+    (foo)  "(foo)"
+#   ^^^^^^^^^^^^^^      - meta.disposed        
+#   ^^^^^               meta.group.regexp.b2jam meta.mode.basic.regexp.b2jam
+#   ^^^^^               - meta.string
+#          ^^^^^^^      meta.string.b2jam
+#           ^^^^^       meta.group.regexp.b2jam meta.mode.basic.regexp.b2jam
+#   ^                   punctuation.section.group.begin.regexp.b2jam
+#       ^               punctuation.section.group.end.regexp.b2jam
+#           ^           punctuation.section.group.begin.regexp.b2jam
+#               ^       punctuation.section.group.end.regexp.b2jam
+
+# alternations
+    a|b   "a|b"
+#   ^^^                 meta.mode.basic.regexp.b2jam    
+#   ^^^                 - meta.string
+#         ^^^^^         meta.string.b2jam
+#          ^^^          meta.mode.basic.regexp.b2jam
+#    ^                  keyword.operator.alternation.regexp.b2jam
+#           ^           keyword.operator.alternation.regexp.b2jam
+
+# quantifiers 
+    foo* bar+ "baz?" 
+#   ^^^^^^^^^           - meta.string    
+#             ^^^^^^    meta.string.b2jam
+#      ^                meta.mode.basic.regexp.b2jam keyword.operator.quantifier.regexp.b2jam
+#           ^           meta.mode.basic.regexp.b2jam keyword.operator.quantifier.regexp.b2jam
+#                 ^     meta.mode.basic.regexp.b2jam keyword.operator.quantifier.regexp.b2jam
+
+# special operator .
+    .*   ".*" 
+#   ^                   meta.mode.basic.regexp.b2jam keyword.other.any.regexp.b2jam
+#         ^             meta.string.b2jam keyword.other.any.regexp.b2jam
+
+
+# sets - [..] work, but with deprecation warning, when literal
+    [^a-z] "[^a-z]"
+#   ^^^^^^^^^^^^^^^     - meta.disposed
+#   ^^^^^^^^^^^^^^^     - meta.set meta.set    
+#   ^^^^^^^             - meta.string 
+#          ^^^^^^^^     - meta.string meta.string
+#          ^^^^^^^^     meta.mode.basic.regexp.b2jam meta.string.b2jam
+#   ^^^^^^              - meta.string
+#   ^^^^^^              meta.set.regexp.b2jam
+#           ^^^^^^      meta.set.regexp.b2jam
+#   ^                   punctuation.definition.set.begin.regexp.b2jam
+#        ^              punctuation.definition.set.end.regexp.b2jam
+#           ^           punctuation.definition.set.begin.regexp.b2jam
+#                ^      punctuation.definition.set.end.regexp.b2jam
+#    ^                  keyword.operator.logical.regexp.b2jam
+#            ^          keyword.operator.logical.regexp.b2jam
+#     ^^^               constant.other.range.regexp.b2jam
+#             ^^^       constant.other.range.regexp.b2jam
+#      ^                punctuation.separator.sequence.regexp.b2jam
+#              ^        punctuation.separator.sequence.regexp.b2jam
+#   ^                   invalid.deprecated.b2jam
+#        ^              invalid.deprecated.b2jam
+#          ^^^^^^^^     - invalid.deprecated
+
+
+# escaped set - when quoted, escaping doesn't do anything
+    \[^a-z\] "\[^a-z\]"
+#   ^^^^^^^^^^^^^^^^^^^ - meta.disposed    
+#   ^^^^^^^^^^^^^^^^^^^ - meta.set meta.set
+#   ^^^^^^^^            - meta.string
+#            ^^^^^^^^^^ - meta.string meta.string
+#   ^^^^^^^^            meta.set.regexp.b2jam
+#            ^^^^^^^^^^ meta.mode.basic.regexp.b2jam meta.string.b2jam
+#    ^                  punctuation.definition.set.begin.regexp.b2jam
+#          ^            punctuation.definition.set.end.regexp.b2jam
+#              ^        punctuation.definition.set.begin.regexp.b2jam
+#                    ^  punctuation.definition.set.end.regexp.b2jam
+#     ^                 keyword.operator.logical.regexp.b2jam
+#               ^       keyword.operator.logical.regexp.b2jam
+#      ^^^              constant.other.range.regexp.b2jam
+#                ^^^    constant.other.range.regexp.b2jam
+#       ^               punctuation.separator.sequence.regexp.b2jam
+#                 ^     punctuation.separator.sequence.regexp.b2jam
+#   ^                   constant.character.escape.b2jam
+#         ^             constant.character.escape.b2jam
+#             ^         constant.character.escape.impotent.regexp.b2jam
+#                   ^   constant.character.escape.impotent.regexp.b2jam
+#   ^^^^^^^^^^          - invalid.deprecated
+#             ^         invalid.deprecated.impotent.escape.b2jam     
+#              ^^^^^    - invalid.deprecated
+#                   ^   invalid.deprecated.impotent.escape.b2jam
+# special case sets with 3 chars
+    []]      "[]]" 
+#   ^^^^^^^^^^^^^^      - meta.disposed    
+#   ^^^^^^^^^^^^^^      - meta.set meta.set
+#   ^^^                 - meta.string
+#            ^^^^^      - meta.string meta.string
+#   ^^^                 meta.mode.basic.regexp.b2jam meta.set.regexp.b2jam    
+#            ^^^^^      meta.mode.basic.regexp.b2jam meta.string.b2jam
+#             ^^^       meta.mode.basic.regexp.b2jam meta.set.regexp.b2jam
+#   ^                   punctuation.definition.set.begin.regexp.b2jam
+#     ^                 punctuation.definition.set.end.regexp.b2jam
+#             ^         punctuation.definition.set.begin.regexp.b2jam
+#               ^       punctuation.definition.set.end.regexp.b2jam
+#    ^                  - punctuation.definition.
+#              ^        - punctuation.definition.
+#   ^^^                 invalid.deprecated.b2jam
+#             ^^^       - invalid.deprecated
+
+# interleaved quotes
+    ["]]" []"]"         
+#   ^^^^^^^^^^^         - meta.disposed    
+#   ^^^^^^^^^^^         - meta.set meta.set
+#   ^^^^^^^^^^^         - meta.string meta.string
+#   ^^^^^               meta.mode.basic.regexp.b2jam
+#         ^^^^^         meta.mode.basic.regexp.b2jam
+#   ^^^^                meta.set.regexp.b2jam
+#         ^^^^          meta.set.regexp.b2jam
+#   ^                   - meta.string
+#    ^^^^               meta.string.b2jam
+#        ^^^            - meta.string
+#           ^^^         meta.string.b2jam
+#   ^                   punctuation.definition.set.begin.regexp.b2jam
+#         ^             punctuation.definition.set.begin.regexp.b2jam
+#     ^                 - punctuation.definition.set
+#          ^            - punctuation.definition.set
+#      ^                punctuation.definition.set.end.regexp.b2jam
+#            ^          punctuation.definition.set.end.regexp.b2jam
+#   ^                   invalid.deprecated.b2jam
+#    ^^^^^              - invalid.deprecated
+#         ^             invalid.deprecated.b2jam
+#          ^            invalid.deprecated.b2jam
+#           ^^^         - invalid.deprecated
+
+    "[]"] "["]]
+#   ^^^^^^^^^^^         - meta.disposed    
+#   ^^^^^^^^^^^         - meta.set meta.set
+#   ^^^^^^^^^^^         - meta.string meta.string
+#   ^^^^^               meta.mode.basic.regexp.b2jam
+#         ^^^^^         meta.mode.basic.regexp.b2jam
+#    ^^^^               meta.set.regexp.b2jam
+#          ^^^^         meta.set.regexp.b2jam
+#   ^^^^                meta.string.b2jam
+#       ^^              - meta.string
+#         ^^^           meta.string.b2jam
+#            ^^         - meta.string
+#    ^                  punctuation.definition.set.begin.regexp.b2jam
+#          ^            punctuation.definition.set.begin.regexp.b2jam
+#     ^                 - punctuation.definition.set
+#            ^          - punctuation.definition.set
+#       ^               punctuation.definition.set.end.regexp.b2jam
+#             ^         punctuation.definition.set.end.regexp.b2jam
+#   ^^^^                - invalid.deprecated
+#       ^               invalid.deprecated.b2jam
+#        ^^^^           - invalid.deprecated
+#            ^^         invalid.deprecated.b2jam
+
+
+    \[\]\]  "\[\]\]"
+#   ^^^^^^^^^^^^^^^^    - meta.disposed   
+#   ^^^^^^^^^^^^^^^^    - meta.set meta.set 
+#   ^^^^^^              - meta.string
+#           ^^^^^^^^    - meta.string meta.string
+#   ^^^^^^              meta.mode.basic.regexp.b2jam meta.set.regexp.b2jam    
+#           ^^^^^^^^    meta.mode.basic.regexp.b2jam meta.string.b2jam
+#    ^                  punctuation.definition.set.begin.regexp.b2jam
+#        ^              punctuation.definition.set.end.regexp.b2jam
+#             ^         punctuation.definition.set.begin.regexp.b2jam
+#                 ^     punctuation.definition.set.end.regexp.b2jam
+#     ^^                - punctuation.definition.
+#              ^^       - punctuation.definition.
+#   ^                   constant.character.escape.b2jam
+#     ^                 constant.character.escape.b2jam
+#      ^                constant.character.escape.b2jam
+#       ^               constant.character.escape.b2jam
+#      ^                - punctuation.definition 
+#   ^^^^^^^^^           - invalid.deprecated
+#            ^          invalid.deprecated.impotent.escape.b2jam
+#             ^         - invalid.deprecated
+#              ^        invalid.deprecated.impotent.escape.b2jam
+#               ^       - invalid.deprecated
+#                ^      invalid.deprecated.impotent.escape.b2jam
+#                 ^^     - invalid.deprecated
+#            ^          constant.character.escape.impotent.regexp.b2jam
+#              ^        constant.character.escape.impotent.regexp.b2jam
+#               ^       - constant.character.escape
+#                ^      constant.character.escape.impotent.regexp.b2jam
+#            ^          invalid.deprecated.impotent.escape.b2jam
+#                ^      invalid.deprecated.impotent.escape.b2jam
+
+    \[]\]   "\[]\]"
+#   ^^^^^^^^^^^^^^^     - meta.disposed    
+#   ^^^^^^^^^^^^^^^     - meta.set meta.set 
+#   ^^^^^               - meta.string 
+#           ^^^^^^^     - meta.string meta.string
+#   ^^^^^               meta.mode.basic.regexp.b2jam meta.set.regexp.b2jam    
+#           ^^^^^^^     meta.mode.basic.regexp.b2jam meta.string.b2jam
+#    ^                  punctuation.definition.set.begin.regexp.b2jam
+#       ^               punctuation.definition.set.end.regexp.b2jam
+#     ^                 - punctuation.definition.
+#   ^^                  - invalid.deprecated
+#     ^                 invalid.deprecated.b2jam
+#      ^^^^^^           - invalid.deprecated
+#   ^                   constant.character.escape.b2jam
+#      ^                constant.character.escape.b2jam
+
+    [^]     "[^]"     
+#   ^^^^^^^^^^^^^       - meta.disposed    
+#   ^^^^^^^^^^^^^       - meta.set meta.set 
+#   ^^^                 - meta.string
+#           ^^^^^       - meta.string meta.string
+#   ^^^                 meta.mode.basic.regexp.b2jam meta.set.regexp.b2jam    
+#           ^^^^^       meta.mode.basic.regexp.b2jam meta.string.b2jam
+#            ^^^        meta.mode.basic.regexp.b2jam meta.set.regexp.b2jam
+#   ^                   punctuation.definition.set.begin.regexp.b2jam
+#            ^          punctuation.definition.set.begin.regexp.b2jam
+#     ^                 - punctuation.definition
+#              ^        - punctuation.definition
+#    ^                  keyword.operator.logical.regexp.b2jam
+#             ^         keyword.operator.logical.regexp.b2jam
+#   ^                   invalid.illegal.unmatched.bracket.b2jam
+#            ^          invalid.illegal.unmatched.bracket.b2jam
+#     ^                 invalid.deprecated.b2jam
+#              ^        - invalid.deprecated
+
+    \[^]    "\[^]"
+#   ^^^^^^^^^^^^^^      - meta.disposed    
+#   ^^^^^^^^^^^^^^      - meta.set meta.set 
+#   ^^^^                - meta.string meta.string
+#           ^^^^^^      - meta.string meta.string
+#   ^^^^                meta.mode.basic.regexp.b2jam meta.set.regexp.b2jam    
+#           ^^^^^^      meta.mode.basic.regexp.b2jam meta.string.b2jam
+#             ^^^       meta.mode.basic.regexp.b2jam meta.set.regexp.b2jam
+#    ^                  punctuation.definition.set.begin.regexp.b2jam
+#             ^         punctuation.definition.set.begin.regexp.b2jam
+#      ^                - punctuation.definition
+#               ^       - punctuation.definition
+#     ^                 keyword.operator.logical.regexp.b2jam
+#              ^        keyword.operator.logical.regexp.b2jam
+#   ^                   - invalid.deprecated
+#      ^                invalid.deprecated.b2jam
+#               ^       - invalid.deprecated
+#            ^          invalid.deprecated.impotent.escape.b2jam
+#   ^                   constant.character.escape.b2jam
+#            ^          constant.character.escape.impotent.regexp.b2jam
+
+# escaping non-escapble chars, nothing
+# when escaping regex symbols, add deprecated
+    \d\*\(\)
+#   ^^^^^^^             meta.mode.basic.regexp.b2jam
+#   ^                   constant.character.escape.impotent.regexp.b2jam
+#     ^                 constant.character.escape.impotent.regexp.b2jam
+#       ^               constant.character.escape.impotent.regexp.b2jam
+#         ^             constant.character.escape.impotent.regexp.b2jam
+#    ^                  - constant.character.escape
+#      ^                - constant.character.escape
+#        ^              - constant.character.escape   
+#          ^            - constant.character.escape   
+#      ^                keyword.operator.quantifier.regexp.b2jam
+#        ^              punctuation.section.group.begin.regexp.b2jam
+#          ^            punctuation.section.group.end.regexp.b2jam
+#     ^                 invalid.deprecated.impotent.escape.b2jam
+#       ^               invalid.deprecated.impotent.escape.b2jam
+#         ^             invalid.deprecated.impotent.escape.b2jam
+
+    \n\t\r\:\{\;
+#   ^^^^^^^^^^^^        meta.mode.basic.regexp.b2jam 
+#   ^^^^^^^^^^^^        constant.character.escape.b2jam
+#   ^^^^^^^^^^^^        - constant.character.escape.impotent
+#   ^^^^^^^^^^^^        - invalid.deprecated
+
+
+# anchors
+    ^word$  "^word$"  
+#   ^^^^^^              meta.mode.basic.regexp.b2jam    
+#           ^^^^^^^^    meta.mode.basic.regexp.b2jam meta.string.b2jam
+#   ^                   keyword.control.anchor.regexp.b2jam    
+#            ^          keyword.control.anchor.regexp.b2jam    
+#        ^              keyword.control.anchor.regexp.b2jam
+#                 ^     keyword.control.anchor.regexp.b2jam
+
+#  special anchors \< and \> -- which require double escaping (once for B2 and once for Regex engine)
+    \\<word\\>
+#   ^^^^^^^^^^          meta.mode.basic.regexp.b2jam    
+#   ^^^                 keyword.control.anchor.regexp.b2jam
+#          ^^^          keyword.control.anchor.regexp.b2jam
+    
+
+    "\\<word\\>"
+#   ^^^^^^^^^^^^        meta.mode.basic.regexp.b2jam meta.string.b2jam
+#    ^^^                keyword.control.anchor.regexp.b2jam
+#           ^^^         keyword.control.anchor.regexp.b2jam
+
+# only double escape works, quoted or not    
+    "\<word\>"
+#   ^^^^^^^^^^          meta.mode.basic.regexp.b2jam meta.string.b2jam
+#    ^                  constant.character.escape.impotent.regexp.b2jam
+#          ^            constant.character.escape.impotent.regexp.b2jam
+#     ^                 - keyword.control
+#           ^           - keyword.control
+
+# don't start with quantifier
+    *blah ? + a|? a(?b)
+#   ^                   invalid.illegal.unexpected-quantifier.regexp.b2jam    
+#         ^             invalid.illegal.unexpected-quantifier.regexp.b2jam
+#           ^           invalid.illegal.unexpected-quantifier.regexp.b2jam
+#              ^        keyword.operator.alternation.regexp.b2jam
+#               ^       invalid.illegal.unexpected-quantifier.regexp.b2jam
+#                  ^^^^ meta.group.regexp.b2jam
+#                   ^   invalid.illegal.unexpected-quantifier.regexp.b2jam
+
+ "*" "?" "+" "|?" "(?)"
+# ^                     invalid.illegal.unexpected-quantifier.regexp.b2jam    
+#     ^                 invalid.illegal.unexpected-quantifier.regexp.b2jam
+#         ^             invalid.illegal.unexpected-quantifier.regexp.b2jam
+#             ^         keyword.operator.alternation.regexp.b2jam
+#              ^        invalid.illegal.unexpected-quantifier.regexp.b2jam
+#                  ^^^  meta.group.regexp.b2jam
+#                   ^   invalid.illegal.unexpected-quantifier.regexp.b2jam
+
+
+# group with space, is two args
+   \( \)
+#  ^^                   meta.mode.basic.regexp.b2jam 
+#    ^                  - meta.group.regexp.b2jam 
+#    ^                  - meta.mode.basic.regexp.b2jam
+#     ^^                meta.mode.basic.regexp.b2jam
+#   ^                   invalid.illegal.unmatched.parens.regexp.b2jam
+#      ^                invalid.illegal.unmatched.parens.regexp.b2jam
+
+# escaped space however..
+    (\ )   
+#   ^^^^                meta.mode.basic.regexp.b2jam
+#   ^^^^                - invalid.illegal
+
+    (.*(()()))
+#   ^^^^^^^^^^          - meta.disposed    
+#   ^^^^^^^^^^          - meta.string
+#   ^^^^^^^^^^          meta.function-call.arguments.b2jam
+#   ^^^^^^^^^^          meta.mode.basic.regexp.b2jam
+#   ^^^^^^^^^^          meta.group.regexp.b2jam
+#      ^^^^^^           meta.group.regexp.b2jam meta.group.regexp.b2jam
+#       ^^^^            meta.group.regexp.b2jam meta.group.regexp.b2jam meta.group.regexp.b2jam
+#       ^^^^            - meta.group.regexp.b2jam meta.group.regexp.b2jam meta.group.regexp.b2jam meta.group.regexp.b2jam
+
+    "(.*(()()))"
+#   ^^^^^^^^^^^^        - meta.disposed    
+#   ^^^^^^^^^^^^        - meta.string meta.string
+#   ^^^^^^^^^^^^        meta.function-call.arguments.b2jam
+#    ^^^^^^^^^^         meta.mode.basic.regexp.b2jam
+#    ^^^^^^^^^^         meta.group.regexp.b2jam
+#       ^^^^^^          meta.group.regexp.b2jam meta.group.regexp.b2jam
+#        ^^^^           meta.group.regexp.b2jam meta.group.regexp.b2jam meta.group.regexp.b2jam
+#        ^^^^           - meta.group.regexp.b2jam meta.group.regexp.b2jam meta.group.regexp.b2jam meta.group.regexp.b2jam
+
+    "(([a-z].*)()"
+#   ^^^^^^^^^^^^^^      - meta.disposed
+#   ^^^^^^^^^^^^^^      - meta.string meta.string
+#   ^^^^^^^^^^^^^^      meta.function-call.arguments.b2jam
+#   ^^^^^^^^^^^^^^      meta.string.b2jam
+#   ^^^^^^^^^^^^^^      meta.mode.basic.regexp.b2jam
+#    ^                  invalid.illegal.unmatched.parens.regexp.b2jam
+
+    (([a-z].*)()
+#   ^^^^^^^^^^^^        - meta.disposed
+#   ^^^^^^^^^^^^        - meta.set meta.set    
+#   ^^^^^^^^^^^^        - meta.string
+#   ^^^^^^^^^^^^        meta.function-call.arguments.b2jam
+#   ^^^^^^^^^^^^        meta.mode.basic.regexp.b2jam
+#   ^                   invalid.illegal.unmatched.parens.regexp.b2jam
+#     ^                 invalid.deprecated.b2jam
+#         ^             invalid.deprecated.b2jam
+#       ^               punctuation.separator.sequence.regexp.b2jam
+
+    "[-]"   [-]
+#   ^^^^^^^^^^^         - meta.set meta.set    
+#   ^^^^^               - meta.string meta.string
+#           ^^^         - meta.string
+#     ^                 meta.set.regexp.b2jam meta.string.b2jam    
+#     ^                 - punctuation.separator.sequence
+#            ^          - punctuation.separator.sequence
+
+    "[^-]" [^-]
+#   ^^^^^^^^^^^         - meta.set meta.set    
+#   ^^^^^^              - meta.string meta.string
+#          ^^^^         - meta.string
+#     ^                 keyword.operator.logical.regexp.b2jam
+#           ^           keyword.operator.logical.regexp.b2jam
+#      ^                - punctuation.separator.sequence
+#            ^          - punctuation.separator.sequence
+
+# escape anchors
+    \\^\\$"\\^\\$"
+#   ^^^^^^^^^^^^^^      meta.function-call.arguments.b2jam meta.mode.basic.regexp.b2jam
+#   ^^^^^^              constant.character.escape.regexp.b2jam                 
+#          ^^^^^^       constant.character.escape.regexp.b2jam                 
+#   ^^^^^^^^^^^^^^      - keyword.control.anchor
+
+# while you can escape [ with \\[ in regex space
+# charsets do not support escapes
+   ([/\\]) "([/\\])" 
+#  ^^^^^^^^^^^^^^^^^    meta.function-call.arguments.b2jam 
+#  ^^^^^^^              meta.mode.basic.regexp.b2jam
+#          ^^^^^^^^^    meta.mode.basic.regexp.b2jam meta.string.b2jam
+#   ^^^^^               meta.set.regexp.b2jam
+#            ^^^^^      meta.set.regexp.b2jam
+#   ^                   punctuation.definition.set.begin.regexp.b2jam invalid.deprecated.b2jam
+#     ^^                constant.character.escape.b2jam
+#       ^               - constant.character.escape
+#       ^               punctuation.definition.set.end.regexp.b2jam invalid.deprecated.b2jam
+#            ^          punctuation.definition.set.begin.regexp.b2jam
+#              ^^       constant.character.escape.b2jam
+#                ^      - constant.character.escape
+#                ^      punctuation.definition.set.end.regexp.b2jam
+#                 
+
+# regular deprecated chars
+    :;{}
+#   ^^^^                meta.mode.basic.regexp.b2jam invalid.deprecated.b2jam
+
+# regular deprecated chars in set
+    .\[:;\]
+#      ^^               meta.set.regexp.b2jam invalid.deprecated.b2jam    
+
+# escapes that aren't working as you might think
+# - those that are escaping symbols are marked deprecated
+  \^\(\.\$\)\[\^\a\-\z\]\$\*\+\?
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    meta.function-call.arguments.b2jam 
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    meta.mode.basic.regexp.b2jam 
+# ^                                 constant.character.escape.impotent.regexp.b2jam
+#  ^                                - constant.character.escape
+#   ^                               constant.character.escape.impotent.regexp.b2jam
+#    ^                              - constant.character.escape
+#     ^                             constant.character.escape.impotent.regexp.b2jam
+#      ^                            - constant.character.escape
+#       ^                           constant.character.escape.impotent.regexp.b2jam
+#        ^                          - constant.character.escape
+#         ^                         constant.character.escape.impotent.regexp.b2jam
+#          ^                        - constant.character.escape
+#           ^                       constant.character.escape.b2jam
+#            ^                      - constant.character.escape
+#             ^                     constant.character.escape.impotent.regexp.b2jam
+#              ^                    - constant.character.escape
+#               ^                   constant.character.escape.impotent.regexp.b2jam
+#                ^                  - constant.character.escape
+#                 ^                 constant.character.escape.impotent.regexp.b2jam
+#                  ^                - constant.character.escape
+#                   ^               constant.character.escape.impotent.regexp.b2jam
+#                    ^              - constant.character.escape
+#                     ^             constant.character.escape.b2jam
+#                      ^            - constant.character.escape
+#                       ^           constant.character.escape.impotent.regexp.b2jam
+#                        ^          - constant.character.escape
+#                         ^         constant.character.escape.impotent.regexp.b2jam
+#                          ^        - constant.character.escape
+#                           ^       constant.character.escape.impotent.regexp.b2jam
+#                            ^      - constant.character.escape
+#                             ^     constant.character.escape.impotent.regexp.b2jam
+#                              ^    - constant.character.escape
+# ^                                 invalid.deprecated.impotent.escape.b2jam
+#   ^                               invalid.deprecated.impotent.escape.b2jam
+#     ^                             invalid.deprecated.impotent.escape.b2jam
+#       ^                           invalid.deprecated.impotent.escape.b2jam
+#         ^                         invalid.deprecated.impotent.escape.b2jam
+#             ^                     invalid.deprecated.impotent.escape.b2jam
+#                 ^                 invalid.deprecated.impotent.escape.b2jam
+#                       ^           invalid.deprecated.impotent.escape.b2jam
+#                         ^         invalid.deprecated.impotent.escape.b2jam
+#                           ^       invalid.deprecated.impotent.escape.b2jam
+#                             ^     invalid.deprecated.impotent.escape.b2jam
+
+# escapes thar ARE working
+  \\^\\(\\.\\$\\)\\[
+# ^^^^^^^^^^^^^^^^^^                meta.function-call.arguments.b2jam 
+# ^^^^^^^^^^^^^^^^^^                meta.mode.basic.regexp.b2jam 
+# ^^^^^^^^^^^^^^^^^^                constant.character.escape.regexp.b2jam
+
+  \\^\\a\\-\\z\\]\\$  
+# ^^^^^^^^^^^^^^^^^^                meta.function-call.arguments.b2jam 
+# ^^^^^^^^^^^^^^^^^^                meta.mode.basic.regexp.b2jam 
+# ^^^^^^^^^^^^^^^^^^                constant.character.escape.regexp.b2jam
+
+
+    ;
+#   ^                   punctuation.terminator.b2jam
+
+
+
+
