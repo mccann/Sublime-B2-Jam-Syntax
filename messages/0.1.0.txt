@@ -1,0 +1,8 @@
+Version 0.1.0
+
+Initial release!
+
+Please submit feedback on the GitHub project page to improve this project.
+
+https://github.com/mccann/Sublime-B2-Jam-Syntax/issues
+

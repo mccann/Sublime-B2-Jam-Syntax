@@ -1,0 +1,8 @@
+Welcome to the B2 Jam Syntax Highlighting package for Sublime Text 4
+
+Improvements and suggestions can be made via GitHub pull requests and Issues.
+
+Repository: https://github.com/mccann/Sublime-B2-Jam-Syntax/pulls
+Issues: https://github.com/mccann/Sublime-B2-Jam-Syntax/issues
+
+Thanks!
