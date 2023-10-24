@@ -55,7 +55,9 @@ More specifically, the *Jam* language dialect supported by the [B2 Build System]
 
 ### Install
 
-- Manual: clone this repo into your Sublime `Packages` folder.
+- Manual Installation
+	
+	Clone this repo into your Sublime `Packages` directory, and name it `B2Jam`
 
 ### Backstory
 
