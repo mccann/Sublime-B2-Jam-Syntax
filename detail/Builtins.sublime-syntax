@@ -263,6 +263,12 @@ contexts:
     - include: Packages/B2Jam/detail/value/constant-integer.sublime-syntax#list
 
  ## glob
+  1st-glob-1:
+    - clear_scopes: 1
+    - meta_scope: meta.function-call.identifier.b2jam
+    - match: ''
+      set: Packages/B2Jam/detail/value/value-glob-pattern-string.sublime-syntax#first-strict-list-1-useful
+
   1st-glob-list:
     - clear_scopes: 1
     - meta_scope: meta.function-call.identifier.b2jam
@@ -976,6 +982,9 @@ contexts:
     - match: '{{ws_lb}}glob-tree{{right_edge}}'
       scope: support.function.project.glob-tree.b2jam
       set: [ remainder, glob-list, --, 1st-glob-list ]
+    - match: '{{ws_lb}}using{{right_edge}}'
+      scope: support.function.project.using.b2jam
+      set: [ plain-lol, --, feature-list, --, feature-list, --, plain-list, --, plain-list, --, 1st-langref-1 ]
     - match: '{{ws_lb}}project{{right_edge}}'
       scope: support.function.project.project.b2jam
       set: [ remainder, as-project-arg-lol, --, 1st-target-entity-1 ]
@@ -998,6 +1007,19 @@ contexts:
     - match: '{{ws_lb}}build-project{{right_edge}}'
       scope: support.function.project.build-project.b2jam
       set: [ remainder, 1st-target-1 ]
+    - match: '{{ws_lb}}conditional{{right_edge}}'
+      scope: support.function.project.conditional.b2jam
+      set: [ remainder, feature-list, --, 1st-feature-list ]
+    - match: '{{ws_lb}}use-packages{{right_edge}}'
+      scope: support.function.project.use-packages.b2jam
+      set: [ remainder, 1st-glob-1 ]
+    - match: '{{ws_lb}}project-search{{right_edge}}'
+      scope: support.function.project.project-search.b2jam
+      set: [ remainder, target-list, --, 1st-target-1 ]
+    - match: '{{ws_lb}}option{{right_edge}}'
+      scope: support.function.project.option.b2jam
+      #TODO value-entity or something would be more appropriate
+      set: [ remainder, plain-1, --, 1st-target-entity-1 ]
     - match: '{{ws_lb}}test-suite{{right_edge}}'
       scope: support.function.alias.b2jam
       set: main-target

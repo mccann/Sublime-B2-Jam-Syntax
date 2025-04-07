@@ -1,0 +1,14 @@
+Version 0.1.1
+
+- Fixes Apparent recursion bug that started in newer versions of Sublime Text.
+
+> Error loading syntax file "Packages/B2Jam/B2Jam.sublime-syntax": 
+> Apparent recursion within a with_prototype action: 
+> 25000 context sanity limit hit
+
+- Add support for "using" Builtin, and other missing project.project
+
+Please submit feedback on the GitHub project page to improve this project.
+
+https://github.com/mccann/Sublime-B2-Jam-Syntax/issues
+

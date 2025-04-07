@@ -1005,6 +1005,26 @@
 #                           ^ punctuation.terminator.b2jam
 #   @@@@@@@@@ reference
 
+    using a b : c d : e f : g h : i j : k l ;
+#   ^^^^^ meta.function-call.identifier.b2jam support.function.project.using.b2jam
+#        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ meta.function-call.arguments.b2jam
+#         ^ variable.other.langref.b2jam
+#           ^ invalid.deprecated.b2jam variable.other.langref.b2jam
+#             ^ punctuation.separator.sequence.b2jam
+#              ^^^^ meta.type.args.plain.b2jam
+#                   ^ punctuation.separator.sequence.b2jam
+#                    ^^^^ meta.type.args.plain.b2jam
+#                         ^ punctuation.separator.sequence.b2jam
+#                          ^^^^ meta.type.args.feature.b2jam
+#                               ^ punctuation.separator.sequence.b2jam
+#                                ^^^^ meta.type.args.feature.b2jam
+#                                     ^ punctuation.separator.sequence.b2jam
+#                                      ^^^^ meta.type.args.plain.b2jam
+#                                           ^ punctuation.terminator.b2jam
+#   @@@@@ reference
+#         @ reference 
+#           @ reference 
+
     project name : id a ;
 #   ^^^^^^^ meta.function-call.identifier.b2jam support.function.project.project.b2jam
 #          ^^^^^^^^^^^^^^ meta.function-call.arguments.b2jam
@@ -1104,6 +1124,56 @@
 #   @@@@@@@@@@@@@ reference
 #                 @ reference 
 #                   @ reference 
+
+    conditional a b : c d : e ;
+#   ^^^^^^^^^^^ meta.function-call.identifier.b2jam support.function.project.conditional.b2jam
+#              ^^^^^^^^^^^^^^^^ meta.function-call.arguments.b2jam
+#              ^^^^ meta.type.args.feature.b2jam
+#                   ^ punctuation.separator.sequence.b2jam
+#                    ^^^^ meta.type.args.feature.b2jam
+#                         ^ punctuation.separator.sequence.b2jam
+#                           ^ meta.string.b2jam invalid.deprecated.b2jam
+#                             ^ punctuation.terminator.b2jam
+#   @@@@@@@@@@@ reference
+
+    use-packages a b ;
+#   ^^^^^^^^^^^^ meta.function-call.identifier.b2jam support.function.project.use-packages.b2jam
+#               ^^^^^^ meta.function-call.arguments.b2jam
+#                ^ meta.mode.basic.regexp.glob.b2jam
+#                  ^ invalid.deprecated.b2jam meta.mode.basic.regexp.glob.b2jam
+#                    ^ punctuation.terminator.b2jam
+#   @@@@@@@@@@@@ reference 
+
+    project-search a b : c d : e ;
+#   ^^^^^^^^^^^^^^ meta.function-call.identifier.b2jam support.function.project.project-search.b2jam
+#                 ^^^^^^^^^^^^^^^^ meta.function-call.arguments.b2jam
+#                  ^ variable.other.target.b2jam
+#                    ^ invalid.deprecated.b2jam variable.other.target.b2jam
+#                      ^ punctuation.separator.sequence.b2jam
+#                        ^ variable.other.target.b2jam
+#                          ^ variable.other.target.b2jam
+#                            ^ punctuation.separator.sequence.b2jam
+#                              ^ meta.string.b2jam invalid.deprecated.b2jam
+#                                ^ punctuation.terminator.b2jam
+#   @@@@@@@@@@@@@@ reference 
+#                  @ reference 
+#                    @ reference 
+#                        @ reference 
+#                          @ reference 
+
+
+    option a b : c d ;
+#   ^^^^^^ meta.function-call.identifier.b2jam support.function.project.option.b2jam
+#         ^^^^^^^^^^^^ meta.function-call.arguments.b2jam
+#          ^ entity.name.type.target.b2jam
+#            ^ invalid.deprecated.b2jam 
+#              ^ punctuation.separator.sequence.b2jam
+#               ^^^^ meta.type.args.plain.b2jam
+#                  ^ invalid.deprecated.b2jam meta.string.b2jam string.unquoted.b2jam
+#                    ^ punctuation.terminator.b2jam
+#   @@@@@@ reference 
+#          @ definition 
+#            @ definition 
 
     test-suite ;
 #   ^^^^^^^^^^ meta.function-call.identifier.b2jam support.function.alias.b2jam

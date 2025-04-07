@@ -1545,13 +1545,12 @@ if a < b | c < d { }
 #   ^^^^^^^^^^^^^^^^^^^^^^^^                                    meta.function.actions.b2jam
 #   ^^^^^^^^^^^^^^^^^^^^^^^^                                    meta.interpolation.shell.b2jam source.shell.bash.embedded.b2jam
 #   ^^^                                                         keyword.control.loop.for.shell 
-#             ^^^^^^                                            meta.string.shell meta.interpolation.parameter.shell
+#             ^^^^^^                                            meta.interpolation.parameter.shell
          ls -al ${i}
     done 
 #   ^^^^                                                        meta.function.actions.b2jam keyword.control.loop.end.shell
 
-
-# B2 Jam variable expansions in shell
+# B2 Jam variable expansions in shell, in double quote string
     printf "%s"  "$(B2JAMVAR:J=,)"
 #                 ^^^^^^^^^^^^^^^                               source.b2jam meta.function.actions.b2jam
 #                 ^^^^^^^^^^^^^^^                               meta.interpolation.parameter
@@ -1562,6 +1561,31 @@ if a < b | c < d { }
 #                             ^                                 keyword.operator.assignment.b2jam
 #                              ^                                string.quoted.double.b2jam
 #                   @@@@@@@@ reference
+
+# B2 Jam variable expansions in shell, in single quote string
+    printf "%s"  '$(B2JAMVAR:J=,)'
+#                 ^^^^^^^^^^^^^^^                               source.b2jam meta.function.actions.b2jam
+#                 ^^^^^^^^^^^^^^^                               meta.interpolation.parameter
+#                 ^^^^^^^^^^^^^^^                               meta.string.b2jam
+#                   ^^^^^^^^                                    variable.other.readwrite.b2jam
+#                           ^                                   keyword.operator.expansion.b2jam
+#                            ^                                  variable.parameter.switch.b2jam
+#                             ^                                 keyword.operator.assignment.b2jam
+#                              ^                                string.quoted.double.b2jam
+#                   @@@@@@@@ reference
+
+# B2 Jam variable expansions in shell, no quoting string
+    echo          $(B2JAMVAR:J=,)
+#                 ^^^^^^^^^^^^^^^                               source.b2jam meta.function.actions.b2jam
+#                 ^^^^^^^^^^^^^^^                               meta.interpolation.parameter
+#                 ^^^^^^^^^^^^^^^                               meta.string.b2jam
+#                   ^^^^^^^^                                    variable.other.readwrite.b2jam
+#                           ^                                   keyword.operator.expansion.b2jam
+#                            ^                                  variable.parameter.switch.b2jam
+#                             ^                                 keyword.operator.assignment.b2jam
+#                              ^                                string.quoted.double.b2jam
+#                   @@@@@@@@ reference
+
 
 # B2 Jam filename expansions
     printf "%s"  "@(B2JAMFILE:E=,)"

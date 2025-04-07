@@ -7,13 +7,14 @@
 hidden: true
 name: B2 Jam
 scope: source.b2jam
+extends: Packages/ShellScript/Bash.sublime-syntax
 
 # buggy with 1
 version: 2
 
 variables:
 
-  is_interpolation: (?=[\$@]\()
+  is_b2jam_interpolation: (?=[\$@]\()
 
 contexts:
 
@@ -22,13 +23,11 @@ contexts:
 
 ###[ PROTOTYPES ]##############################################################
 
-  immediately-pop:
-    - match: ''
-      pop: 1
 
-  immediately-pop2:
-    - match: ''
-      pop: 2
+###[ Bash Overrides ]##########################################################
+
+  string-prototype:
+    - include: B2-expansions
 
 ###[ Actions String ]##########################################################
 
@@ -37,21 +36,19 @@ contexts:
   as-actions-script:
     - match: \{
       scope: punctuation.section.interpolation.begin.b2jam
-      set: [ action-script, shell-script ]
-      with_prototype:
-        - include: B2-expansions
+      set: [ B2-action-script, B2-embeded-shell-script ]
 
-  action-script:
+  B2-action-script:
     - meta_scope: meta.function.actions.b2jam meta.interpolation.shell.b2jam
     - match: \}
       scope: punctuation.section.interpolation.end.b2jam
       pop: 1
 
-  shell-script:
+  B2-embeded-shell-script:
     - meta_content_scope: source.shell.bash.embedded.b2jam
     - match: (?=\})
       pop: 1
-    - include: Packages/ShellScript/Bash.sublime-syntax#statements
+    - include: statements
 
   B2-expansion-identifier-failchars:
     # heuristic character that occurs in shell command $(), but not B2Jam expansion identifiers (normally)
@@ -59,13 +56,13 @@ contexts:
       fail: B2_expansion_looks_like_shell
 
   B2-expansions:
-    - match: '(?={{is_interpolation}})'
+    - match: '(?={{is_b2jam_interpolation}})'
       branch_point: B2_expansion_looks_like_shell
       branch:
         - B2-expansion
-        - shell-expansion
+        - B2-embeded-shell-expansion
 
-  L-quote-escape:
+  B2-L-quote-escape:
     - clear_scopes: true
     - meta_scope: source.b2jam meta.function.actions.b2jam meta.interpolation.shell.b2jam
     - match: (?<=\")
@@ -75,14 +72,15 @@ contexts:
   B2-expansion:
     - match: ''
       set:
-        - L-quote-escape # this represents the "L" layer
+        - B2-L-quote-escape # this represents the "L" layer
         # use Q as this is a 'quoted' context as far as escaping is concerned
         - Packages/B2Jam/detail/expansion/expansions.sublime-syntax#Q-as-expansions
       #with_prototype:
         # # ignore strings?
         # - match: '"'
 
-  shell-expansion:
-    # hope it was an expansions-command we interrupted!
-    - include: Packages/ShellScript/Bash.sublime-syntax#expansions-command
+  B2-embeded-shell-expansion:
+    # hope it was a variable-expansions we interrupted!
+    # Don't love this - somewhat brittle, Bash syntax broke this once before by changing context name.
+    - include: variable-expansions
     - include: immediately-pop
